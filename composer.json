@@ -1,0 +1,28 @@
+{
+  "name": "lisachenko/parser-reflection",
+  "description": "Provides reflection information, based on raw source",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Alexander Lisachenko",
+      "email": "lisachenko.it@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "ParserReflection\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "ParserReflection\\": "tests"
+    }
+  },
+  "require": {
+    "nikic/php-parser": "~1.1@dev"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0"
+  }
+}
