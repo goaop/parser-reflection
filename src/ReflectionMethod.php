@@ -27,7 +27,7 @@ class ReflectionMethod extends BaseReflectionMethod
     public function __construct($className, $methodName, ClassMethod $classMethodNode = null)
     {
         $this->className        = $className;
-        $this->functionLikeNode = $classMethodNode ?: Engine::parseClassMethod($className, $methodName);
+        $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
     }
 
     /**

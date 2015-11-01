@@ -33,7 +33,7 @@ class ReflectionFileNamespace implements \Reflector
     public function __construct($fileName, $namespaceName, Namespace_ $namespaceNode = null)
     {
         if (!$namespaceNode) {
-            $namespaceNode = Engine::parseFileNamespace($fileName, $namespaceName);
+            $namespaceNode = ReflectionEngine::parseFileNamespace($fileName, $namespaceName);
         }
         $this->namespaceNode = $namespaceNode;
         $this->fileName      = $fileName;

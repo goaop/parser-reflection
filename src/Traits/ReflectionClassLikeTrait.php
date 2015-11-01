@@ -10,7 +10,7 @@
 
 namespace ParserReflection\Traits;
 
-use ParserReflection\Engine;
+use ParserReflection\ReflectionEngine;
 use ParserReflection\ReflectionClass;
 use ParserReflection\ReflectionFile;
 use ParserReflection\ReflectionFileNamespace;
@@ -121,7 +121,7 @@ trait ReflectionClassLikeTrait
      */
     public function getFileName()
     {
-        return Engine::locateClassFile($this->getName());
+        return ReflectionEngine::locateClassFile($this->getName());
     }
 
     /**

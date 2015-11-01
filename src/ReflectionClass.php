@@ -25,7 +25,7 @@ class ReflectionClass extends InternalReflectionClass
         $this->className     = array_pop($namespaceParts);
         $this->namespaceName = join('\\', $namespaceParts);
 
-        $this->classLikeNode = $classLikeNode ?: Engine::parseClass($fullClassName);
+        $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
     }
 
     /**

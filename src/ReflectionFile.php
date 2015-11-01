@@ -35,7 +35,7 @@ class ReflectionFile implements \Reflector
     public function __construct($fileName, $topLevelNodes = null)
     {
         $this->fileName      = $fileName;
-        $this->topLevelNodes = $topLevelNodes ?: Engine::parseFile($fileName);
+        $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
     }
 
     public function getName()
