@@ -8,6 +8,7 @@
 
 namespace ParserReflection;
 
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
@@ -27,11 +28,32 @@ class ReflectionClass extends InternalReflectionClass
     private $classLikeNode;
 
     /**
-     * Namespace node reference
+     * Namespace name
      *
-     * @var ReflectionFileNamespace
+     * @var string
      */
-    private $fileNamespace;
+    private $namespaceName;
+
+    /**
+     * Short name of the class, without namespace
+     *
+     * @var string
+     */
+    private $className;
+
+    /**
+     * Parent class, or false if not present, null if uninitialized yet
+     *
+     * @var \ReflectionClass|false|null
+     */
+    private $parentClass;
+
+    /**
+     * Interfaces, empty array or null if not initialized yet
+     *
+     * @var \ReflectionClass[]|array|null
+     */
+    private $interfaceClasses;
 
     /**
      * Is internal reflection is initialized or not
@@ -50,10 +72,24 @@ class ReflectionClass extends InternalReflectionClass
      */
     protected $methods;
 
-    public function __construct(ClassLike $classLikeNode, ReflectionFileNamespace $fileNamespace)
+    public function __construct($argument, ClassLike $classLikeNode = null)
     {
-        $this->classLikeNode = $classLikeNode;
-        $this->fileNamespace = $fileNamespace;
+        $fullClassName       = is_object($argument) ? get_class($argument) : $argument;
+        $namespaceParts      = explode('\\', $fullClassName);
+        $this->className     = array_pop($namespaceParts);
+        $this->namespaceName = join('\\', $namespaceParts);
+
+        $this->classLikeNode = $classLikeNode ?: Engine::parseClass($fullClassName);
+    }
+
+    /**
+     * Emulating original behaviour of reflection
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'name' => $this->getName()
+        );
     }
 
     /**
@@ -61,7 +97,9 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function getName()
     {
-        return $this->fileNamespace->getName() . '\\' . $this->getShortName();
+        $namespaceName = $this->namespaceName ? $this->namespaceName . '\\' : '';
+
+        return $namespaceName . $this->getShortName();
     }
 
     /**
@@ -69,7 +107,7 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function getShortName()
     {
-        return $this->classLikeNode->name;
+        return $this->className;
     }
 
     /**
@@ -108,6 +146,52 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * {@inheritDoc}
      */
+    public function getParentClass()
+    {
+        if (!isset($this->parentClass)) {
+            static $extendsField = 'extends';
+
+            $parentClass = false;
+            $hasExtends  = in_array($extendsField, $this->classLikeNode->getSubNodeNames());
+            $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
+            if ($extendsNode instanceof Name\FullyQualified) {
+                $extendsName = $extendsNode->toString();
+                $parentClass = class_exists($extendsName, false) ? new parent($extendsName) : new static($extendsName);
+            }
+            $this->parentClass = $parentClass;
+        }
+
+        return $this->parentClass;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getInterfaces()
+    {
+        if (!isset($this->interfaceClasses)) {
+            $this->interfaceClasses = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+                if ($instance->isInterface()) {
+                    $result[$instance->getName()] = $instance;
+                }
+                $result += $instance->getInterfaces();
+            });
+        }
+
+        return $this->interfaceClasses;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getInterfaceNames()
+    {
+        return array_keys($this->getInterfaces());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getExtension()
     {
         // For user-defined classes this will be always null
@@ -128,7 +212,27 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function getFileName()
     {
-        return $this->fileNamespace->getName();
+        return Engine::locateClassFile($this->getName());
+    }
+
+    /**
+     * Returns the reflection of current file
+     *
+     * @return ReflectionFile
+     */
+    public function getFile()
+    {
+        return new ReflectionFile($this->getFileName());
+    }
+
+    /**
+     * Returns the reflection of current file namespace
+     *
+     * @return ReflectionFileNamespace
+     */
+    public function getFileNamespace()
+    {
+        return new ReflectionFileNamespace($this->getFileName(), $this->namespaceName);
     }
 
     /**
@@ -171,13 +275,19 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * {@inheritdoc}
      */
-    public function getMethods($filter = null, $returnKeys = false)
+    public function getMethods(...$args)
     {
         if (!isset($this->methods)) {
-            $this->methods = $this->findMethods();
+            $directMethods = $this->getDirectMethods();
+            $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) use ($args) {
+                $result += $instance->getMethods(...$args);
+            });
+            $methods = array_merge($directMethods, $parentMethods);
+
+            $this->methods = $methods;
         }
 
-        return $returnKeys ? $this->methods : array_values($this->methods);
+        return $this->methods;
     }
 
     /**
@@ -185,8 +295,11 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function getMethod($name)
     {
-        if ($this->hasMethod($name)) {
-            return $this->methods[$name];
+        $methods = $this->getMethods();
+        foreach ($methods as $method) {
+            if ($method->getName() == $name) {
+                return $method;
+            }
         }
 
         return false;
@@ -197,12 +310,15 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function hasMethod($name)
     {
-        $methods   = $this->getMethods(-1, $returnKeys = true);
-        $hasMethod = isset($methods[$name]);
+        $methods = $this->getMethods();
+        foreach ($methods as $method) {
+            if ($method->getName() == $name) {
+                return true;
+            }
+        }
 
-        return $hasMethod;
+        return false;
     }
-
 
     /**
      * {@inheritDoc}
@@ -386,16 +502,59 @@ class ReflectionClass extends InternalReflectionClass
         return $constants;
     }
 
-    private function findMethods()
+    private function getDirectMethods()
     {
         $methods = array();
 
         foreach ($this->classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof ClassMethod) {
-                $methods[$classLevelNode->name] = new ReflectionMethod($classLevelNode, $this);
+                $methods[] = new ReflectionMethod(
+                    $this->getName(),
+                    $classLevelNode->name,
+                    $classLevelNode
+                );
             }
         }
 
         return $methods;
+    }
+
+    private function getDirectInterfaces()
+    {
+        $interfaces = array();
+
+        $interfaceField = $this->isInterface() ? 'extends' : 'implements';
+        $hasInterfaces  = in_array($interfaceField, $this->classLikeNode->getSubNodeNames());
+        $implementsList = $hasInterfaces ? $this->classLikeNode->$interfaceField : array();
+        if ($implementsList) {
+            foreach ($implementsList as $implementNode) {
+                if ($implementNode instanceof Name\FullyQualified) {
+                    $implementName  = $implementNode->toString();
+                    $interface      = interface_exists($implementName, false)
+                        ? new parent($implementName)
+                        : new static($implementName);
+                    $interfaces[$implementName] = $interface;
+                }
+            }
+        }
+
+        return $interfaces;
+    }
+
+    private function recursiveCollect(\Closure $collector)
+    {
+        $result = array();
+
+        $parentClass = $this->getParentClass();
+        if ($parentClass) {
+            $collector($result, $parentClass);
+        }
+
+        $interfaces = $this->getDirectInterfaces();
+        foreach ($interfaces as $interface) {
+            $collector($result, $interface);
+        }
+
+        return $result;
     }
 }

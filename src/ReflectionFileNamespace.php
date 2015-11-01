@@ -23,9 +23,20 @@ class ReflectionFileNamespace implements \Reflector
      */
     private $namespaceNode;
 
-    public function __construct(Namespace_ $namespaceNode)
+    /**
+     * Name of the file
+     *
+     * @var string
+     */
+    private $fileName;
+
+    public function __construct($fileName, $namespaceName, Namespace_ $namespaceNode = null)
     {
+        if (!$namespaceNode) {
+            $namespaceNode = Engine::parseFileNamespace($fileName, $namespaceName);
+        }
         $this->namespaceNode = $namespaceNode;
+        $this->fileName      = $fileName;
     }
 
     /**
@@ -36,6 +47,26 @@ class ReflectionFileNamespace implements \Reflector
     public function getName()
     {
         return $this->namespaceNode->name->toString();
+    }
+
+    /**
+     * Returns the name of file
+     *
+     * @return string
+     */
+    public function getFileName()
+    {
+        return $this->fileName;
+    }
+
+    /**
+     * Returns the reflection of current file
+     *
+     * @return ReflectionFile
+     */
+    public function getFile()
+    {
+        return new ReflectionFile($this->fileName);
     }
 
     /**
@@ -153,7 +184,9 @@ class ReflectionFileNamespace implements \Reflector
         // classes can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof Class_) {
-                $classes[$namespaceLevelNode->name] = new ReflectionClass($namespaceLevelNode, $this);
+                $className = $namespaceLevelNode->name;
+
+                $classes[$className] = new ReflectionClass($className, $namespaceLevelNode);
             }
         }
 

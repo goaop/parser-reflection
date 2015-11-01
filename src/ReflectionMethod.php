@@ -8,18 +8,13 @@
 
 namespace ParserReflection;
 
+use ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
 
 class ReflectionMethod extends BaseReflectionMethod
 {
-
-    /**
-     * Method node
-     *
-     * @var ClassMethod
-     */
-    private $classMethodNode;
+    use ReflectionFunctionLikeTrait;
 
     /**
      * Is internal reflection is initialized or not
@@ -29,19 +24,27 @@ class ReflectionMethod extends BaseReflectionMethod
     private $isInitialized = false;
 
     /**
-     * @var array|ReflectionParameters[]
+     * Name of the class
+     *
+     * @var string
      */
-    protected $parameters;
+    private $className;
+
+    public function __construct($className, $methodName, ClassMethod $classMethodNode = null)
+    {
+        $this->className        = $className;
+        $this->functionLikeNode = $classMethodNode ?: Engine::parseClassMethod($className, $methodName);
+    }
 
     /**
-     * @var ReflectionClass
+     * Emulating original behaviour of reflection
      */
-    private $reflectionClass;
-
-    public function __construct(ClassMethod $classMethodNode, ReflectionClass $reflectionClass)
+    public function __debugInfo()
     {
-        $this->classMethodNode = $classMethodNode;
-        $this->reflectionClass = $reflectionClass;
+        return array(
+            'name'  => $this->functionLikeNode->name,
+            'class' => $this->className
+        );
     }
 
     /**
@@ -49,7 +52,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isPublic()
     {
-        return $this->classMethodNode->isPublic();
+        return $this->functionLikeNode->isPublic();
     }
 
     /**
@@ -57,7 +60,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isPrivate()
     {
-        return $this->classMethodNode->isPrivate();
+        return $this->functionLikeNode->isPrivate();
     }
 
     /**
@@ -65,7 +68,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isProtected()
     {
-        return $this->classMethodNode->isProtected();
+        return $this->functionLikeNode->isProtected();
     }
 
     /**
@@ -73,7 +76,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isAbstract()
     {
-        return $this->classMethodNode->isAbstract();
+        return $this->functionLikeNode->isAbstract();
     }
 
     /**
@@ -81,7 +84,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isFinal()
     {
-        return $this->classMethodNode->isFinal();
+        return $this->functionLikeNode->isFinal();
     }
 
     /**
@@ -89,7 +92,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isStatic()
     {
-        return $this->classMethodNode->isStatic();
+        return $this->functionLikeNode->isStatic();
     }
 
     /**
@@ -97,7 +100,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isConstructor()
     {
-        return $this->classMethodNode->name == '__construct';
+        return $this->functionLikeNode->name == '__construct';
     }
 
     /**
@@ -105,51 +108,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isDestructor()
     {
-        return $this->classMethodNode->name == '__destruct';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isUserDefined()
-    {
-        // always defined by user, because we parse the source code
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isInternal()
-    {
-        // never can be an internal method
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isClosure()
-    {
-        // method in the class can not be a closure at all
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isDeprecated()
-    {
-        // userland method can not be deprecated
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getShortName()
-    {
-        return $this->classMethodNode->name;
+        return $this->functionLikeNode->name == '__destruct';
     }
 
     /**
@@ -157,7 +116,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getName()
     {
-        return $this->classMethodNode->name;
+        return $this->functionLikeNode->name;
     }
 
     /**
@@ -193,7 +152,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getDeclaringClass()
     {
-        return $this->reflectionClass;
+        return new ReflectionClass($this->className);
     }
 
     /**
@@ -202,7 +161,7 @@ class ReflectionMethod extends BaseReflectionMethod
     public function initializeInternalReflection()
     {
         if (!$this->isInitialized) {
-            parent::__construct($this->reflectionClass->getName(), $this->getName());
+            parent::__construct($this->className, $this->getName());
             $this->isInitialized = true;
         }
     }

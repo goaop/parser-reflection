@@ -28,9 +28,9 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         )));
 
         $fileNode       = $parser->parse(file_get_contents($file));
-        $reflectionFile = new ReflectionFile($fileNode, $file);
+        $reflectionFile = new ReflectionFile($file, $fileNode);
 
-        $parsedClass = $reflectionFile->getNamespace($refClass->getNamespaceName())->getClass($refClass->getShortName());
+        $parsedClass = $reflectionFile->getFileNamespace($refClass->getNamespaceName())->getClass($refClass->getShortName());
         $this->parsedRefClass = $parsedClass;
     }
 
@@ -54,9 +54,11 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
             $methodName   = $refMethod->getName();
             $parsedMethod = $this->parsedRefClass->getMethod($methodName);
             foreach ($allGetters as $getterName) {
+                $expectedValue = $refMethod->$getterName();
+                $actualValue   = $parsedMethod->$getterName();
                 $this->assertEquals(
-                    $refMethod->$getterName(),
-                    $parsedMethod->$getterName(),
+                    $expectedValue,
+                    $actualValue,
                     "$getterName() for method $methodName should be equal"
                 );
             }

@@ -10,6 +10,7 @@ namespace ParserReflection;
 
 
 use PhpParser\Node;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 
 class ReflectionFile implements \Reflector
@@ -31,10 +32,10 @@ class ReflectionFile implements \Reflector
      */
     private $topLevelNodes;
 
-    public function __construct(array $topLevelNodes, $fileName)
+    public function __construct($fileName, $topLevelNodes = null)
     {
-        $this->topLevelNodes = $topLevelNodes;
         $this->fileName      = $fileName;
+        $this->topLevelNodes = $topLevelNodes ?: Engine::parseFile($fileName);
     }
 
     public function getName()
@@ -47,7 +48,7 @@ class ReflectionFile implements \Reflector
      *
      * @return array|ReflectionFileNamespace[]
      */
-    public function getNamespaces()
+    public function getFileNamespaces()
     {
         if (!isset($this->fileNamespaces)) {
             $this->fileNamespaces = $this->findFileNamespaces();
@@ -63,9 +64,9 @@ class ReflectionFile implements \Reflector
      *
      * @return bool
      */
-    public function hasNamespace($namespaceName)
+    public function hasFileNamespace($namespaceName)
     {
-        $namespaces = $this->getNamespaces();
+        $namespaces = $this->getFileNamespaces();
 
         return isset($namespaces[$namespaceName]);
     }
@@ -77,9 +78,9 @@ class ReflectionFile implements \Reflector
      *
      * @return bool|ReflectionFileNamespace
      */
-    public function getNamespace($namespaceName)
+    public function getFileNamespace($namespaceName)
     {
-        if ($this->hasNamespace($namespaceName)) {
+        if ($this->hasFileNamespace($namespaceName)) {
             return $this->fileNamespaces[$namespaceName];
         }
 
@@ -120,8 +121,20 @@ class ReflectionFile implements \Reflector
         // namespaces can be only top-level nodes, so we can scan them directly
         foreach ($this->topLevelNodes as $topLevelNode) {
             if ($topLevelNode instanceof Namespace_) {
-                $namespaces[$topLevelNode->name->toString()] = new ReflectionFileNamespace($topLevelNode);
+                $namespaceName = $topLevelNode->name->toString();
+
+                $namespaces[$namespaceName] = new ReflectionFileNamespace(
+                    $this->fileName,
+                    $namespaceName,
+                    $topLevelNode
+                );
             }
+        }
+
+        if (!$namespaces) {
+            // if we don't have a namespaces at all, this is global namespace
+            $globalNamespaceNode = new Namespace_(new FullyQualified(''), $this->topLevelNodes);
+            $namespaces['\\']    = new ReflectionFileNamespace($this->fileName, '\\', $globalNamespaceNode);
         }
 
         return $namespaces;
