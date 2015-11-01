@@ -73,4 +73,22 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($refMethod->getName(), $parsedMethod->getName());
         $this->assertEquals($refMethod->getShortName(), $parsedMethod->getShortName());
     }
+
+    public function testCoverAllMethods()
+    {
+        $allInternalMethods = get_class_methods(\ReflectionMethod::class);
+        $allMissedMethods   = [];
+
+        foreach ($allInternalMethods as $internalMethodName) {
+            $refMethod    = new \ReflectionMethod(ReflectionMethod::class, $internalMethodName);
+            $definerClass = $refMethod->getDeclaringClass()->getName();
+            if (strpos($definerClass, 'ParserReflection') !== 0) {
+                $allMissedMethods[] = $internalMethodName;
+            }
+        }
+
+        if ($allMissedMethods) {
+            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+        }
+    }
 }
