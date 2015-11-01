@@ -144,4 +144,12 @@ trait ReflectionFunctionLikeTrait
 
         return false;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function returnsReference()
+    {
+        return $this->functionLikeNode->returnsByRef();
+    }
 }
