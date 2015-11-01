@@ -8,6 +8,7 @@
 
 namespace ParserReflection;
 
+use ParserReflection\Traits\InitializationTrait;
 use ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
@@ -15,15 +16,7 @@ use ReflectionClass as InternalReflectionClass;
 
 class ReflectionClass extends InternalReflectionClass
 {
-    use ReflectionClassLikeTrait;
-
-    /**
-     * Is internal reflection is initialized or not
-     *
-     * @var boolean
-     */
-    private $isInitialized = false;
-
+    use ReflectionClassLikeTrait, InitializationTrait;
 
     public function __construct($argument, ClassLike $classLikeNode = null)
     {
@@ -36,23 +29,12 @@ class ReflectionClass extends InternalReflectionClass
     }
 
     /**
-     * Initializes internal reflection for calling misc runtime methods
-     */
-    public function initializeInternalReflection()
-    {
-        if (!$this->isInitialized) {
-            parent::__construct($this->getName());
-            $this->isInitialized = true;
-        }
-    }
-
-    /**
-     * Returns the status of initialization status for internal object
+     * Implementation of internal reflection initialization
      *
-     * @return bool
+     * @return void
      */
-    public function isInitialized()
+    protected function __initialize()
     {
-        return $this->isInitialized;
+        parent::__construct($this->getName());
     }
 }
