@@ -44,7 +44,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
         foreach ($refClass->getMethods() as $refMethod) {
             // let's filter only all isXXX() methods from the ReflectionMethod class
-            if (substr($refMethod->getName(), 0, 2) == 'is' && $refMethod->getNumberOfRequiredParameters() == 0) {
+            $notRequiresParams = $refMethod->getNumberOfRequiredParameters() == 0;
+            if (substr($refMethod->getName(), 0, 2) == 'is' && $notRequiresParams && $refMethod->isPublic()) {
                 $allGetters[] = $refMethod->getName();
             }
         }
