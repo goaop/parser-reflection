@@ -411,6 +411,16 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
+    public function implementsInterface($interfaceName)
+    {
+        $allInterfaces = $this->getInterfaces();
+
+        return isset($allInterfaces[$interfaceName]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isInterface()
     {
         return ($this->classLikeNode instanceof Interface_);
