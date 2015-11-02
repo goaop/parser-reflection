@@ -251,6 +251,19 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
+    public function getConstructor()
+    {
+        $constructor = $this->getMethod('__construct');
+        if (!$constructor) {
+            return null;
+        }
+
+        return $constructor;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isCloneable()
     {
         if ($this->isInterface() || $this->isAbstract()) {

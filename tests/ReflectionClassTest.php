@@ -6,32 +6,26 @@ use PhpParser\Parser;
 
 class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_CLASS = '\ParserReflection\Stub\AbstractClassWithMethods';
+    const STUB_FILE = './Stub/FileWithClasses.php';
 
     /**
-     * @var \ReflectionClass
+     * @var ReflectionFileNamespace
      */
-    protected $originalRefClass;
-
-    /**
-     * @var ReflectionClass
-     */
-    protected $parsedRefClass;
+    protected $parsedRefFileNamespace;
 
     protected function setUp()
     {
-        $this->originalRefClass = $refClass = new \ReflectionClass(self::STUB_CLASS);
-
-        $file   = $refClass->getFileName();
         $parser = new Parser(new Lexer(array(
             'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
         )));
+        $fileName       = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
+        $fileNode       = $parser->parse(file_get_contents($fileName));
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
 
-        $fileNode       = $parser->parse(file_get_contents($file));
-        $reflectionFile = new ReflectionFile($file, $fileNode);
+        $parsedFileNamespace          = $reflectionFile->getFileNamespace('ParserReflection\Stub');
+        $this->parsedRefFileNamespace = $parsedFileNamespace;
 
-        $parsedClass = $reflectionFile->getFileNamespace($refClass->getNamespaceName())->getClass($refClass->getShortName());
-        $this->parsedRefClass = $parsedClass;
+        include_once $fileName;
     }
 
     /**
@@ -50,14 +44,17 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             }
         }
 
-        foreach ($allGetters as $getterName) {
-            $expectedValue = $this->originalRefClass->$getterName();
-            $actualValue   = $this->parsedRefClass->$getterName();
-            $this->assertEquals(
-                $expectedValue,
-                $actualValue,
-                "$getterName() for class should be equal"
-            );
+        foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
+            $originalRefClass = new \ReflectionClass($parsedRefClass->getName());
+            foreach ($allGetters as $getterName) {
+                $expectedValue = $originalRefClass->$getterName();
+                $actualValue   = $parsedRefClass->$getterName();
+                $this->assertEquals(
+                    $expectedValue,
+                    $actualValue,
+                    "$getterName() for class should be equal"
+                );
+            }
         }
     }
 
