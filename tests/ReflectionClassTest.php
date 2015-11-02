@@ -10,7 +10,7 @@ use PhpParser\Parser;
 
 class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_FILE = './Stub/FileWithClasses.php';
+    const STUB_FILE = '/Stub/FileWithClasses.php';
 
     /**
      * @var ReflectionFileNamespace
