@@ -10,7 +10,6 @@
 
 namespace ParserReflection;
 
-use ParserReflection\Traits\InitializationTrait;
 use ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
@@ -18,7 +17,7 @@ use ReflectionObject as InternalReflectionObject;
 
 class ReflectionObject extends InternalReflectionObject
 {
-    use ReflectionClassLikeTrait, InitializationTrait;
+    use ReflectionClassLikeTrait;
 
     /**
      * Instance of object

@@ -8,14 +8,13 @@
 
 namespace ParserReflection;
 
-use ParserReflection\Traits\InitializationTrait;
 use ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
 
 class ReflectionMethod extends BaseReflectionMethod
 {
-    use ReflectionFunctionLikeTrait, InitializationTrait;
+    use ReflectionFunctionLikeTrait;
 
     /**
      * Name of the class
@@ -149,6 +148,65 @@ class ReflectionMethod extends BaseReflectionMethod
     {
         return new ReflectionClass($this->className);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getClosure($object)
+    {
+        $this->initializeInternalReflection();
+
+        return parent::getClosure($object);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAccessible($accessible)
+    {
+        $this->initializeInternalReflection();
+
+        parent::setAccessible($accessible);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function invoke($object, $args = null)
+    {
+        $this->initializeInternalReflection();
+
+        return call_user_func_array('parent::invoke', func_get_args());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function invokeArgs($object, array $args)
+    {
+        $this->initializeInternalReflection();
+
+        return parent::invokeArgs($object, $args);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPrototype()
+    {
+        $parent = $this->getDeclaringClass()->getParentClass();
+        if (!$parent) {
+            throw new ReflectionException("No prototype");
+        }
+
+        $prototypeMethod = $parent->getMethod($this->getName());
+        if (!$prototypeMethod) {
+            throw new ReflectionException("No prototype");
+        }
+
+        return $prototypeMethod;
+    }
+
 
     /**
      * Implementation of internal reflection initialization

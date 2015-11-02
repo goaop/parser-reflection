@@ -72,7 +72,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
     /**
      * Tests that names are correct for reflection data
      */
-    public function testGetNames()
+    public function testNameGetters()
     {
         $allNameGetters = ['getName', 'getNamespaceName', 'getShortName', 'inNamespace'];
         foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {

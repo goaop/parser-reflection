@@ -8,7 +8,6 @@
 
 namespace ParserReflection;
 
-use ParserReflection\Traits\InitializationTrait;
 use ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
@@ -16,7 +15,7 @@ use ReflectionClass as InternalReflectionClass;
 
 class ReflectionClass extends InternalReflectionClass
 {
-    use ReflectionClassLikeTrait, InitializationTrait;
+    use ReflectionClassLikeTrait;
 
     public function __construct($argument, ClassLike $classLikeNode = null)
     {

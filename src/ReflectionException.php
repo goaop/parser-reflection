@@ -2,8 +2,9 @@
 
 namespace ParserReflection;
 
+use ReflectionException as BaseException;
 
-class ReflectionException extends \RuntimeException
+class ReflectionException extends BaseException
 {
 
 }

@@ -28,6 +28,8 @@ use PhpParser\Node\Stmt\Trait_;
  */
 trait ReflectionClassLikeTrait
 {
+    use InitializationTrait;
+
     /**
      * @var ClassLike
      */

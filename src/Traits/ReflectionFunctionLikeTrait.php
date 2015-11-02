@@ -11,16 +11,21 @@
 namespace ParserReflection\Traits;
 
 
+use ParserReflection\NodeVisitor\StaticVariablesCollector;
+use ParserReflection\ReflectionException;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\NodeTraverser;
 
 /**
  * General trait for all function-like reflections
  */
 trait ReflectionFunctionLikeTrait
 {
+    use InitializationTrait;
+
     /**
      * @var FunctionLike
      */
@@ -179,5 +184,39 @@ trait ReflectionFunctionLikeTrait
     public function returnsReference()
     {
         return $this->functionLikeNode->returnsByRef();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getClosureThis()
+    {
+        $this->initializeInternalReflection();
+
+        return forward_static_call('parent::getClosureThis');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getClosureScopeClass()
+    {
+        $this->initializeInternalReflection();
+
+        return forward_static_call('parent::getClosureScopeClass');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getStaticVariables()
+    {
+        $nodeTraverser      = new NodeTraverser();
+        $variablesCollector = new StaticVariablesCollector();
+        $nodeTraverser->addVisitor($variablesCollector);
+
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts());
+
+        return $variablesCollector->getStaticVariables();
     }
 }
