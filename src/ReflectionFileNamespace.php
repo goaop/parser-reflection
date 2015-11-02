@@ -179,12 +179,13 @@ class ReflectionFileNamespace implements \Reflector
      */
     private function findClasses()
     {
-        $classes = array();
-
+        $classes       = array();
+        $namespaceName = $this->getName();
         // classes can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof Class_) {
-                $className = $namespaceLevelNode->name;
+                $classShortName = $namespaceLevelNode->name;
+                $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 
                 $classes[$className] = new ReflectionClass($className, $namespaceLevelNode);
             }

@@ -30,7 +30,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         $fileNode       = $parser->parse(file_get_contents($file));
         $reflectionFile = new ReflectionFile($file, $fileNode);
 
-        $parsedClass = $reflectionFile->getFileNamespace($refClass->getNamespaceName())->getClass($refClass->getShortName());
+        $parsedClass = $reflectionFile->getFileNamespace($refClass->getNamespaceName())->getClass($refClass->getName());
         $this->parsedRefClass = $parsedClass;
     }
 
