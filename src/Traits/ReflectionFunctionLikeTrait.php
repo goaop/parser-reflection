@@ -27,13 +27,41 @@ trait ReflectionFunctionLikeTrait
     protected $functionLikeNode;
 
     /**
+     * Namespace name
+     *
+     * @var string
+     */
+    protected $namespaceName = '';
+
+    /**
      * @var array|ReflectionParameter
      */
     protected $parameters = [];
 
+    /**
+     * {@inheritDoc}
+     */
+    public function getNamespaceName()
+    {
+        return $this->namespaceName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function inNamespace()
+    {
+        return !empty($this->namespaceName);
+    }
+
     public function getDocComment()
     {
         return $this->functionLikeNode->getDocComment();
+    }
+
+    public function getStartLine()
+    {
+        return $this->functionLikeNode->getAttribute('startLine');
     }
 
     public function getEndLine()

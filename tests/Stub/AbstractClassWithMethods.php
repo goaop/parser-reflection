@@ -13,4 +13,12 @@ abstract class AbstractClassWithMethods
     static function staticFunc(){}
     abstract function abstractFunc();
     final function finalFunc(){}
+
+    /**
+     * @return string
+     */
+    public function funcWithDocAndBody()
+    {
+        return 'hello';
+    }
 }
