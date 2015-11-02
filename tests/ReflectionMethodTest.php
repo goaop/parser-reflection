@@ -101,6 +101,17 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testGetStaticVariables()
+    {
+        $refMethod    = $this->originalRefClass->getMethod('funcWithDocAndBody');
+        $parsedMethod = $this->parsedRefClass->getMethod('funcWithDocAndBody');
+
+        $originalVariables = $refMethod->getStaticVariables();
+        $parsedVariables   = $parsedMethod->getStaticVariables();
+
+        $this->assertEquals($originalVariables, $parsedVariables);
+    }
+
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(\ReflectionMethod::class);

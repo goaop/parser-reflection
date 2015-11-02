@@ -19,6 +19,8 @@ abstract class AbstractClassWithMethods
      */
     public function funcWithDocAndBody()
     {
+        static $a =5, $test = '1234';
+
         return 'hello';
     }
 }

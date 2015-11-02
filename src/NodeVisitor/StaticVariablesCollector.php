@@ -28,8 +28,14 @@ class StaticVariablesCollector extends NodeVisitorAbstract
         if ($node instanceof Node\Stmt\Static_) {
             $staticVariables = $node->vars;
             foreach ($staticVariables as $staticVariable) {
+                $expr  = $staticVariable->default;
+                $value = null;
                 // TODO: Add code evaluator for the expression
-                $this->staticVariables[$staticVariable->name] = $staticVariable->default;
+                if ($expr instanceof Node\Scalar && isset($expr->value)) {
+                    $value = $expr->value;
+                }
+
+                $this->staticVariables[$staticVariable->name] = $value;
             }
         }
     }
