@@ -1,7 +1,11 @@
 <?php
 namespace ParserReflection;
 
+use ParserReflection\Stub\ImplicitAbstractClass;
+use ParserReflection\Stub\SimpleAbstractInheritance;
 use PhpParser\Lexer;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 
 class ReflectionClassTest extends \PHPUnit_Framework_TestCase
@@ -18,8 +22,15 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
         $parser = new Parser(new Lexer(array(
             'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
         )));
+        $traverser     = new NodeTraverser();
+        $traverser->addVisitor(new NameResolver());
+
         $fileName       = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
         $fileNode       = $parser->parse(file_get_contents($fileName));
+
+        // traverse
+        $fileNode = $traverser->traverse($fileNode);
+
         $reflectionFile = new ReflectionFile($fileName, $fileNode);
 
         $parsedFileNamespace          = $reflectionFile->getFileNamespace('ParserReflection\Stub');
@@ -57,6 +68,48 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             }
         }
     }
+
+    /**
+     * Tests that names are correct for reflection data
+     */
+    public function testGetNames()
+    {
+        $allNameGetters = ['getName', 'getNamespaceName', 'getShortName', 'inNamespace'];
+        foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
+            $originalRefClass = new \ReflectionClass($parsedRefClass->getName());
+            foreach ($allNameGetters as $getterName) {
+                $expectedValue = $originalRefClass->$getterName();
+                $actualValue   = $parsedRefClass->$getterName();
+                $this->assertEquals(
+                    $expectedValue,
+                    $actualValue,
+                    "$getterName() for class should be equal"
+                );
+            }
+        }
+    }
+
+    public function testDirectMethods()
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ImplicitAbstractClass::class);
+        $originalRefClass = new \ReflectionClass(ImplicitAbstractClass::class);
+
+        $this->assertEquals($originalRefClass->hasMethod('test'), $parsedRefClass->hasMethod('test'));
+        $this->assertCount(count($originalRefClass->getMethods()), $parsedRefClass->getMethods());
+
+        $originalMethodName = $originalRefClass->getMethod('test')->getName();
+        $parsedMethodName   = $parsedRefClass->getMethod('test')->getName();
+        $this->assertSame($originalMethodName, $parsedMethodName);
+    }
+
+    public function testInheritedMethods()
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(SimpleAbstractInheritance::class);
+        $originalRefClass = new \ReflectionClass(SimpleAbstractInheritance::class);
+
+        $this->assertEquals($originalRefClass->hasMethod('test'), $parsedRefClass->hasMethod('test'));
+    }
+
 
     public function testCoverAllMethods()
     {

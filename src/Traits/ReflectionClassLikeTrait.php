@@ -45,7 +45,7 @@ trait ReflectionClassLikeTrait
      *
      * @var string
      */
-    protected $namespaceName;
+    protected $namespaceName = '';
 
     /**
      * @var array|ReflectionMethod
@@ -122,6 +122,22 @@ trait ReflectionClassLikeTrait
     public function getFileName()
     {
         return ReflectionEngine::locateClassFile($this->getName());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getNamespaceName()
+    {
+        return $this->namespaceName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function inNamespace()
+    {
+        return !empty($this->namespaceName);
     }
 
     /**
