@@ -386,17 +386,18 @@ trait ReflectionClassLikeTrait
      *
      * @return ReflectionMethod[]|array
      */
-    public function getMethods(...$args)
+    public function getMethods($filter = null)
     {
         if (!isset($this->methods)) {
             $directMethods = $this->getDirectMethods();
-            $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) use ($args) {
-                $result = array_merge($result, $instance->getMethods(...$args));
+            $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+                $result = array_merge($result, $instance->getMethods());
             });
             $methods = array_merge($directMethods, $parentMethods);
 
             $this->methods = $methods;
         }
+        // TODO: Implement filtration of methods
 
         return $this->methods;
     }
