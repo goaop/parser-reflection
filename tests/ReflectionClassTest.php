@@ -19,9 +19,9 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $parser = new Parser(new Lexer(array(
+        $parser = new Parser(new Lexer(['usedAttributes' => [
             'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-        )));
+        ]]));
         $traverser     = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
 
