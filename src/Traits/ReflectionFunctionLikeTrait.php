@@ -222,7 +222,8 @@ trait ReflectionFunctionLikeTrait
         $variablesCollector = new StaticVariablesCollector();
         $nodeTraverser->addVisitor($variablesCollector);
 
-        $nodeTraverser->traverse($this->functionLikeNode->getStmts());
+        /* @see https://github.com/nikic/PHP-Parser/issues/235 */
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
 
         return $variablesCollector->getStaticVariables();
     }
