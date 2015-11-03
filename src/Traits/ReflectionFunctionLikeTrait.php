@@ -11,6 +11,7 @@
 namespace ParserReflection\Traits;
 
 
+use ParserReflection\NodeVisitor\GeneratorDetector;
 use ParserReflection\NodeVisitor\StaticVariablesCollector;
 use ParserReflection\ReflectionException;
 use PhpParser\Node\Expr\Closure;
@@ -139,8 +140,14 @@ trait ReflectionFunctionLikeTrait
      */
     public function isGenerator()
     {
-        // TODO: check for presence of "yield" or "yield from"
-        return false;
+        $nodeTraverser = new NodeTraverser();
+        $nodeDetector  = new GeneratorDetector();
+        $nodeTraverser->addVisitor($nodeDetector);
+
+        /* @see https://github.com/nikic/PHP-Parser/issues/235 */
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
+
+        return $nodeDetector->isGenerator();
     }
 
     /**

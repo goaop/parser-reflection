@@ -23,4 +23,27 @@ abstract class AbstractClassWithMethods
 
         return 'hello';
     }
+
+    /**
+     * @return \Generator
+     */
+    public function generatorYieldFunc()
+    {
+        $index = 0;
+        while ($index < 1e3) {
+            yield $index;
+        }
+    }
+
+    /**
+     * @return int
+     */
+    public function noGeneratorFunc()
+    {
+        $gen = function () {
+            yield 10;
+        };
+
+        return 10;
+    }
 }
