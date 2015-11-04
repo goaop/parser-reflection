@@ -13,6 +13,10 @@ final class FinalClass {}
 
 interface SimpleInterface {}
 
+interface InterfaceWithMethod {
+    function foo();
+}
+
 trait SimpleTrait
 {
     function foo() { return __CLASS__; }
@@ -25,6 +29,11 @@ abstract class SimpleAbstractInheritance extends ImplicitAbstractClass {}
 class ClassWithInterface implements SimpleInterface {}
 
 class ClassWithTrait
+{
+    use SimpleTrait;
+}
+
+class ClassWithTraitAndInterface implements InterfaceWithMethod
 {
     use SimpleTrait;
 }
