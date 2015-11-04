@@ -103,6 +103,11 @@ trait ReflectionClassLikeTrait
         return $this->classLikeNode->getDocComment();
     }
 
+    public function getStartLine()
+    {
+        return $this->classLikeNode->getAttribute('startLine');
+    }
+
     public function getEndLine()
     {
         return $this->classLikeNode->getAttribute('endLine');
@@ -306,6 +311,14 @@ trait ReflectionClassLikeTrait
             return true;
         }
 
+        return false;
+    }
+
+    /**
+     * Currently, anonymous classes aren't supported for parsed reflection
+     */
+    public function isAnonymous()
+    {
         return false;
     }
 
