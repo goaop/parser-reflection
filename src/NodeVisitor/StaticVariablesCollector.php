@@ -11,6 +11,7 @@
 namespace ParserReflection\NodeVisitor;
 
 use PhpParser\Node;
+use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -25,6 +26,11 @@ class StaticVariablesCollector extends NodeVisitorAbstract
      */
     public function enterNode(Node $node)
     {
+        // There may be internal closures, we do not need to look at them
+        if ($node instanceof Node\Expr\Closure) {
+            return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+        }
+
         if ($node instanceof Node\Stmt\Static_) {
             $staticVariables = $node->vars;
             foreach ($staticVariables as $staticVariable) {
