@@ -121,7 +121,7 @@ class ReflectionFile implements \Reflector
         // namespaces can be only top-level nodes, so we can scan them directly
         foreach ($this->topLevelNodes as $topLevelNode) {
             if ($topLevelNode instanceof Namespace_) {
-                $namespaceName = $topLevelNode->name->toString();
+                $namespaceName = $topLevelNode->name ? $topLevelNode->name->toString() : '\\';
 
                 $namespaces[$namespaceName] = new ReflectionFileNamespace(
                     $this->fileName,

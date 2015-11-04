@@ -176,6 +176,20 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
+    public function getName()
+    {
+        if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
+            $functionName = $this->functionLikeNode->name;
+
+            return $this->namespaceName ? $this->namespaceName . '\\' . $functionName : $functionName;
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getShortName()
     {
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {

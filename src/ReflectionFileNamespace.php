@@ -10,11 +10,13 @@ namespace ParserReflection;
 
 
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 
 class ReflectionFileNamespace implements \Reflector
 {
     protected $fileClasses;
+    protected $fileFunctions;
 
     /**
      * Namespace node
@@ -46,7 +48,9 @@ class ReflectionFileNamespace implements \Reflector
      */
     public function getName()
     {
-        return $this->namespaceNode->name->toString();
+        $nameNode = $this->namespaceNode->name;
+
+        return $nameNode ? $nameNode->toString() : '';
     }
 
     /**
@@ -114,7 +118,7 @@ class ReflectionFileNamespace implements \Reflector
     public function getClasses()
     {
         if (!isset($this->fileClasses)) {
-            $this->fileClasses = $this->findClasses($this->namespaceNode);
+            $this->fileClasses = $this->findClasses();
         }
 
         return $this->fileClasses;
@@ -145,6 +149,50 @@ class ReflectionFileNamespace implements \Reflector
     {
         if ($this->hasClass($className)) {
             return $this->fileClasses[$className];
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets list of functions in the namespace
+     *
+     * @return ReflectionFunction[]|array
+     */
+    public function getFunctions()
+    {
+        if (!isset($this->fileFunctions)) {
+            $this->fileFunctions = $this->findFunctions();
+        }
+
+        return $this->fileFunctions;
+    }
+
+    /**
+     * Checks if the given function is present in this filenamespace
+     *
+     * @param string $functionName
+     *
+     * @return bool
+     */
+    public function hasFunction($functionName)
+    {
+        $functions = $this->getFunctions();
+
+        return isset($functions[$functionName]);
+    }
+
+    /**
+     * Returns the concrete function from the file namespace or false if there is no function
+     *
+     * @param string $functionName
+     *
+     * @return bool|ReflectionFunction
+     */
+    public function getFunction($functionName)
+    {
+        if ($this->hasFunction($functionName)) {
+            return $this->fileFunctions[$functionName];
         }
 
         return false;
@@ -192,5 +240,28 @@ class ReflectionFileNamespace implements \Reflector
         }
 
         return $classes;
+    }
+
+    /**
+     * Searches for functions in the given AST
+     *
+     * @return array
+     */
+    private function findFunctions()
+    {
+        $functions     = array();
+        $namespaceName = $this->getName();
+
+        // functions can be only top-level nodes in the namespace, so we can scan them directly
+        foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
+            if ($namespaceLevelNode instanceof Function_) {
+                $funcShortName = $namespaceLevelNode->name;
+                $functionName  = $namespaceName ? $namespaceName .'\\' . $funcShortName : $funcShortName;
+
+                $functions[$functionName] = new ReflectionFunction($functionName, $namespaceLevelNode);
+            }
+        }
+
+        return $functions;
     }
 }

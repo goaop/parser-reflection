@@ -108,14 +108,6 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getName()
-    {
-        return $this->functionLikeNode->name;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getModifiers()
     {
         $modifiers = 0;
