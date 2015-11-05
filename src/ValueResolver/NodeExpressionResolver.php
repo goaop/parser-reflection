@@ -108,6 +108,9 @@ class NodeExpressionResolver
             if ($this->context instanceof \ReflectionClass) {
                 return $this->context->getName();
             }
+            if (method_exists($this->context, 'getDeclaringClass')) {
+                return $this->context->getDeclaringClass()->getName();
+            }
         }
 
         if ($node instanceof MagicConst\Dir) {
