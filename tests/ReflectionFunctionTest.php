@@ -1,10 +1,7 @@
 <?php
 namespace ParserReflection;
 
-use PhpParser\Lexer;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
+use ParserReflection\Locator\ComposerLocator;
 
 class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 {
@@ -17,17 +14,12 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $parser = new Parser(new Lexer(['usedAttributes' => [
-            'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-        ]]));
-        $traverser = new NodeTraverser();
-        $traverser->addVisitor(new NameResolver());
+        ReflectionEngine::init(new ComposerLocator());
 
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
-        $fileNode = $parser->parse(file_get_contents($fileName));
-        $fileNode = $traverser->traverse($fileNode);
+        $fileNode = ReflectionEngine::parseFile($fileName);
 
-        $reflectionFile      = new ReflectionFile($fileName, $fileNode);
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
         $this->parsedRefFile = $reflectionFile;
 
         include_once $fileName;

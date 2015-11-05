@@ -1,8 +1,8 @@
 <?php
 namespace ParserReflection;
 
+use ParserReflection\Locator\ComposerLocator;
 use PhpParser\Lexer;
-use PhpParser\Parser;
 
 class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
 {
@@ -22,13 +22,11 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
     {
         $this->originalRefClass = $refClass = new \ReflectionClass(self::STUB_CLASS);
 
-        $file   = $refClass->getFileName();
-        $parser = new Parser(new Lexer(['usedAttributes' => [
-            'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-        ]]));
+        $fileName = $refClass->getFileName();
+        ReflectionEngine::init(new ComposerLocator());
 
-        $fileNode       = $parser->parse(file_get_contents($file));
-        $reflectionFile = new ReflectionFile($file, $fileNode);
+        $fileNode       = ReflectionEngine::parseFile($fileName);
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
 
         $parsedClass = $reflectionFile->getFileNamespace($refClass->getNamespaceName())->getClass($refClass->getName());
         $this->parsedRefClass = $parsedClass;
