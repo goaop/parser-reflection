@@ -140,7 +140,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isGenerator()
     {
-        $nodeTraverser = new NodeTraverser();
+        $nodeTraverser = new NodeTraverser(false);
         $nodeDetector  = new GeneratorDetector();
         $nodeTraverser->addVisitor($nodeDetector);
 
@@ -232,8 +232,8 @@ trait ReflectionFunctionLikeTrait
      */
     public function getStaticVariables()
     {
-        $nodeTraverser      = new NodeTraverser();
-        $variablesCollector = new StaticVariablesCollector();
+        $nodeTraverser      = new NodeTraverser(false);
+        $variablesCollector = new StaticVariablesCollector($this);
         $nodeTraverser->addVisitor($variablesCollector);
 
         /* @see https://github.com/nikic/PHP-Parser/issues/235 */

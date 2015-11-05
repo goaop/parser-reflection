@@ -10,6 +10,7 @@
 
 namespace ParserReflection\NodeVisitor;
 
+use ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
@@ -22,6 +23,23 @@ class StaticVariablesCollector extends NodeVisitorAbstract
     private $staticVariables = [];
 
     /**
+     * Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     *
+     * @var mixed
+     */
+    private $context;
+
+    /**
+     * Default constructor
+     *
+     * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     */
+    public function __construct($context)
+    {
+        $this->context = $context;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function enterNode(Node $node)
@@ -32,18 +50,23 @@ class StaticVariablesCollector extends NodeVisitorAbstract
         }
 
         if ($node instanceof Node\Stmt\Static_) {
-            $staticVariables = $node->vars;
+            $expressionSolver = new NodeExpressionResolver($this->context);
+            $staticVariables  = $node->vars;
             foreach ($staticVariables as $staticVariable) {
-                $expr  = $staticVariable->default;
-                $value = null;
-                // TODO: Add code evaluator for the expression
-                if ($expr instanceof Node\Scalar && isset($expr->value)) {
-                    $value = $expr->value;
+                $expr = $staticVariable->default;
+                if ($expr) {
+                    $expressionSolver->process($expr);
+                    $value = $expressionSolver->getValue();
+                } else {
+                    // TODO: emit warning
+                    $value = null;
                 }
 
                 $this->staticVariables[$staticVariable->name] = $value;
             }
         }
+
+        return null;
     }
 
     /**
