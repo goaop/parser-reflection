@@ -307,7 +307,7 @@ trait ReflectionClassLikeTrait
     {
         if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
             return true;
-        } elseif ($this->isInterface() && !empty($this->methods)) {
+        } elseif ($this->isInterface() && !empty($this->getMethods())) {
             return true;
         }
 
