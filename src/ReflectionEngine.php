@@ -46,9 +46,9 @@ class ReflectionEngine
 
     public static function init(LocatorInterface $locator)
     {
-        self::$parser = new Parser(new Lexer(array(
+        self::$parser = new Parser(new Lexer(['usedAttributes' => [
             'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-        )));
+        ]]));
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
@@ -164,7 +164,16 @@ class ReflectionEngine
      */
     public static function locateClassFile($fullClassName)
     {
-        $classFileName = self::$locator->locateClass($fullClassName);
+        if (class_exists($fullClassName, false)
+            || interface_exists($fullClassName, false)
+            || trait_exists($fullClassName, false)
+        ) {
+            $refClass      = new \ReflectionClass($fullClassName);
+            $classFileName = $refClass->getFileName();
+        } else {
+            $classFileName = self::$locator->locateClass($fullClassName);
+        }
+
         if (!$classFileName) {
             throw new \InvalidArgumentException("Class $fullClassName was not found by locator");
         }
