@@ -235,6 +235,7 @@ class ReflectionFileNamespace implements \Reflector
                 $classShortName = $namespaceLevelNode->name;
                 $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 
+                $namespaceLevelNode->setAttribute('fileName', $this->fileName);
                 $classes[$className] = new ReflectionClass($className, $namespaceLevelNode);
             }
         }
@@ -258,6 +259,7 @@ class ReflectionFileNamespace implements \Reflector
                 $funcShortName = $namespaceLevelNode->name;
                 $functionName  = $namespaceName ? $namespaceName .'\\' . $funcShortName : $funcShortName;
 
+                $namespaceLevelNode->setAttribute('fileName', $this->fileName);
                 $functions[$functionName] = new ReflectionFunction($functionName, $namespaceLevelNode);
             }
         }

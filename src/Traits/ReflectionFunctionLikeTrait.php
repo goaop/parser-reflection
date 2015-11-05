@@ -75,6 +75,11 @@ trait ReflectionFunctionLikeTrait
         return $this->functionLikeNode->getAttribute('endLine');
     }
 
+    public function getFileName()
+    {
+        return $this->functionLikeNode->getAttribute('fileName');
+    }
+
     public function getExtension()
     {
         return null;

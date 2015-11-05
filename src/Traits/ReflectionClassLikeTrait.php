@@ -113,6 +113,11 @@ trait ReflectionClassLikeTrait
         return $this->classLikeNode->getAttribute('endLine');
     }
 
+    public function getFileName()
+    {
+        return $this->classLikeNode->getAttribute('fileName');
+    }
+
     public function getExtension()
     {
         return null;
@@ -121,14 +126,6 @@ trait ReflectionClassLikeTrait
     public function getExtensionName()
     {
         return '';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getFileName()
-    {
-        return ReflectionEngine::locateClassFile($this->getName());
     }
 
     /**
@@ -507,6 +504,8 @@ trait ReflectionClassLikeTrait
 
         foreach ($this->classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof ClassMethod) {
+                $classLevelNode->setAttribute('fileName', $this->getFileName());
+
                 $methods[] = new ReflectionMethod(
                     $this->getName(),
                     $classLevelNode->name,
