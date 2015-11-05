@@ -37,3 +37,14 @@ class ClassWithTraitAndInterface implements InterfaceWithMethod
 {
     use SimpleTrait;
 }
+
+class NoCloneable
+{
+    private function __clone() {}
+}
+
+interface AbstractInterface
+{
+    public function foo();
+    public function bar();
+}
