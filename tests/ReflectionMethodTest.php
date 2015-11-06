@@ -37,10 +37,15 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
-            'isClosure', 'isDeprecated', 'isGenerator', 'isInternal', 'isUserDefined',
-            'isVariadic', 'isAbstract', 'isConstructor', 'isDestructor', 'isFinal',
+            'isClosure', 'isDeprecated', 'isInternal', 'isUserDefined',
+            'isAbstract', 'isConstructor', 'isDestructor', 'isFinal',
             'isPrivate', 'isProtected', 'isPublic', 'isStatic'
         ];
+
+        if (PHP_VERSION_ID >= 50600) {
+            $allNameGetters[] = 'isVariadic';
+            $allNameGetters[] = 'isGenerator';
+        }
 
         $allMethods = $this->originalRefClass->getMethods();
 
