@@ -16,6 +16,7 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
@@ -153,6 +154,32 @@ class ReflectionEngine
         }
 
         throw new \InvalidArgumentException("Method $methodName was not found in the $fullClassName");
+    }
+
+    /**
+     * Parses class property
+     *
+     * @param string $fullClassName Name of the class
+     * @param string $propertyName Name of the property
+     *
+     * @return array Pair of [Property and PropertyProperty] nodes
+     */
+    public static function parseClassProperty($fullClassName, $propertyName)
+    {
+        $class      = self::parseClass($fullClassName);
+        $classNodes = $class->stmts;
+
+        foreach ($classNodes as $classLevelNode) {
+            if ($classLevelNode instanceof Property) {
+                foreach ($classLevelNode->props as $classProperty) {
+                    if ($classProperty->name == $propertyName) {
+                        return [$classLevelNode, $classProperty];
+                    }
+                }
+            }
+        }
+
+        throw new \InvalidArgumentException("Property $propertyName was not found in the $fullClassName");
     }
 
     /**

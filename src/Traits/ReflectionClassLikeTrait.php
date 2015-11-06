@@ -15,12 +15,14 @@ use ParserReflection\ReflectionClass;
 use ParserReflection\ReflectionFile;
 use ParserReflection\ReflectionFileNamespace;
 use ParserReflection\ReflectionMethod;
+use ParserReflection\ReflectionProperty;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
 
 /**
@@ -50,9 +52,14 @@ trait ReflectionClassLikeTrait
     protected $namespaceName = '';
 
     /**
-     * @var array|ReflectionMethod
+     * @var array|ReflectionMethod[]
      */
     protected $methods;
+
+    /**
+     * @var array|ReflectionProperty[]
+     */
+    protected $properties;
 
     /**
      * Parent class, or false if not present, null if uninitialized yet
@@ -443,6 +450,57 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Retrieves reflected properties.
+     *
+     * @return ReflectionProperty[]|array
+     */
+    public function getProperties($filter = null)
+    {
+        if (!isset($this->properties)) {
+            $directProperties = $this->getDirectProperties();
+            $parentProperties = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+                $result = array_merge($result, $instance->getProperties());
+            });
+            $properties = array_merge($directProperties, $parentProperties);
+
+            $this->properties = $properties;
+        }
+        // TODO: Implement filtration of properties
+
+        return $this->properties;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getProperty($name)
+    {
+        $properties = $this->getProperties();
+        foreach ($properties as $property) {
+            if ($property->getName() == $name) {
+                return $property;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasProperty($name)
+    {
+        $properties = $this->getProperties();
+        foreach ($properties as $property) {
+            if ($property->getName() == $name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function isIterateable()
@@ -515,6 +573,26 @@ trait ReflectionClassLikeTrait
         }
 
         return $methods;
+    }
+
+    private function getDirectProperties()
+    {
+        $properties = array();
+
+        foreach ($this->classLikeNode->stmts as $classLevelNode) {
+            if ($classLevelNode instanceof Property) {
+                foreach ($classLevelNode->props as $classPropertyNode) {
+                    $properties[] = new ReflectionProperty(
+                        $this->getName(),
+                        $classPropertyNode->name,
+                        $classLevelNode,
+                        $classPropertyNode
+                    );
+                }
+            }
+        }
+
+        return $properties;
     }
 
     private function recursiveCollect(\Closure $collector)
