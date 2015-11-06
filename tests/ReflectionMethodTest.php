@@ -32,26 +32,22 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         $this->parsedRefClass = $parsedClass;
     }
 
-    /**
-     * This test case checks all isXXX() methods reflection for parsed item with internal one
-     */
-    public function testModifiersAreEqual()
+    public function testGeneralInfoGetters()
     {
-        $allMethods = $this->originalRefClass->getMethods();
-        $refClass   = new \ReflectionClass('ReflectionMethod');
-        $allGetters = array();
+        $allNameGetters = [
+            'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
+            'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
+            'isClosure', 'isDeprecated', 'isGenerator', 'isInternal', 'isUserDefined',
+            'isVariadic', 'isAbstract', 'isConstructor', 'isDestructor', 'isFinal',
+            'isPrivate', 'isProtected', 'isPublic', 'isStatic'
+        ];
 
-        foreach ($refClass->getMethods() as $refMethod) {
-            // let's filter only all isXXX() methods from the ReflectionMethod class
-            if (substr($refMethod->getName(), 0, 2) == 'is' && $refMethod->isPublic()) {
-                $allGetters[] = $refMethod->getName();
-            }
-        }
+        $allMethods = $this->originalRefClass->getMethods();
 
         foreach ($allMethods as $refMethod) {
             $methodName   = $refMethod->getName();
             $parsedMethod = $this->parsedRefClass->getMethod($methodName);
-            foreach ($allGetters as $getterName) {
+            foreach ($allNameGetters as $getterName) {
                 $expectedValue = $refMethod->$getterName();
                 $actualValue   = $parsedMethod->$getterName();
                 $this->assertEquals(
@@ -61,53 +57,6 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
                 );
             }
         }
-    }
-
-    public function testNameGetters()
-    {
-        $allNameGetters = ['getName', 'getNamespaceName', 'getShortName', 'inNamespace'];
-
-        $refMethod      = $this->originalRefClass->getMethod('explicitPublicFunc');
-        $parsedMethod   = $this->parsedRefClass->getMethod('explicitPublicFunc');
-
-        foreach ($allNameGetters as $getterName) {
-            $expectedValue = $refMethod->$getterName();
-            $actualValue   = $parsedMethod->$getterName();
-            $this->assertEquals(
-                $expectedValue,
-                $actualValue,
-                "$getterName() for method should be equal"
-            );
-        }
-    }
-
-    public function testGeneralInfoGetters()
-    {
-        $allNameGetters = ['getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName'];
-
-        $refMethod      = $this->originalRefClass->getMethod('funcWithDocAndBody');
-        $parsedMethod   = $this->parsedRefClass->getMethod('funcWithDocAndBody');
-
-        foreach ($allNameGetters as $getterName) {
-            $expectedValue = $refMethod->$getterName();
-            $actualValue   = $parsedMethod->$getterName();
-            $this->assertEquals(
-                $expectedValue,
-                $actualValue,
-                "$getterName() for method should be equal"
-            );
-        }
-    }
-
-    public function testGetStaticVariables()
-    {
-        $refMethod    = $this->originalRefClass->getMethod('funcWithDocAndBody');
-        $parsedMethod = $this->parsedRefClass->getMethod('funcWithDocAndBody');
-
-        $originalVariables = $refMethod->getStaticVariables();
-        $parsedVariables   = $parsedMethod->getStaticVariables();
-
-        $this->assertEquals($originalVariables, $parsedVariables);
     }
 
     public function testCoverAllMethods()

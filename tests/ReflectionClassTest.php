@@ -30,53 +30,26 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * This test case checks all isXXX() methods reflection for parsed item with internal one
-     */
-    public function testModifiersAreEqual()
-    {
-        $refClass   = new \ReflectionClass('ReflectionClass');
-        $allGetters = array();
-
-        foreach ($refClass->getMethods() as $refMethod) {
-            // let's filter only all isXXX() methods from the ReflectionMethod class
-            $notRequiresParams = $refMethod->getNumberOfRequiredParameters() == 0;
-            if (substr($refMethod->getName(), 0, 2) == 'is' && $notRequiresParams && $refMethod->isPublic()) {
-                $allGetters[] = $refMethod->getName();
-            }
-        }
-
-        foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
-            $originalRefClass = new \ReflectionClass($parsedRefClass->getName());
-            foreach ($allGetters as $getterName) {
-                $expectedValue = $originalRefClass->$getterName();
-                $actualValue   = $parsedRefClass->$getterName();
-                $this->assertEquals(
-                    $expectedValue,
-                    $actualValue,
-                    "$getterName() for class should be equal"
-                );
-            }
-        }
-    }
-
-    /**
      * Tests that names are correct for reflection data
      */
     public function testGeneralInfoGetters()
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
-            'getName', 'getNamespaceName', 'getShortName', 'inNamespace'
+            'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
+            'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
+            'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined'
         ];
         foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
-            $originalRefClass = new \ReflectionClass($parsedRefClass->getName());
+            $className        = $parsedRefClass->getName();
+            $originalRefClass = new \ReflectionClass($className);
             foreach ($allNameGetters as $getterName) {
                 $expectedValue = $originalRefClass->$getterName();
                 $actualValue   = $parsedRefClass->$getterName();
                 $this->assertEquals(
                     $expectedValue,
                     $actualValue,
-                    "$getterName() for class should be equal"
+                    "$getterName() for class $className should be equal"
                 );
             }
         }
