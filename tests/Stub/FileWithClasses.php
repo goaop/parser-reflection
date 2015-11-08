@@ -43,6 +43,11 @@ class NoCloneable
     private function __clone() {}
 }
 
+class NoInstantiable
+{
+    private function __construct() {}
+}
+
 interface AbstractInterface
 {
     public function foo();
