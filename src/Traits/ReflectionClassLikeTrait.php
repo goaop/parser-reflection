@@ -45,28 +45,11 @@ trait ReflectionClassLikeTrait
     protected $className;
 
     /**
-     * Namespace name
+     * List of all constants from the class
      *
-     * @var string
+     * @var array
      */
-    protected $namespaceName = '';
-
-    /**
-     * @var array|ReflectionMethod[]
-     */
-    protected $methods;
-
-    /**
-     * @var array|ReflectionProperty[]
-     */
-    protected $properties;
-
-    /**
-     * Parent class, or false if not present, null if uninitialized yet
-     *
-     * @var \ReflectionClass|false|null
-     */
-    protected $parentClass;
+    protected $constants;
 
     /**
      * Interfaces, empty array or null if not initialized yet
@@ -76,11 +59,28 @@ trait ReflectionClassLikeTrait
     protected $interfaceClasses;
 
     /**
-     * List of all constants from the class
-     *
-     * @var array
+     * @var array|ReflectionMethod[]
      */
-    protected $constants;
+    protected $methods;
+
+    /**
+     * Namespace name
+     *
+     * @var string
+     */
+    protected $namespaceName = '';
+
+    /**
+     * Parent class, or false if not present, null if uninitialized yet
+     *
+     * @var \ReflectionClass|false|null
+     */
+    protected $parentClass;
+
+    /**
+     * @var array|ReflectionProperty[]
+     */
+    protected $properties;
 
     /**
      * Emulating original behaviour of reflection
@@ -95,80 +95,13 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getName()
+    public function getConstant($name)
     {
-        $namespaceName = $this->namespaceName ? $this->namespaceName . '\\' : '';
+        if ($this->hasConstant($name)) {
+            return $this->constants[$name];
+        }
 
-        return $namespaceName . $this->getShortName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getDocComment()
-    {
-        return $this->classLikeNode->getDocComment();
-    }
-
-    public function getStartLine()
-    {
-        return $this->classLikeNode->getAttribute('startLine');
-    }
-
-    public function getEndLine()
-    {
-        return $this->classLikeNode->getAttribute('endLine');
-    }
-
-    public function getFileName()
-    {
-        return $this->classLikeNode->getAttribute('fileName');
-    }
-
-    public function getExtension()
-    {
-        return null;
-    }
-
-    public function getExtensionName()
-    {
-        return '';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getNamespaceName()
-    {
-        return $this->namespaceName;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function inNamespace()
-    {
-        return !empty($this->namespaceName);
-    }
-
-    /**
-     * Returns the reflection of current file namespace
-     *
-     * @return ReflectionFileNamespace
-     */
-    public function getFileNamespace()
-    {
-        return new ReflectionFileNamespace($this->getFileName(), $this->namespaceName);
-    }
-
-    /**
-     * Returns the reflection of current file
-     *
-     * @return ReflectionFile
-     */
-    public function getFile()
-    {
-        return new ReflectionFile($this->getFileName());
+        return false;
     }
 
     /**
@@ -188,24 +121,70 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function hasConstant($name)
+    public function getConstructor()
     {
-        $constants   = $this->getConstants();
-        $hasConstant = isset($constants[$name]) || array_key_exists($constants, $name);
+        $constructor = $this->getMethod('__construct');
+        if (!$constructor) {
+            return null;
+        }
 
-        return $hasConstant;
+        return $constructor;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getConstant($name)
+    public function getDocComment()
     {
-        if ($this->hasConstant($name)) {
-            return $this->constants[$name];
-        }
+        return $this->classLikeNode->getDocComment();
+    }
 
-        return false;
+    public function getEndLine()
+    {
+        return $this->classLikeNode->getAttribute('endLine');
+    }
+
+    public function getExtension()
+    {
+        return null;
+    }
+
+    public function getExtensionName()
+    {
+        return '';
+    }
+
+    /**
+     * Returns the reflection of current file
+     *
+     * @return ReflectionFile
+     */
+    public function getFile()
+    {
+        return new ReflectionFile($this->getFileName());
+    }
+
+    public function getFileName()
+    {
+        return $this->classLikeNode->getAttribute('fileName');
+    }
+
+    /**
+     * Returns the reflection of current file namespace
+     *
+     * @return ReflectionFileNamespace
+     */
+    public function getFileNamespace()
+    {
+        return new ReflectionFileNamespace($this->getFileName(), $this->namespaceName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getInterfaceNames()
+    {
+        return array_keys($this->getInterfaces());
     }
 
     /**
@@ -226,176 +205,18 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function getInterfaceNames()
+    public function getMethod($name)
     {
-        return array_keys($this->getInterfaces());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isUserDefined()
-    {
-        // always defined by user, because we parse the source code
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isInternal()
-    {
-        // never can be an internal method
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getShortName()
-    {
-        return $this->className;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isInstantiable()
-    {
-        if ($this->isInterface() || $this->isAbstract()) {
-            return false;
-        }
-
-        if (null === ($constructor = $this->getConstructor())) {
-            return true;
-        }
-
-        return $constructor->isPublic();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getConstructor()
-    {
-        $constructor = $this->getMethod('__construct');
-        if (!$constructor) {
-            return null;
-        }
-
-        return $constructor;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isCloneable()
-    {
-        if ($this->isInterface() || $this->isAbstract()) {
-            return false;
-        }
-
-        if ($this->hasMethod('__clone')) {
-            return $this->getMethod('__clone')->isPublic();
-        }
-
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isAbstract()
-    {
-        if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
-            return true;
-        } elseif ($this->isInterface() && !empty($this->getMethods())) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Currently, anonymous classes aren't supported for parsed reflection
-     */
-    public function isAnonymous()
-    {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isFinal()
-    {
-        $isFinal = $this->classLikeNode instanceof Class_ && $this->classLikeNode->isFinal();
-
-        return $isFinal;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isInstance($object)
-    {
-        if (!is_object($object)) {
-            throw new \RuntimeException(sprintf('Parameter must be an object, "%s" provided.', gettype($object)));
-        }
-
-        $className = $this->getName();
-
-        return $className === get_class($object) || is_subclass_of($object, $className);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isSubclassOf($class)
-    {
-        if (is_object($class)) {
-            if ($class instanceof ReflectionClass) {
-                $class = $class->getName();
-            } else {
-                $class = get_class($class);
+        $methods = $this->getMethods();
+        foreach ($methods as $method) {
+            if ($method->getName() == $name) {
+                return $method;
             }
         }
 
-        if (!$this->classLikeNode instanceof Class_) {
-            return false;
-        } else{
-            $extends = $this->classLikeNode->extends;
-            if ($extends && $extends->toString() == $class) {
-                return true;
-            }
-        }
-
-        $parent = $this->getParentClass();
-
-        return false === $parent ? false : $parent->isSubclassOf($class);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getParentClass()
-    {
-        if (!isset($this->parentClass)) {
-            static $extendsField = 'extends';
-
-            $parentClass = false;
-            $hasExtends  = in_array($extendsField, $this->classLikeNode->getSubNodeNames());
-            $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
-            if ($extendsNode instanceof FullyQualified) {
-                $extendsName = $extendsNode->toString();
-                $parentClass = class_exists($extendsName, false) ? new parent($extendsName) : new static($extendsName);
-            }
-            $this->parentClass = $parentClass;
-        }
-
-        return $this->parentClass;
+        return false;
     }
 
     /**
@@ -420,33 +241,42 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    public function getMethod($name)
+    public function getName()
     {
-        $methods = $this->getMethods();
-        foreach ($methods as $method) {
-            if ($method->getName() == $name) {
-                return $method;
-            }
-        }
+        $namespaceName = $this->namespaceName ? $this->namespaceName . '\\' : '';
 
-        return false;
+        return $namespaceName . $this->getShortName();
     }
 
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    public function hasMethod($name)
+    public function getNamespaceName()
     {
-        $methods = $this->getMethods();
-        foreach ($methods as $method) {
-            if ($method->getName() == $name) {
-                return true;
+        return $this->namespaceName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getParentClass()
+    {
+        if (!isset($this->parentClass)) {
+            static $extendsField = 'extends';
+
+            $parentClass = false;
+            $hasExtends  = in_array($extendsField, $this->classLikeNode->getSubNodeNames());
+            $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
+            if ($extendsNode instanceof FullyQualified) {
+                $extendsName = $extendsNode->toString();
+                $parentClass = class_exists($extendsName, false) ? new parent($extendsName) : new static($extendsName);
             }
+            $this->parentClass = $parentClass;
         }
 
-        return false;
+        return $this->parentClass;
     }
 
     /**
@@ -486,6 +316,45 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getShortName()
+    {
+        return $this->className;
+    }
+
+    public function getStartLine()
+    {
+        return $this->classLikeNode->getAttribute('startLine');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasConstant($name)
+    {
+        $constants   = $this->getConstants();
+        $hasConstant = isset($constants[$name]) || array_key_exists($constants, $name);
+
+        return $hasConstant;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function hasMethod($name)
+    {
+        $methods = $this->getMethods();
+        foreach ($methods as $method) {
+            if ($method->getName() == $name) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function hasProperty($name)
@@ -503,19 +372,97 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isIterateable()
-    {
-        return $this->implementsInterface('Traversable');
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function implementsInterface($interfaceName)
     {
         $allInterfaces = $this->getInterfaces();
 
         return isset($allInterfaces[$interfaceName]);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function inNamespace()
+    {
+        return !empty($this->namespaceName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isAbstract()
+    {
+        if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
+            return true;
+        } elseif ($this->isInterface() && !empty($this->getMethods())) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Currently, anonymous classes aren't supported for parsed reflection
+     */
+    public function isAnonymous()
+    {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isCloneable()
+    {
+        if ($this->isInterface() || $this->isAbstract()) {
+            return false;
+        }
+
+        if ($this->hasMethod('__clone')) {
+            return $this->getMethod('__clone')->isPublic();
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isFinal()
+    {
+        $isFinal = $this->classLikeNode instanceof Class_ && $this->classLikeNode->isFinal();
+
+        return $isFinal;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isInstance($object)
+    {
+        if (!is_object($object)) {
+            throw new \RuntimeException(sprintf('Parameter must be an object, "%s" provided.', gettype($object)));
+        }
+
+        $className = $this->getName();
+
+        return $className === get_class($object) || is_subclass_of($object, $className);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isInstantiable()
+    {
+        if ($this->isInterface() || $this->isAbstract()) {
+            return false;
+        }
+
+        if (null === ($constructor = $this->getConstructor())) {
+            return true;
+        }
+
+        return $constructor->isPublic();
     }
 
     /**
@@ -529,9 +476,62 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
+    public function isInternal()
+    {
+        // never can be an internal method
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isIterateable()
+    {
+        return $this->implementsInterface('Traversable');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isSubclassOf($class)
+    {
+        if (is_object($class)) {
+            if ($class instanceof ReflectionClass) {
+                $class = $class->getName();
+            } else {
+                $class = get_class($class);
+            }
+        }
+
+        if (!$this->classLikeNode instanceof Class_) {
+            return false;
+        } else{
+            $extends = $this->classLikeNode->extends;
+            if ($extends && $extends->toString() == $class) {
+                return true;
+            }
+        }
+
+        $parent = $this->getParentClass();
+
+        return false === $parent ? false : $parent->isSubclassOf($class);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isTrait()
     {
         return ($this->classLikeNode instanceof Trait_);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isUserDefined()
+    {
+        // always defined by user, because we parse the source code
+        return true;
     }
 
     private function getDirectInterfaces()

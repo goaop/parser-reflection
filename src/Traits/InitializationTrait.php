@@ -21,16 +21,6 @@ trait InitializationTrait
     private $isInitialized = false;
 
     /**
-     * Returns the status of initialization status for internal object
-     *
-     * @return bool
-     */
-    public function isInitialized()
-    {
-        return $this->isInitialized;
-    }
-
-    /**
      * Initializes internal reflection for calling misc runtime methods
      */
     public function initializeInternalReflection()
@@ -39,6 +29,16 @@ trait InitializationTrait
             $this->__initialize();
             $this->isInitialized = true;
         }
+    }
+
+    /**
+     * Returns the status of initialization status for internal object
+     *
+     * @return bool
+     */
+    public function isInitialized()
+    {
+        return $this->isInitialized;
     }
 
     /**

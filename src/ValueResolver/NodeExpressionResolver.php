@@ -20,16 +20,18 @@ class NodeExpressionResolver
 {
 
     /**
+     * Name of the constant (if present)
+     *
+     * @var null|string
+     */
+    private $constantName = null;
+
+    /**
      * Current reflection context for parsing
      *
      * @var mixed
      */
     private $context;
-
-    /**
-     * @var mixed Value of expression/constant
-     */
-    private $value;
 
     /**
      * Flag if expression is constant
@@ -39,15 +41,28 @@ class NodeExpressionResolver
     private $isConstant = false;
 
     /**
-     * Name of the constant (if present)
-     *
-     * @var null|string
+     * @var mixed Value of expression/constant
      */
-    private $constantName = null;
+    private $value;
 
     public function __construct($context)
     {
         $this->context = $context;
+    }
+
+    public function getConstantName()
+    {
+        return $this->constantName;
+    }
+
+    public function getValue()
+    {
+        return $this->value;
+    }
+
+    public function isConstant()
+    {
+        return $this->isConstant;
     }
 
     /**
@@ -65,21 +80,6 @@ class NodeExpressionResolver
         if ($node instanceof MagicConst) {
             $this->value = $this->resolveMagicConst($node);
         }
-    }
-
-    public function getValue()
-    {
-        return $this->value;
-    }
-
-    public function isConstant()
-    {
-        return $this->isConstant;
-    }
-
-    public function getConstantName()
-    {
-        return $this->constantName;
     }
 
     private function resolveMagicConst(MagicConst $node)

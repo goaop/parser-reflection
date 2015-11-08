@@ -20,14 +20,14 @@ use PhpParser\NodeVisitorAbstract;
  */
 class StaticVariablesCollector extends NodeVisitorAbstract
 {
-    private $staticVariables = [];
-
     /**
      * Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      *
      * @var mixed
      */
     private $context;
+
+    private $staticVariables = [];
 
     /**
      * Default constructor

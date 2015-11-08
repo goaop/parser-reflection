@@ -43,55 +43,6 @@ class ReflectionFile implements \Reflector
         $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
     }
 
-    public function getName()
-    {
-        return $this->fileName;
-    }
-
-    /**
-     * Gets the list of namespaces in the file
-     *
-     * @return array|ReflectionFileNamespace[]
-     */
-    public function getFileNamespaces()
-    {
-        if (!isset($this->fileNamespaces)) {
-            $this->fileNamespaces = $this->findFileNamespaces();
-        }
-
-        return $this->fileNamespaces;
-    }
-
-    /**
-     * Returns the presence of namespace in the file
-     *
-     * @param string $namespaceName
-     *
-     * @return bool
-     */
-    public function hasFileNamespace($namespaceName)
-    {
-        $namespaces = $this->getFileNamespaces();
-
-        return isset($namespaces[$namespaceName]);
-    }
-
-    /**
-     * Returns a namespace from the file or false if no such a namespace
-     *
-     * @param string $namespaceName
-     *
-     * @return bool|ReflectionFileNamespace
-     */
-    public function getFileNamespace($namespaceName)
-    {
-        if ($this->hasFileNamespace($namespaceName)) {
-            return $this->fileNamespaces[$namespaceName];
-        }
-
-        return false;
-    }
-
     /**
      * (PHP 5)<br/>
      * Exports
@@ -112,6 +63,55 @@ class ReflectionFile implements \Reflector
     public function __toString()
     {
         // TODO: Implement __toString() method.
+    }
+
+    /**
+     * Returns a namespace from the file or false if no such a namespace
+     *
+     * @param string $namespaceName
+     *
+     * @return bool|ReflectionFileNamespace
+     */
+    public function getFileNamespace($namespaceName)
+    {
+        if ($this->hasFileNamespace($namespaceName)) {
+            return $this->fileNamespaces[$namespaceName];
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets the list of namespaces in the file
+     *
+     * @return array|ReflectionFileNamespace[]
+     */
+    public function getFileNamespaces()
+    {
+        if (!isset($this->fileNamespaces)) {
+            $this->fileNamespaces = $this->findFileNamespaces();
+        }
+
+        return $this->fileNamespaces;
+    }
+
+    public function getName()
+    {
+        return $this->fileName;
+    }
+
+    /**
+     * Returns the presence of namespace in the file
+     *
+     * @param string $namespaceName
+     *
+     * @return bool
+     */
+    public function hasFileNamespace($namespaceName)
+    {
+        $namespaces = $this->getFileNamespaces();
+
+        return isset($namespaces[$namespaceName]);
     }
 
     /**

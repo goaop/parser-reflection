@@ -21,6 +21,7 @@ use PhpParser\Node\Stmt\Namespace_;
 class ReflectionFileNamespace implements \Reflector
 {
     protected $fileClasses;
+
     protected $fileFunctions;
 
     /**
@@ -47,55 +48,55 @@ class ReflectionFileNamespace implements \Reflector
     }
 
     /**
-     * Gets namespace name
-     *
+     * (PHP 5)<br/>
+     * Exports
+     * @link http://php.net/manual/en/reflector.export.php
      * @return string
      */
-    public function getName()
+    public static function export()
     {
-        $nameNode = $this->namespaceNode->name;
-
-        return $nameNode ? $nameNode->toString() : '';
+        // TODO: Implement export() method.
     }
 
     /**
-     * Returns the name of file
-     *
+     * (PHP 5)<br/>
+     * To string
+     * @link http://php.net/manual/en/reflector.tostring.php
      * @return string
      */
-    public function getFileName()
+    public function __toString()
     {
-        return $this->fileName;
+        // TODO: Implement __toString() method.
     }
 
     /**
-     * Returns the reflection of current file
+     * Returns the concrete class from the file namespace or false if there is no class
      *
-     * @return ReflectionFile
+     * @param string $className
+     *
+     * @return bool|ReflectionClass
      */
-    public function getFile()
+    public function getClass($className)
     {
-        return new ReflectionFile($this->fileName);
+        if ($this->hasClass($className)) {
+            return $this->fileClasses[$className];
+        }
+
+        return false;
     }
 
     /**
-     * Gets starting line number
+     * Gets list of classes in the namespace
      *
-     * @return integer
+     * @return ReflectionClass[]|array
      */
-    public function getStartLine()
+    public function getClasses()
     {
-        return $this->namespaceNode->getAttribute('startLine');
-    }
+        if (!isset($this->fileClasses)) {
+            $this->fileClasses = $this->findClasses();
+        }
 
-    /**
-     * Gets starting line number
-     *
-     * @return integer
-     */
-    public function getEndLine()
-    {
-        return $this->namespaceNode->getAttribute('endLine');
+        return $this->fileClasses;
     }
 
     /**
@@ -116,44 +117,46 @@ class ReflectionFileNamespace implements \Reflector
     }
 
     /**
-     * Gets list of classes in the namespace
+     * Gets starting line number
      *
-     * @return ReflectionClass[]|array
+     * @return integer
      */
-    public function getClasses()
+    public function getEndLine()
     {
-        if (!isset($this->fileClasses)) {
-            $this->fileClasses = $this->findClasses();
-        }
-
-        return $this->fileClasses;
+        return $this->namespaceNode->getAttribute('endLine');
     }
 
     /**
-     * Checks if the given class is present in this filenamespace
+     * Returns the reflection of current file
      *
-     * @param string $className
-     *
-     * @return bool
+     * @return ReflectionFile
      */
-    public function hasClass($className)
+    public function getFile()
     {
-        $classes = $this->getClasses();
-
-        return isset($classes[$className]);
+        return new ReflectionFile($this->fileName);
     }
 
     /**
-     * Returns the concrete class from the file namespace or false if there is no class
+     * Returns the name of file
      *
-     * @param string $className
-     *
-     * @return bool|ReflectionClass
+     * @return string
      */
-    public function getClass($className)
+    public function getFileName()
     {
-        if ($this->hasClass($className)) {
-            return $this->fileClasses[$className];
+        return $this->fileName;
+    }
+
+    /**
+     * Returns the concrete function from the file namespace or false if there is no function
+     *
+     * @param string $functionName
+     *
+     * @return bool|ReflectionFunction
+     */
+    public function getFunction($functionName)
+    {
+        if ($this->hasFunction($functionName)) {
+            return $this->fileFunctions[$functionName];
         }
 
         return false;
@@ -174,6 +177,42 @@ class ReflectionFileNamespace implements \Reflector
     }
 
     /**
+     * Gets namespace name
+     *
+     * @return string
+     */
+    public function getName()
+    {
+        $nameNode = $this->namespaceNode->name;
+
+        return $nameNode ? $nameNode->toString() : '';
+    }
+
+    /**
+     * Gets starting line number
+     *
+     * @return integer
+     */
+    public function getStartLine()
+    {
+        return $this->namespaceNode->getAttribute('startLine');
+    }
+
+    /**
+     * Checks if the given class is present in this filenamespace
+     *
+     * @param string $className
+     *
+     * @return bool
+     */
+    public function hasClass($className)
+    {
+        $classes = $this->getClasses();
+
+        return isset($classes[$className]);
+    }
+
+    /**
      * Checks if the given function is present in this filenamespace
      *
      * @param string $functionName
@@ -185,44 +224,6 @@ class ReflectionFileNamespace implements \Reflector
         $functions = $this->getFunctions();
 
         return isset($functions[$functionName]);
-    }
-
-    /**
-     * Returns the concrete function from the file namespace or false if there is no function
-     *
-     * @param string $functionName
-     *
-     * @return bool|ReflectionFunction
-     */
-    public function getFunction($functionName)
-    {
-        if ($this->hasFunction($functionName)) {
-            return $this->fileFunctions[$functionName];
-        }
-
-        return false;
-    }
-
-    /**
-     * (PHP 5)<br/>
-     * Exports
-     * @link http://php.net/manual/en/reflector.export.php
-     * @return string
-     */
-    public static function export()
-    {
-        // TODO: Implement export() method.
-    }
-
-    /**
-     * (PHP 5)<br/>
-     * To string
-     * @link http://php.net/manual/en/reflector.tostring.php
-     * @return string
-     */
-    public function __toString()
-    {
-        // TODO: Implement __toString() method.
     }
 
     /**

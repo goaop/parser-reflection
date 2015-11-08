@@ -10,7 +10,6 @@
 
 namespace ParserReflection;
 
-
 use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
@@ -27,16 +26,6 @@ use PhpParser\Parser;
 class ReflectionEngine
 {
     /**
-     * @var null|Parser
-     */
-    protected static $parser = null;
-
-    /**
-     * @var null|NodeTraverser
-     */
-    protected static $traverser = null;
-
-    /**
      * @var null|LocatorInterface
      */
     protected static $locator = null;
@@ -45,6 +34,16 @@ class ReflectionEngine
      * @var array|Node[]
      */
     protected static $parsedFiles = array();
+
+    /**
+     * @var null|Parser
+     */
+    protected static $parser = null;
+
+    /**
+     * @var null|NodeTraverser
+     */
+    protected static $traverser = null;
 
     private function __construct() {}
 
@@ -61,48 +60,30 @@ class ReflectionEngine
     }
 
     /**
-     * Parses a file and returns an AST for it
+     * Locates a file name for class
      *
-     * @param string $fileName Name of the file
+     * @param string $fullClassName Full name of the class
      *
-     * @return Node[]
+     * @return string
      */
-    public static function parseFile($fileName)
+    public static function locateClassFile($fullClassName)
     {
-        if (isset(self::$parsedFiles[$fileName])) {
-            return self::$parsedFiles[$fileName];
+        if (class_exists($fullClassName, false)
+            || interface_exists($fullClassName, false)
+            || trait_exists($fullClassName, false)
+        ) {
+            $refClass      = new \ReflectionClass($fullClassName);
+            $classFileName = $refClass->getFileName();
+        } else {
+            $classFileName = self::$locator->locateClass($fullClassName);
         }
 
-        $fileContent = file_get_contents($fileName);
-        $treeNode    = self::$parser->parse($fileContent);
-        $treeNode    = self::$traverser->traverse($treeNode);
-
-        self::$parsedFiles[$fileName] = $treeNode;
-
-        return $treeNode;
-    }
-
-    /**
-     * Parses a file namespace and returns an AST for it
-     *
-     * @param string $fileName Name of the file
-     * @param string $namespaceName Namespace name
-     *
-     * @return Namespace_
-     */
-    public static function parseFileNamespace($fileName, $namespaceName)
-    {
-        $topLevelNodes = self::parseFile($fileName);
-        // namespaces can be only top-level nodes, so we can scan them directly
-        foreach ($topLevelNodes as $topLevelNode) {
-            if ($topLevelNode instanceof Namespace_ && ($topLevelNode->name->toString() == $namespaceName)) {
-                return $topLevelNode;
-            }
+        if (!$classFileName) {
+            throw new \InvalidArgumentException("Class $fullClassName was not found by locator");
         }
 
-        throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
+        return $classFileName;
     }
-
 
     /**
      * Tries to parse a class by name using LocatorInterface
@@ -186,29 +167,46 @@ class ReflectionEngine
     }
 
     /**
-     * Locates a file name for class
+     * Parses a file and returns an AST for it
      *
-     * @param string $fullClassName Full name of the class
+     * @param string $fileName Name of the file
      *
-     * @return string
+     * @return Node[]
      */
-    public static function locateClassFile($fullClassName)
+    public static function parseFile($fileName)
     {
-        if (class_exists($fullClassName, false)
-            || interface_exists($fullClassName, false)
-            || trait_exists($fullClassName, false)
-        ) {
-            $refClass      = new \ReflectionClass($fullClassName);
-            $classFileName = $refClass->getFileName();
-        } else {
-            $classFileName = self::$locator->locateClass($fullClassName);
+        if (isset(self::$parsedFiles[$fileName])) {
+            return self::$parsedFiles[$fileName];
         }
 
-        if (!$classFileName) {
-            throw new \InvalidArgumentException("Class $fullClassName was not found by locator");
+        $fileContent = file_get_contents($fileName);
+        $treeNode    = self::$parser->parse($fileContent);
+        $treeNode    = self::$traverser->traverse($treeNode);
+
+        self::$parsedFiles[$fileName] = $treeNode;
+
+        return $treeNode;
+    }
+
+    /**
+     * Parses a file namespace and returns an AST for it
+     *
+     * @param string $fileName Name of the file
+     * @param string $namespaceName Namespace name
+     *
+     * @return Namespace_
+     */
+    public static function parseFileNamespace($fileName, $namespaceName)
+    {
+        $topLevelNodes = self::parseFile($fileName);
+        // namespaces can be only top-level nodes, so we can scan them directly
+        foreach ($topLevelNodes as $topLevelNode) {
+            if ($topLevelNode instanceof Namespace_ && ($topLevelNode->name->toString() == $namespaceName)) {
+                return $topLevelNode;
+            }
         }
 
-        return $classFileName;
+        throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
     }
 
 }

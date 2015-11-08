@@ -47,17 +47,21 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getNamespaceName()
+    public function getClosureScopeClass()
     {
-        return $this->namespaceName;
+        $this->initializeInternalReflection();
+
+        return forward_static_call('parent::getClosureScopeClass');
     }
 
     /**
      * {@inheritDoc}
      */
-    public function inNamespace()
+    public function getClosureThis()
     {
-        return !empty($this->namespaceName);
+        $this->initializeInternalReflection();
+
+        return forward_static_call('parent::getClosureThis');
     }
 
     public function getDocComment()
@@ -65,19 +69,9 @@ trait ReflectionFunctionLikeTrait
         return $this->functionLikeNode->getDocComment();
     }
 
-    public function getStartLine()
-    {
-        return $this->functionLikeNode->getAttribute('startLine');
-    }
-
     public function getEndLine()
     {
         return $this->functionLikeNode->getAttribute('endLine');
-    }
-
-    public function getFileName()
-    {
-        return $this->functionLikeNode->getAttribute('fileName');
     }
 
     public function getExtension()
@@ -88,6 +82,33 @@ trait ReflectionFunctionLikeTrait
     public function getExtensionName()
     {
         return '';
+    }
+
+    public function getFileName()
+    {
+        return $this->functionLikeNode->getAttribute('fileName');
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getName()
+    {
+        if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
+            $functionName = $this->functionLikeNode->name;
+
+            return $this->namespaceName ? $this->namespaceName . '\\' . $functionName : $functionName;
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getNamespaceName()
+    {
+        return $this->namespaceName;
     }
 
     public function getNumberOfParameters()
@@ -117,19 +138,41 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isUserDefined()
+    public function getShortName()
     {
-        // always defined by user, because we parse the source code
-        return true;
+        if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
+            return $this->functionLikeNode->name;
+        }
+
+        return false;
+    }
+
+    public function getStartLine()
+    {
+        return $this->functionLikeNode->getAttribute('startLine');
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isInternal()
+    public function getStaticVariables()
     {
-        // never can be an internal method
-        return false;
+        $nodeTraverser      = new NodeTraverser(false);
+        $variablesCollector = new StaticVariablesCollector($this);
+        $nodeTraverser->addVisitor($variablesCollector);
+
+        /* @see https://github.com/nikic/PHP-Parser/issues/235 */
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
+
+        return $variablesCollector->getStaticVariables();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function inNamespace()
+    {
+        return !empty($this->namespaceName);
     }
 
     /**
@@ -138,6 +181,15 @@ trait ReflectionFunctionLikeTrait
     public function isClosure()
     {
         return $this->functionLikeNode instanceof Closure;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isDeprecated()
+    {
+        // userland method/function/closure can not be deprecated
+        return false;
     }
 
     /**
@@ -158,6 +210,24 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
+    public function isInternal()
+    {
+        // never can be an internal method
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isUserDefined()
+    {
+        // always defined by user, because we parse the source code
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isVariadic()
     {
         foreach ($this->parameters as $parameter) {
@@ -172,78 +242,8 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isDeprecated()
-    {
-        // userland method/function/closure can not be deprecated
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getName()
-    {
-        if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
-            $functionName = $this->functionLikeNode->name;
-
-            return $this->namespaceName ? $this->namespaceName . '\\' . $functionName : $functionName;
-        }
-
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getShortName()
-    {
-        if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
-            return $this->functionLikeNode->name;
-        }
-
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function returnsReference()
     {
         return $this->functionLikeNode->returnsByRef();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getClosureThis()
-    {
-        $this->initializeInternalReflection();
-
-        return forward_static_call('parent::getClosureThis');
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getClosureScopeClass()
-    {
-        $this->initializeInternalReflection();
-
-        return forward_static_call('parent::getClosureScopeClass');
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getStaticVariables()
-    {
-        $nodeTraverser      = new NodeTraverser(false);
-        $variablesCollector = new StaticVariablesCollector($this);
-        $nodeTraverser->addVisitor($variablesCollector);
-
-        /* @see https://github.com/nikic/PHP-Parser/issues/235 */
-        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
-
-        return $variablesCollector->getStaticVariables();
     }
 }

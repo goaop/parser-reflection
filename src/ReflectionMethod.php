@@ -56,65 +56,19 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPublic()
+    public function getClosure($object)
     {
-        return $this->functionLikeNode->isPublic();
+        $this->initializeInternalReflection();
+
+        return parent::getClosure($object);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isPrivate()
+    public function getDeclaringClass()
     {
-        return $this->functionLikeNode->isPrivate();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isProtected()
-    {
-        return $this->functionLikeNode->isProtected();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isAbstract()
-    {
-        return $this->functionLikeNode->isAbstract();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isFinal()
-    {
-        return $this->functionLikeNode->isFinal();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isStatic()
-    {
-        return $this->functionLikeNode->isStatic();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isConstructor()
-    {
-        return $this->functionLikeNode->name == '__construct';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isDestructor()
-    {
-        return $this->functionLikeNode->name == '__destruct';
+        return new ReflectionClass($this->className);
     }
 
     /**
@@ -148,29 +102,19 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getDeclaringClass()
+    public function getPrototype()
     {
-        return new ReflectionClass($this->className);
-    }
+        $parent = $this->getDeclaringClass()->getParentClass();
+        if (!$parent) {
+            throw new ReflectionException("No prototype");
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getClosure($object)
-    {
-        $this->initializeInternalReflection();
+        $prototypeMethod = $parent->getMethod($this->getName());
+        if (!$prototypeMethod) {
+            throw new ReflectionException("No prototype");
+        }
 
-        return parent::getClosure($object);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setAccessible($accessible)
-    {
-        $this->initializeInternalReflection();
-
-        parent::setAccessible($accessible);
+        return $prototypeMethod;
     }
 
     /**
@@ -196,21 +140,76 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getPrototype()
+    public function isAbstract()
     {
-        $parent = $this->getDeclaringClass()->getParentClass();
-        if (!$parent) {
-            throw new ReflectionException("No prototype");
-        }
-
-        $prototypeMethod = $parent->getMethod($this->getName());
-        if (!$prototypeMethod) {
-            throw new ReflectionException("No prototype");
-        }
-
-        return $prototypeMethod;
+        return $this->functionLikeNode->isAbstract();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function isConstructor()
+    {
+        return $this->functionLikeNode->name == '__construct';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isDestructor()
+    {
+        return $this->functionLikeNode->name == '__destruct';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isFinal()
+    {
+        return $this->functionLikeNode->isFinal();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isPrivate()
+    {
+        return $this->functionLikeNode->isPrivate();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isProtected()
+    {
+        return $this->functionLikeNode->isProtected();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isPublic()
+    {
+        return $this->functionLikeNode->isPublic();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isStatic()
+    {
+        return $this->functionLikeNode->isStatic();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAccessible($accessible)
+    {
+        $this->initializeInternalReflection();
+
+        parent::setAccessible($accessible);
+    }
 
     /**
      * Implementation of internal reflection initialization

@@ -80,33 +80,19 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function isPublic()
+    public function getDeclaringClass()
     {
-        return $this->propertyTypeNode->isPublic();
+        return new ReflectionClass($this->className);
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
-    public function isPrivate()
+    public function getDocComment()
     {
-        return $this->propertyTypeNode->isPrivate();
-    }
+        $docBlock = $this->propertyTypeNode->getDocComment();
 
-    /**
-     * {@inheritDoc}
-     */
-    public function isProtected()
-    {
-        return $this->propertyTypeNode->isProtected();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function isStatic()
-    {
-        return $this->propertyTypeNode->isStatic();
+        return $docBlock ? $docBlock->getText() : false;
     }
 
     /**
@@ -132,24 +118,6 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
-     * {@inheritDoc}
-     */
-    public function getDeclaringClass()
-    {
-        return new ReflectionClass($this->className);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setAccessible($accessible)
-    {
-        $this->initializeInternalReflection();
-
-        parent::setAccessible($accessible);
-    }
-
-    /**
      * @inheritDoc
      */
     public function getName()
@@ -170,29 +138,61 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function setValue($object, $value = null)
-    {
-        $this->initializeInternalReflection();
-
-        parent::setValue($object, $value);
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function isDefault()
     {
         return isset($this->propertyNode->default);
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function isPrivate()
+    {
+        return $this->propertyTypeNode->isPrivate();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isProtected()
+    {
+        return $this->propertyTypeNode->isProtected();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isPublic()
+    {
+        return $this->propertyTypeNode->isPublic();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isStatic()
+    {
+        return $this->propertyTypeNode->isStatic();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAccessible($accessible)
+    {
+        $this->initializeInternalReflection();
+
+        parent::setAccessible($accessible);
+    }
+
+    /**
      * @inheritDoc
      */
-    public function getDocComment()
+    public function setValue($object, $value = null)
     {
-        $docBlock = $this->propertyTypeNode->getDocComment();
+        $this->initializeInternalReflection();
 
-        return $docBlock ? $docBlock->getText() : false;
+        parent::setValue($object, $value);
     }
 
     /**
