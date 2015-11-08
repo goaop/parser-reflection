@@ -1,6 +1,6 @@
 <?php
 /**
- * Go! AOP framework
+ * Parser Reflection API
  *
  * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
  *

@@ -15,6 +15,9 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use ReflectionProperty as BaseReflectionProperty;
 
+/**
+ * AST-based reflection for class property
+ */
 class ReflectionProperty extends BaseReflectionProperty
 {
     use InitializationTrait;
@@ -40,6 +43,14 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     private $className;
 
+    /**
+     * Initializes a reflection for the property
+     *
+     * @param string $className Name of the class with properties
+     * @param string $propertyName Name of the property to reflect
+     * @param Property $propertyType Property type definition node
+     * @param PropertyProperty $propertyNode Concrete property definition (value, name)
+     */
     public function __construct(
         $className,
         $propertyName,

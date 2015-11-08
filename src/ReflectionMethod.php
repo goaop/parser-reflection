@@ -1,9 +1,11 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: 1
- * Date: 22.03.2015
- * Time: 12:12
+ * Parser Reflection API
+ *
+ * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ *
+ * This source file is subject to the license that is bundled
+ * with this source code in the file LICENSE.
  */
 
 namespace ParserReflection;
@@ -12,6 +14,9 @@ use ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
 
+/**
+ * AST-based reflection for the method in a class
+ */
 class ReflectionMethod extends BaseReflectionMethod
 {
     use ReflectionFunctionLikeTrait;
@@ -23,6 +28,13 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     private $className;
 
+    /**
+     * Initializes reflection instance for the method node
+     *
+     * @param string $className Name of the class
+     * @param string $methodName Name of the method
+     * @param ClassMethod $classMethodNode AST-node for method
+     */
     public function __construct($className, $methodName, ClassMethod $classMethodNode = null)
     {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too

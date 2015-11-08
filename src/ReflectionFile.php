@@ -1,9 +1,11 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: 1
- * Date: 22.03.2015
- * Time: 12:12
+ * Parser Reflection API
+ *
+ * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ *
+ * This source file is subject to the license that is bundled
+ * with this source code in the file LICENSE.
  */
 
 namespace ParserReflection;
@@ -13,6 +15,9 @@ use PhpParser\Node;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 
+/**
+ * AST-based reflector for the source file
+ */
 class ReflectionFile implements \Reflector
 {
 

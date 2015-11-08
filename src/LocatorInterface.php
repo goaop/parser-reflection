@@ -10,7 +10,9 @@
 
 namespace ParserReflection;
 
-
+/**
+ * Locator is responsible to return a file name for given item, typically class
+ */
 interface LocatorInterface
 {
 

@@ -21,6 +21,9 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 
+/**
+ * AST-based reflection engine, powered by PHP-Parser
+ */
 class ReflectionEngine
 {
     /**

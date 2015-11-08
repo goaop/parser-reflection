@@ -15,6 +15,12 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use ReflectionObject as InternalReflectionObject;
 
+/**
+ * AST-based reflection for an object
+ *
+ * Typically, this class won't be used on parsing level, because if we have an instance of object,
+ * then we can initialize a default ReflectionObject for it.
+ */
 class ReflectionObject extends InternalReflectionObject
 {
     use ReflectionClassLikeTrait;
@@ -26,6 +32,12 @@ class ReflectionObject extends InternalReflectionObject
      */
     private $instance;
 
+    /**
+     * Initializes reflection instance
+     *
+     * @param object $instance Instance of object
+     * @param ClassLike $classLikeNode AST node for class definition
+     */
     public function __construct($instance, ClassLike $classLikeNode = null)
     {
         $this->instance      = $instance;

@@ -14,11 +14,16 @@ use ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\Function_;
 use ReflectionFunction as BaseReflectionFunction;
 
+/**
+ * AST-based reflection for function
+ */
 class ReflectionFunction extends BaseReflectionFunction
 {
     use ReflectionFunctionLikeTrait;
 
     /**
+     * Initializes reflection instance for given AST-node
+     *
      * @param string|\Closure $functionName The name of the function to reflect or a closure.
      * @param Function_|null  $functionNode Function node AST
      */

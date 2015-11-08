@@ -1,9 +1,11 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: 1
- * Date: 22.03.2015
- * Time: 12:12
+ * Parser Reflection API
+ *
+ * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ *
+ * This source file is subject to the license that is bundled
+ * with this source code in the file LICENSE.
  */
 
 namespace ParserReflection;
@@ -13,10 +15,19 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use ReflectionClass as InternalReflectionClass;
 
+/**
+ * AST-based reflection class
+ */
 class ReflectionClass extends InternalReflectionClass
 {
     use ReflectionClassLikeTrait;
 
+    /**
+     * Initializes reflection instance
+     *
+     * @param string|object $argument Class name or instance of object
+     * @param ClassLike $classLikeNode AST node for class
+     */
     public function __construct($argument, ClassLike $classLikeNode = null)
     {
         $fullClassName       = is_object($argument) ? get_class($argument) : $argument;
