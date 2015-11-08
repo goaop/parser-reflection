@@ -13,7 +13,7 @@ namespace ParserReflection\Traits;
 
 use ParserReflection\NodeVisitor\GeneratorDetector;
 use ParserReflection\NodeVisitor\StaticVariablesCollector;
-use ParserReflection\ReflectionException;
+use ParserReflection\ReflectionParameter;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -40,9 +40,9 @@ trait ReflectionFunctionLikeTrait
     protected $namespaceName = '';
 
     /**
-     * @var array|ReflectionParameter
+     * @var array|ReflectionParameter[]
      */
-    protected $parameters = [];
+    protected $parameters;
 
     /**
      * {@inheritDoc}
@@ -116,16 +116,20 @@ trait ReflectionFunctionLikeTrait
         return count($this->functionLikeNode->getParams());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function getParameters()
     {
         if (!isset($this->parameters)) {
             $parameters = [];
 
-            foreach ($this->functionLikeNode->getParams() as $parameterNode) {
+            foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
                 $parameters[] = new ReflectionParameter(
                     $this->getName(),
                     $parameterNode->name,
-                    $parameterNode
+                    $parameterNode,
+                    $parameterIndex
                 );
             }
 
@@ -230,7 +234,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isVariadic()
     {
-        foreach ($this->parameters as $parameter) {
+        foreach ($this->getParameters() as $parameter) {
             if ($parameter->isVariadic()) {
                 return true;
             }
