@@ -12,7 +12,8 @@ namespace ParserReflection\ValueResolver;
 
 use ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
-use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr;
+use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\MagicConst;
 
 /**
@@ -72,21 +73,43 @@ class NodeExpressionResolver
      */
     public function process(Node $node)
     {
-        $this->value = null;
+        $this->value = $this->resolve($node);
+    }
 
-        // Most of simple scalars have raw value
-        if ($node instanceof Node\Scalar && isset($node->value)) {
-            $this->value = $node->value;
-        }
-
+    /**
+     * Resolves node into valid value
+     *
+     * @param Node $node
+     *
+     * @return mixed
+     */
+    protected function resolve(Node $node)
+    {
         $nodeType   = $node->getType();
         $methodName = 'resolve' . $nodeType;
         if (method_exists($this, $methodName)) {
-            $this->value = $this->$methodName($node);
+            return $this->$methodName($node);
         }
+
+        return null;
     }
 
-    private function resolveScalar_MagicConst_Method(MagicConst\Method $node)
+    protected function resolveScalar_DNumber(Scalar\DNumber $node)
+    {
+        return $node->value;
+    }
+
+    protected function resolveScalar_LNumber(Scalar\LNumber $node)
+    {
+        return $node->value;
+    }
+
+    protected function resolveScalar_String(Scalar\String_ $node)
+    {
+        return $node->value;
+    }
+
+    protected function resolveScalar_MagicConst_Method(MagicConst\Method $node)
     {
         if ($this->context instanceof \ReflectionMethod) {
             $fullName = $this->context->getDeclaringClass()->getName() . '::' . $this->context->getShortName();
@@ -97,7 +120,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveScalar_MagicConst_Function(MagicConst\Function_ $node)
+    protected function resolveScalar_MagicConst_Function(MagicConst\Function_ $node)
     {
         if ($this->context instanceof \ReflectionFunctionAbstract) {
             return $this->context->getName();
@@ -106,7 +129,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveScalar_MagicConst_Namespace(MagicConst\Namespace_ $node)
+    protected function resolveScalar_MagicConst_Namespace(MagicConst\Namespace_ $node)
     {
         if (method_exists($this->context, 'getNamespaceName')) {
             return $this->context->getNamespaceName();
@@ -115,7 +138,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveScalar_MagicConst_Class(MagicConst\Class_ $node)
+    protected function resolveScalar_MagicConst_Class(MagicConst\Class_ $node)
     {
         if ($this->context instanceof \ReflectionClass) {
             return $this->context->getName();
@@ -127,7 +150,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveScalar_MagicConst_Dir(MagicConst\Dir $node)
+    protected function resolveScalar_MagicConst_Dir(MagicConst\Dir $node)
     {
         if (method_exists($this->context, 'getFileName')) {
             return dirname($this->context->getFileName());
@@ -136,7 +159,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveScalar_MagicConst_File(MagicConst\File $node)
+    protected function resolveScalar_MagicConst_File(MagicConst\File $node)
     {
         if (method_exists($this->context, 'getFileName')) {
             return $this->context->getFileName();
@@ -145,12 +168,12 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveScalar_MagicConst_Line(MagicConst\Line $node)
+    protected function resolveScalar_MagicConst_Line(MagicConst\Line $node)
     {
         return $node->hasAttribute('startLine') ? $node->getAttribute('startLine') : 0;
     }
 
-    private function resolveScalar_MagicConst_Trait(MagicConst\Trait_ $node)
+    protected function resolveScalar_MagicConst_Trait(MagicConst\Trait_ $node)
     {
         if ($this->context instanceof \ReflectionClass && $this->context->isTrait()) {
             return $this->context->getName();
@@ -159,7 +182,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    private function resolveExpr_ConstFetch(ConstFetch $node)
+    protected function resolveExpr_ConstFetch(Expr\ConstFetch $node)
     {
         /** @var ReflectionFileNamespace|null $fileNamespace */
         $fileNamespace = null;
@@ -179,5 +202,17 @@ class NodeExpressionResolver
         }
 
         return null;
+    }
+
+    protected function resolveExpr_Array(Expr\Array_ $node)
+    {
+        $result = [];
+        foreach ($node->items as $itemIndex => $arrayItem) {
+            $itemValue = $this->resolve($arrayItem->value);
+            $itemKey   = isset($arrayItem->key) ? $this->resolve($arrayItem->key) : $itemIndex;
+            $result[$itemKey] = $itemValue;
+        }
+
+        return $result;
     }
 }
