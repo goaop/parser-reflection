@@ -71,7 +71,10 @@ class ClassWithMagicConstants
     const E = __LINE__;
 }
 
+const NS_CONST = 'test';
+
 class ClassWithComplexConstantsAndInheritance extends ClassWithMagicConstants
 {
     const H = M_PI;
+    const J = NS_CONST;
 }
