@@ -79,66 +79,81 @@ class NodeExpressionResolver
             $this->value = $node->value;
         }
 
-        if ($node instanceof MagicConst) {
-            $this->value = $this->resolveScalar_MagicConst($node);
-        }
-
-        if ($node instanceof ConstFetch) {
-            $this->value = $this->resolveExpr_ConstFetch($node);
+        $nodeType   = $node->getType();
+        $methodName = 'resolve' . $nodeType;
+        if (method_exists($this, $methodName)) {
+            $this->value = $this->$methodName($node);
         }
     }
 
-    private function resolveScalar_MagicConst(MagicConst $node)
+    private function resolveScalar_MagicConst_Method(MagicConst\Method $node)
     {
-        if ($node instanceof MagicConst\Method) {
-            if ($this->context instanceof \ReflectionMethod) {
-                $fullName = $this->context->getDeclaringClass()->getName() . '::' . $this->context->getShortName();
+        if ($this->context instanceof \ReflectionMethod) {
+            $fullName = $this->context->getDeclaringClass()->getName() . '::' . $this->context->getShortName();
 
-                return $fullName;
-            }
+            return $fullName;
         }
 
-        if ($node instanceof MagicConst\Function_) {
-            if ($this->context instanceof \ReflectionFunctionAbstract) {
-                return $this->context->getName();
-            }
+        return '';
+    }
+
+    private function resolveScalar_MagicConst_Function(MagicConst\Function_ $node)
+    {
+        if ($this->context instanceof \ReflectionFunctionAbstract) {
+            return $this->context->getName();
         }
 
-        if ($node instanceof MagicConst\Namespace_) {
-            if (method_exists($this->context, 'getNamespaceName')) {
-                return $this->context->getNamespaceName();
-            }
+        return '';
+    }
+
+    private function resolveScalar_MagicConst_Namespace(MagicConst\Namespace_ $node)
+    {
+        if (method_exists($this->context, 'getNamespaceName')) {
+            return $this->context->getNamespaceName();
         }
 
-        if ($node instanceof MagicConst\Class_) {
-            if ($this->context instanceof \ReflectionClass) {
-                return $this->context->getName();
-            }
-            if (method_exists($this->context, 'getDeclaringClass')) {
-                return $this->context->getDeclaringClass()->getName();
-            }
+        return '';
+    }
+
+    private function resolveScalar_MagicConst_Class(MagicConst\Class_ $node)
+    {
+        if ($this->context instanceof \ReflectionClass) {
+            return $this->context->getName();
+        }
+        if (method_exists($this->context, 'getDeclaringClass')) {
+            return $this->context->getDeclaringClass()->getName();
         }
 
-        if ($node instanceof MagicConst\Dir) {
-            if (method_exists($this->context, 'getFileName')) {
-                return dirname($this->context->getFileName());
-            }
+        return '';
+    }
+
+    private function resolveScalar_MagicConst_Dir(MagicConst\Dir $node)
+    {
+        if (method_exists($this->context, 'getFileName')) {
+            return dirname($this->context->getFileName());
         }
 
-        if ($node instanceof MagicConst\File) {
-            if (method_exists($this->context, 'getFileName')) {
-                return $this->context->getFileName();
-            }
+        return '';
+    }
+
+    private function resolveScalar_MagicConst_File(MagicConst\File $node)
+    {
+        if (method_exists($this->context, 'getFileName')) {
+            return $this->context->getFileName();
         }
 
-        if ($node instanceof MagicConst\Line) {
-            return $node->hasAttribute('startLine') ? $node->getAttribute('startLine') : 0;
-        }
+        return '';
+    }
 
-        if ($node instanceof MagicConst\Trait_) {
-            if ($this->context instanceof \ReflectionClass && $this->context->isTrait()) {
-                return $this->context->getName();
-            }
+    private function resolveScalar_MagicConst_Line(MagicConst\Line $node)
+    {
+        return $node->hasAttribute('startLine') ? $node->getAttribute('startLine') : 0;
+    }
+
+    private function resolveScalar_MagicConst_Trait(MagicConst\Trait_ $node)
+    {
+        if ($this->context instanceof \ReflectionClass && $this->context->isTrait()) {
+            return $this->context->getName();
         }
 
         return '';
