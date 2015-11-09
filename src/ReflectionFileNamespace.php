@@ -11,6 +11,8 @@
 namespace ParserReflection;
 
 
+use ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
@@ -23,6 +25,8 @@ class ReflectionFileNamespace implements \Reflector
     protected $fileClasses;
 
     protected $fileFunctions;
+
+    protected $fileConstants;
 
     /**
      * Namespace node
@@ -97,6 +101,36 @@ class ReflectionFileNamespace implements \Reflector
         }
 
         return $this->fileClasses;
+    }
+
+    /**
+     * Returns a value for the constant
+     *
+     * @param string $constantName name of the constant to fetch
+     *
+     * @return bool|mixed
+     */
+    public function getConstant($constantName)
+    {
+        if ($this->hasConstant($constantName)) {
+            return $this->fileConstants[$constantName];
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns a list of defined constants in the namespace
+     *
+     * @return array
+     */
+    public function getConstants()
+    {
+        if (!isset($this->fileConstants)) {
+            $this->fileConstants = $this->findConstants();
+        }
+
+        return $this->fileConstants;
     }
 
     /**
@@ -213,6 +247,20 @@ class ReflectionFileNamespace implements \Reflector
     }
 
     /**
+     * Checks if the given constant is present in this filenamespace
+     *
+     * @param string $constantName
+     *
+     * @return bool
+     */
+    public function hasConstant($constantName)
+    {
+        $constants = $this->getConstants();
+
+        return isset($constants[$constantName]);
+    }
+
+    /**
      * Checks if the given function is present in this filenamespace
      *
      * @param string $functionName
@@ -271,5 +319,27 @@ class ReflectionFileNamespace implements \Reflector
         }
 
         return $functions;
+    }
+
+    /**
+     * Searches for constants in the given AST
+     *
+     * @return array
+     */
+    private function findConstants()
+    {
+        $constants        = array();
+        $expressionSolver = new NodeExpressionResolver($this);
+
+        // constants can be only top-level nodes in the namespace, so we can scan them directly
+        foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
+            if ($namespaceLevelNode instanceof Const_) {
+                $constantName = $namespaceLevelNode->name;
+                $expressionSolver->process($namespaceLevelNode->value);
+                $constants[$constantName] = $expressionSolver->getValue();
+            }
+        }
+
+        return $constants;
     }
 }
