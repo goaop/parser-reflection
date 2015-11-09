@@ -12,8 +12,8 @@ namespace ParserReflection;
 
 
 use ParserReflection\ValueResolver\NodeExpressionResolver;
-use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 
@@ -334,9 +334,13 @@ class ReflectionFileNamespace implements \Reflector
         // constants can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof Const_) {
-                $constantName = $namespaceLevelNode->name;
-                $expressionSolver->process($namespaceLevelNode->value);
-                $constants[$constantName] = $expressionSolver->getValue();
+                $nodeConstants = $namespaceLevelNode->consts;
+                if ($nodeConstants) {
+                    foreach ($nodeConstants as $nodeConstant) {
+                        $expressionSolver->process($nodeConstant->value);
+                        $constants[$nodeConstant->name] = $expressionSolver->getValue();
+                    }
+                }
             }
         }
 
