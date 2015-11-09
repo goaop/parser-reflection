@@ -32,6 +32,7 @@ class ComposerLocator implements LocatorInterface
             foreach ($loaders as $loader) {
                 if (is_array($loader) && $loader[0] instanceof ClassLoader) {
                     $loader = $loader[0];
+                    break;
                 }
             }
             if (!$loader) {
