@@ -53,3 +53,20 @@ interface AbstractInterface
     public function foo();
     public function bar();
 }
+
+class ClassWithScalarConstants
+{
+    const A = 10, A1 = 11;
+    const B = 42.0;
+    const C = 'foo';
+    const D = false;
+}
+
+class ClassWithMagicConstants
+{
+    const A = __DIR__;
+    const B = __FILE__;
+    const C = __NAMESPACE__;
+    const D = __CLASS__;
+    const E = __LINE__;
+}

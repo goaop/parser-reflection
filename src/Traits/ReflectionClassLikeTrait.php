@@ -16,6 +16,7 @@ use ParserReflection\ReflectionFile;
 use ParserReflection\ReflectionFileNamespace;
 use ParserReflection\ReflectionMethod;
 use ParserReflection\ReflectionProperty;
+use ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
@@ -110,10 +111,14 @@ trait ReflectionClassLikeTrait
     public function getConstants()
     {
         if (!isset($this->constants)) {
-            $this->constants = $this->findConstants();
-        }
+            $directConstants = $this->findConstants();
+            $parentConstants = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+                $result += $instance->getConstants();
+            });
+            $constants = $directConstants + $parentConstants;
 
-        // TODO: collect constants from all parents
+            $this->constants = $constants;
+        }
 
         return $this->constants;
     }
@@ -619,15 +624,18 @@ trait ReflectionClassLikeTrait
      */
     private function findConstants()
     {
-        $constants = array();
+        $constants        = array();
+        $expressionSolver = new NodeExpressionResolver($this);
 
         // constants can be only top-level nodes in the class, so we can scan them directly
         foreach ($this->classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof ClassConst) {
                 $nodeConstants = $classLevelNode->consts;
                 if ($nodeConstants) {
-                    // TODO: normalize values of constants to the PHP expressions
-                    $constants[$nodeConstants[0]->name] = $nodeConstants[0]->value;
+                    foreach ($nodeConstants as $nodeConstant) {
+                        $expressionSolver->process($nodeConstant->value);
+                        $constants[$nodeConstant->name] = $expressionSolver->getValue();
+                    }
                 }
             }
         }

@@ -38,7 +38,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
-            'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined'
+            'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
+            'getConstants'
         ];
         foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
             $className        = $parsedRefClass->getName();
