@@ -10,7 +10,9 @@
 
 namespace ParserReflection\ValueResolver;
 
+use ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Scalar\MagicConst;
 
 /**
@@ -78,11 +80,15 @@ class NodeExpressionResolver
         }
 
         if ($node instanceof MagicConst) {
-            $this->value = $this->resolveMagicConst($node);
+            $this->value = $this->resolveScalar_MagicConst($node);
+        }
+
+        if ($node instanceof ConstFetch) {
+            $this->value = $this->resolveExpr_ConstFetch($node);
         }
     }
 
-    private function resolveMagicConst(MagicConst $node)
+    private function resolveScalar_MagicConst(MagicConst $node)
     {
         if ($node instanceof MagicConst\Method) {
             if ($this->context instanceof \ReflectionMethod) {
@@ -136,5 +142,27 @@ class NodeExpressionResolver
         }
 
         return '';
+    }
+
+    private function resolveExpr_ConstFetch(ConstFetch $node)
+    {
+        /** @var ReflectionFileNamespace|null $fileNamespace */
+        $fileNamespace = null;
+        $isFQNConstant = $node->name instanceof Node\Name\FullyQualified;
+        $constantName  = $node->name->toString();
+        if (!$isFQNConstant) {
+            if (method_exists($this->context, 'getFileNamespace')) {
+                $fileNamespace = $this->context->getFileNamespace();
+                if ($fileNamespace->hasConstant($constantName)) {
+                    return $fileNamespace->getConstant($constantName);
+                }
+            }
+        }
+
+        if (defined($constantName)) {
+            return constant($constantName);
+        }
+
+        return null;
     }
 }

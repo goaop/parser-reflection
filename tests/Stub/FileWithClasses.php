@@ -70,3 +70,8 @@ class ClassWithMagicConstants
     const D = __CLASS__;
     const E = __LINE__;
 }
+
+class ClassWithComplexConstantsAndInheritance extends ClassWithMagicConstants
+{
+    const H = M_PI;
+}
