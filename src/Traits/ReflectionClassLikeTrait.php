@@ -141,7 +141,7 @@ trait ReflectionClassLikeTrait
      */
     public function getDocComment()
     {
-        return $this->classLikeNode->getDocComment();
+        return $this->classLikeNode->getDocComment() ?: false;
     }
 
     public function getEndLine()
@@ -156,7 +156,7 @@ trait ReflectionClassLikeTrait
 
     public function getExtensionName()
     {
-        return '';
+        return false;
     }
 
     /**

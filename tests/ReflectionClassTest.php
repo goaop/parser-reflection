@@ -47,7 +47,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             foreach ($allNameGetters as $getterName) {
                 $expectedValue = $originalRefClass->$getterName();
                 $actualValue   = $parsedRefClass->$getterName();
-                $this->assertEquals(
+                $this->assertSame(
                     $expectedValue,
                     $actualValue,
                     "$getterName() for class $className should be equal"
