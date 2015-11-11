@@ -73,11 +73,9 @@ class ClassWithMagicConstants
 
 const NS_CONST = 'test';
 
-class ClassWithComplexConstantsAndInheritance extends ClassWithMagicConstants
+class ClassWithConstantsAndInheritance extends ClassWithMagicConstants
 {
     const A = 'overridden';
     const H = M_PI;
     const J = NS_CONST;
-    const K = array(1, NS_CONST);
-    const L = [self::class, ClassWithScalarConstants::A1, parent::A];
 }

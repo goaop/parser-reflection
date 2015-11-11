@@ -7,7 +7,8 @@ use ParserReflection\Stub\SimpleAbstractInheritance;
 
 class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_FILE = '/Stub/FileWithClasses.php';
+    const STUB_FILE55 = '/Stub/FileWithClasses55.php';
+    const STUB_FILE56 = '/Stub/FileWithClasses56.php';
 
     /**
      * @var ReflectionFileNamespace
@@ -18,7 +19,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
     {
         ReflectionEngine::init(new ComposerLocator());
 
-        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
         $fileNode = ReflectionEngine::parseFile($fileName);
 
         $reflectionFile = new ReflectionFile($fileName, $fileNode);
@@ -34,25 +35,29 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
      */
     public function testGeneralInfoGetters()
     {
-        $allNameGetters = [
-            'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
-            'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
-            'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
-            'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
-            'getConstants'
-        ];
         foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
-            $className        = $parsedRefClass->getName();
-            $originalRefClass = new \ReflectionClass($className);
-            foreach ($allNameGetters as $getterName) {
-                $expectedValue = $originalRefClass->$getterName();
-                $actualValue   = $parsedRefClass->$getterName();
-                $this->assertSame(
-                    $expectedValue,
-                    $actualValue,
-                    "$getterName() for class $className should be equal"
-                );
-            }
+            $this->performGeneralMethodComparison($parsedRefClass);
+        }
+    }
+
+    /**
+     * Tests specific features of PHP5.6 and newer, for example, array constants, etc
+     */
+    public function testGettersPHP56()
+    {
+        if (PHP_VERSION_ID < 50600) {
+            $this->markTestSkipped("Can not test new features on old version of PHP");
+        }
+
+        $fileName       = stream_resolve_include_path(__DIR__ . self::STUB_FILE56);
+        $fileNode       = ReflectionEngine::parseFile($fileName);
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+
+        include_once $fileName;
+
+        $parsedFileNamespace = $reflectionFile->getFileNamespace('ParserReflection\Stub');
+        foreach ($parsedFileNamespace->getClasses() as $parsedRefClass) {
+            $this->performGeneralMethodComparison($parsedRefClass);
         }
     }
 
@@ -93,6 +98,35 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
         if ($allMissedMethods) {
             $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+        }
+    }
+
+    /**
+     * Performs list of common checks on parsed and runtime refelection
+     *
+     * @param ReflectionCLass $parsedRefClass
+     * @param array $allNameGetters Optional list of getters to check
+     */
+    protected function performGeneralMethodComparison(ReflectionCLass $parsedRefClass, array $allNameGetters = [])
+    {
+        $allNameGetters ?: [
+            'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
+            'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
+            'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
+            'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
+            'getConstants'
+        ];
+
+        $className        = $parsedRefClass->getName();
+        $originalRefClass = new \ReflectionClass($className);
+        foreach ($allNameGetters as $getterName) {
+            $expectedValue = $originalRefClass->$getterName();
+            $actualValue   = $parsedRefClass->$getterName();
+            $this->assertSame(
+                $expectedValue,
+                $actualValue,
+                "$getterName() for class $className should be equal"
+            );
         }
     }
 }
