@@ -539,6 +539,53 @@ trait ReflectionClassLikeTrait
         return true;
     }
 
+    /**
+     * Creates a new class instance from given arguments.
+     *
+     * @link http://php.net/manual/en/reflectionclass.newinstance.php
+     * @param mixed $args Accepts a variable number of arguments which are passed to the class constructor
+     *
+     * @return object
+     */
+    public function newInstance($args = null)
+    {
+        $this->initializeInternalReflection();
+
+        return call_user_func_array('parent::newInstance', func_get_args());
+    }
+
+    /**
+     * Creates a new class instance from given arguments.
+     *
+     * @link http://php.net/manual/en/reflectionclass.newinstanceargs.php
+     *
+     * @param array $args The parameters to be passed to the class constructor as an array.
+     *
+     * @return object
+     */
+    public function newInstanceArgs(array $args = [])
+    {
+        $function = __FUNCTION__;
+        $this->initializeInternalReflection();
+
+        return parent::$function($args);
+    }
+
+    /**
+     * Creates a new class instance without invoking the constructor.
+     *
+     * @link http://php.net/manual/en/reflectionclass.newinstancewithoutconstructor.php
+     *
+     * @return object
+     */
+    public function newInstanceWithoutConstructor($args = null)
+    {
+        $function = __FUNCTION__;
+        $this->initializeInternalReflection();
+
+        return parent::$function($args);
+    }
+
     private function getDirectInterfaces()
     {
         $interfaces = array();

@@ -2,6 +2,7 @@
 namespace ParserReflection;
 
 use ParserReflection\Locator\ComposerLocator;
+use ParserReflection\Stub\FinalClass;
 use ParserReflection\Stub\ImplicitAbstractClass;
 use ParserReflection\Stub\SimpleAbstractInheritance;
 
@@ -59,6 +60,32 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
         foreach ($parsedFileNamespace->getClasses() as $parsedRefClass) {
             $this->performGeneralMethodComparison($parsedRefClass);
         }
+    }
+
+    public function testNewInstanceMethod()
+    {
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
+        $instance = $parsedRefClass->newInstance();
+        $this->assertInstanceOf(FinalClass::class, $instance);
+        $this->assertSame([], $instance->args);
+    }
+
+    public function testNewInstanceArgsMethod()
+    {
+        $arguments      = [1, 2];
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
+        $instance       = $parsedRefClass->newInstanceArgs($arguments);
+        $this->assertInstanceOf(FinalClass::class, $instance);
+        $this->assertSame($arguments, $instance->args);
+    }
+
+    public function testNewInstanceWithoutConstructorMethod()
+    {
+        $arguments      = [1, 2];
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
+        $instance       = $parsedRefClass->newInstanceWithoutConstructor($arguments);
+        $this->assertInstanceOf(FinalClass::class, $instance);
+        $this->assertSame([], $instance->args);
     }
 
     public function testDirectMethods()
