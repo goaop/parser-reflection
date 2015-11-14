@@ -155,7 +155,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
             'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
-            'getConstants', 'getStaticProperties'
+            'getConstants', 'getTraitNames', 'getInterfaceNames', 'getStaticProperties'
         ];
 
         $className        = $parsedRefClass->getName();

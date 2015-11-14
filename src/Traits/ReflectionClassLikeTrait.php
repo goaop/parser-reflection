@@ -26,6 +26,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
+use PhpParser\Node\Stmt\TraitUse;
 
 /**
  * General class-like reflection
@@ -59,6 +60,13 @@ trait ReflectionClassLikeTrait
      * @var \ReflectionClass[]|array|null
      */
     protected $interfaceClasses;
+
+    /**
+     * List of traits, empty array or null if not initialized yet
+     *
+     * @var  \ReflectionClass[]|array|null
+     */
+    protected $traits;
 
     /**
      * @var array|ReflectionMethod[]
@@ -461,6 +469,41 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Returns an array of names of traits used by this class
+     *
+     * @link http://php.net/manual/en/reflectionclass.gettraitnames.php
+     *
+     * @return array
+     */
+    public function getTraitNames()
+    {
+        return array_keys($this->getTraits());
+    }
+
+    /**
+     * Returns an array of traits used by this class
+     *
+     * @link http://php.net/manual/en/reflectionclass.gettraits.php
+     *
+     * @return array|\ReflectionClass[]
+     */
+    public function getTraits()
+    {
+        if (!isset($this->traits)) {
+            $directTraits = $this->getDirectTraits();
+            $parentTraits = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+                if ($instance->isTrait()) {
+                    $result[$instance->getName()] = $instance;
+                }
+                $result += $instance->getTraits();
+            });
+            $this->traits = $directTraits + $parentTraits;
+        }
+
+        return $this->traits;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function hasConstant($name)
@@ -839,6 +882,29 @@ trait ReflectionClassLikeTrait
         }
 
         return $properties;
+    }
+
+    private function getDirectTraits()
+    {
+        $traits = [];
+
+        if ($this->classLikeNode->stmts) {
+            foreach ($this->classLikeNode->stmts as $classLevelNode) {
+                if ($classLevelNode instanceof TraitUse) {
+                    foreach ($classLevelNode->traits as $classTraitName) {
+                        if ($classTraitName instanceof FullyQualified) {
+                            $traitName  = $classTraitName->toString();
+                            $trait      = trait_exists($traitName, false)
+                                ? new parent($traitName)
+                                : new static($traitName);
+                            $traits[$traitName] = $trait;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $traits;
     }
 
     private function recursiveCollect(\Closure $collector)
