@@ -29,7 +29,8 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
-            'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables'
+            'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
+            'getNumberOfParameters'
         ];
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
@@ -39,7 +40,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
                 foreach ($allNameGetters as $getterName) {
                     $expectedValue = $originalRefFunction->$getterName();
                     $actualValue   = $refFunction->$getterName();
-                    $this->assertEquals(
+                    $this->assertSame(
                         $expectedValue,
                         $actualValue,
                         "{$getterName}() for function {$functionName} should be equal"

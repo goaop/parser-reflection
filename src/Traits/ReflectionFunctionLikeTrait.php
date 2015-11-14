@@ -66,7 +66,9 @@ trait ReflectionFunctionLikeTrait
 
     public function getDocComment()
     {
-        return $this->functionLikeNode->getDocComment();
+        $docComment = $this->functionLikeNode->getDocComment();
+
+        return $docComment ? $docComment->getText() : false;
     }
 
     public function getEndLine()
@@ -81,7 +83,7 @@ trait ReflectionFunctionLikeTrait
 
     public function getExtensionName()
     {
-        return '';
+        return false;
     }
 
     public function getFileName()
