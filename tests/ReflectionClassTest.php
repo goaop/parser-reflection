@@ -72,7 +72,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     public function testNewInstanceArgsMethod()
     {
-        $arguments      = [1, 2];
+        $someValueByRef = 5;
+        $arguments      = [1, &$someValueByRef];
         $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
         $instance       = $parsedRefClass->newInstanceArgs($arguments);
         $this->assertInstanceOf(FinalClass::class, $instance);
