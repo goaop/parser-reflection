@@ -11,6 +11,7 @@
 namespace ParserReflection;
 
 use ParserReflection\Traits\InitializationTrait;
+use ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use ReflectionProperty as BaseReflectionProperty;
@@ -130,6 +131,13 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getValue($object = null)
     {
+        if (!isset($object)) {
+            $solver = new NodeExpressionResolver($this->getDeclaringClass());
+            $solver->process($this->propertyNode->default);
+
+            return $solver->getValue();
+        }
+
         $this->initializeInternalReflection();
 
         return parent::getValue($object);
