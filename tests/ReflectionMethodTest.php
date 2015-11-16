@@ -39,7 +39,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
             'isClosure', 'isDeprecated', 'isInternal', 'isUserDefined',
             'isAbstract', 'isConstructor', 'isDestructor', 'isFinal',
-            'isPrivate', 'isProtected', 'isPublic', 'isStatic'
+            'isPrivate', 'isProtected', 'isPublic', 'isStatic', '__toString'
         ];
 
         if (PHP_VERSION_ID >= 50600) {

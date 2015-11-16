@@ -54,6 +54,41 @@ class ReflectionMethod extends BaseReflectionMethod
     }
 
     /**
+     * Returns the string representation of the Reflection method object.
+     *
+     * @link http://php.net/manual/en/reflectionmethod.tostring.php
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
+        $methodParameters = $this->getParameters();
+
+        $paramString = '';
+        foreach ($methodParameters as $methodParameter) {
+            $paramString .= "\n" . $methodParameter;
+        }
+
+        return sprintf(
+            "%sMethod [ <user%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n",
+            $this->getDocComment() ? $this->getDocComment() . "\n" : '',
+            $this->isConstructor() ? ', ctor' : '',
+            $this->isDestructor() ? ', dtor' : '',
+            $this->isFinal() ? ' final' : '',
+            $this->isStatic() ? ' static' : '',
+            $this->isAbstract() ? ' abstract' : '',
+            join(' ', \Reflection::getModifierNames($this->getModifiers() & 1792)),
+            $this->getName(),
+            $this->getFileName(),
+            $this->getStartLine(),
+            $this->getEndLine(),
+            count($methodParameters),
+            $paramString
+        );
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getClosure($object)
