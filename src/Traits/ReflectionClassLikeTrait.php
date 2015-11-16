@@ -12,6 +12,7 @@ namespace ParserReflection\Traits;
 
 use ParserReflection\ReflectionEngine;
 use ParserReflection\ReflectionClass;
+use ParserReflection\ReflectionException;
 use ParserReflection\ReflectionFile;
 use ParserReflection\ReflectionFileNamespace;
 use ParserReflection\ReflectionMethod;
@@ -568,6 +569,53 @@ trait ReflectionClassLikeTrait
         // always defined by user, because we parse the source code
         return true;
     }
+
+    /**
+     * Gets static properties
+     *
+     * @link http://php.net/manual/en/reflectionclass.getstaticproperties.php
+     *
+     * @return array
+     */
+    public function getStaticProperties()
+    {
+        $properties = [];
+
+        $reflectionProperties = $this->getProperties(ReflectionProperty::IS_STATIC);
+        foreach ($reflectionProperties as $reflectionProperty) {
+            if (!$reflectionProperty instanceof ReflectionProperty) {
+                if (!$reflectionProperty->isPublic()) {
+                    $reflectionProperty->setAccessible(true);
+                }
+            }
+            $properties[$reflectionProperty->getName()] = $reflectionProperty->getValue();
+        }
+
+        return $properties;
+    }
+
+    /**
+     * Gets static property value
+     *
+     * @param string $name    The name of the static property for which to return a value.
+     * @param mixed  $default A default value to return in case the class does not declare
+     *                        a static property with the given name
+     *
+     * @return mixed
+     * @throws ReflectionException If there is no such property and no default value was given
+     */
+    public function getStaticPropertyValue($name, $default = null)
+    {
+        $properties     = $this->getStaticProperties();
+        $propertyExists = array_key_exists($properties, $name);
+
+        if (!$propertyExists && func_num_args() === 1) {
+            throw new ReflectionException("Static property does not exist and no default value is given");
+        }
+
+        return $propertyExists ? $properties[$name] : $default;
+    }
+
 
     /**
      * Creates a new class instance from given arguments.
