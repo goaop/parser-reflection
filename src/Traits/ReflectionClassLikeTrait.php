@@ -287,14 +287,23 @@ trait ReflectionClassLikeTrait
     /**
      * Retrieves reflected properties.
      *
-     * @return ReflectionProperty[]|array
+     * @param int $filter The optional filter, for filtering desired property types.
+     *                    It's configured using the ReflectionProperty constants, and defaults to all property types.
+     *
+     * @return array|\ParserReflection\ReflectionProperty[]
      */
     public function getProperties($filter = null)
     {
         if (!isset($this->properties)) {
             $directProperties = $this->getDirectProperties();
             $parentProperties = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
-                $result = array_merge($result, $instance->getProperties());
+                $reflectionProperties = [];
+                foreach ($instance->getProperties() as $reflectionProperty) {
+                    if (!$reflectionProperty->isPrivate()) {
+                        $reflectionProperties[] = $reflectionProperty;
+                    }
+                }
+                $result = array_merge($result, $reflectionProperties);
             });
             $properties = array_merge($directProperties, $parentProperties);
 
