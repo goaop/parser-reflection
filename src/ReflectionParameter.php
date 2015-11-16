@@ -23,6 +23,13 @@ class ReflectionParameter extends BaseReflectionParameter
     use InitializationTrait;
 
     /**
+     * Reflection function or method
+     *
+     * @var \ReflectionFunctionAbstract
+     */
+    private $declaringFunction;
+
+    /**
      * Stores the default value for node (if present)
      *
      * @var mixed
@@ -116,6 +123,26 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
+    public function getDeclaringClass()
+    {
+        if ($this->declaringFunction instanceof \ReflectionMethod) {
+            return $this->declaringFunction->getDeclaringClass();
+        };
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getDeclaringFunction()
+    {
+        return $this->declaringFunction;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getDefaultValue()
     {
         if (!$this->isDefaultValueAvailable()) {
@@ -186,6 +213,14 @@ class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function isOptional()
+    {
+        return $this->isDefaultValueAvailable() && $this->haveSiblingsDefalutValues();
+    }
+
+    /**
      * @inheritDoc
      */
     public function isPassedByReference()
@@ -199,6 +234,40 @@ class ReflectionParameter extends BaseReflectionParameter
     public function isVariadic()
     {
         return (bool) $this->parameterNode->variadic;
+    }
+
+    /**
+     * Passes an information about top-level reflection instance
+     *
+     * @param \ReflectionFunctionAbstract $refFunction
+     */
+    public function setDeclaringFunction(\ReflectionFunctionAbstract $refFunction)
+    {
+        $this->declaringFunction = $refFunction;
+    }
+
+    /**
+     * Returns if all following parameters have a default value definition.
+     *
+     * @return bool
+     * @throws ReflectionException If could not fetch declaring function reflection
+     */
+    protected function haveSiblingsDefalutValues()
+    {
+        $function = $this->getDeclaringFunction();
+        if (null === $function) {
+            throw new ReflectionException('Could not get the declaring function reflection.');
+        }
+
+        /** @var \ReflectionParameter[] $remainingParameters */
+        $remainingParameters = array_slice($function->getParameters(), $this->parameterIndex + 1);
+        foreach ($remainingParameters as $reflectionParameter) {
+            if (!$reflectionParameter->isDefaultValueAvailable()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

@@ -113,9 +113,35 @@ trait ReflectionFunctionLikeTrait
         return $this->namespaceName;
     }
 
+    /**
+     * Get the number of parameters that a function defines, both optional and required.
+     *
+     * @link http://php.net/manual/en/reflectionfunctionabstract.getnumberofparameters.php
+     *
+     * @return int
+     */
     public function getNumberOfParameters()
     {
         return count($this->functionLikeNode->getParams());
+    }
+
+    /**
+     * Get the number of required parameters that a function defines.
+     *
+     * @link http://php.net/manual/en/reflectionfunctionabstract.getnumberofrequiredparameters.php
+     *
+     * @return int
+     */
+    public function getNumberOfRequiredParameters()
+    {
+        $requiredParameters = 0;
+        foreach ($this->getParameters() as $parameter) {
+            if (!$parameter->isOptional()) {
+                $requiredParameters++;
+            }
+        }
+
+        return $requiredParameters;
     }
 
     /**
@@ -127,12 +153,14 @@ trait ReflectionFunctionLikeTrait
             $parameters = [];
 
             foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
-                $parameters[] = new ReflectionParameter(
+                $reflectionParameter = new ReflectionParameter(
                     $this->getName(),
                     $parameterNode->name,
                     $parameterNode,
                     $parameterIndex
                 );
+                $reflectionParameter->setDeclaringFunction($this);
+                $parameters[] = $reflectionParameter;
             }
 
             $this->parameters = $parameters;

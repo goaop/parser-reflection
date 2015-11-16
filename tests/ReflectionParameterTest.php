@@ -28,7 +28,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
     public function testGeneralInfoGetters()
     {
         $allNameGetters = [
-            'isArray', 'isCallable', 'isPassedByReference', 'isDefaultValueAvailable',
+            'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue'/*, 'getDefaultValue', 'getDefaultValueConstantName',
             'isDefaultValueConstant'*/
         ];

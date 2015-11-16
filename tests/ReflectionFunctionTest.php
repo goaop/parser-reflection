@@ -30,7 +30,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
-            'getNumberOfParameters'
+            'getNumberOfParameters', 'getNumberOfRequiredParameters'
         ];
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
