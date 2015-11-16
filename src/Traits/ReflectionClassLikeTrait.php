@@ -300,9 +300,30 @@ trait ReflectionClassLikeTrait
 
             $this->properties = $properties;
         }
-        // TODO: Implement filtration of properties
 
-        return $this->properties;
+        // Without filter we can just return the full list
+        if (!isset($filter)) {
+            return $this->properties;
+        }
+
+        $properties = [];
+        foreach ($this->properties as $property) {
+            if (($filter & ReflectionProperty::IS_STATIC) && !($property->isStatic())) {
+                continue;
+            }
+            if (($filter & ReflectionProperty::IS_PUBLIC) && !($property->isPublic())) {
+                continue;
+            }
+            if (($filter & ReflectionProperty::IS_PROTECTED) && !($property->isProtected())) {
+                continue;
+            }
+            if (($filter & ReflectionProperty::IS_PRIVATE) && !($property->isPrivate())) {
+                continue;
+            }
+            $properties[] = $property;
+        }
+
+        return $properties;
     }
 
     /**

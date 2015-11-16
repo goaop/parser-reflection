@@ -137,7 +137,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
      */
     protected function performGeneralMethodComparison(ReflectionCLass $parsedRefClass, array $allNameGetters = [])
     {
-        $allNameGetters ?: [
+        $allNameGetters = $allNameGetters ?: [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
