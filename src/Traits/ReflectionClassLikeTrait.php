@@ -607,7 +607,7 @@ trait ReflectionClassLikeTrait
     public function getStaticPropertyValue($name, $default = null)
     {
         $properties     = $this->getStaticProperties();
-        $propertyExists = array_key_exists($properties, $name);
+        $propertyExists = array_key_exists($name, $properties);
 
         if (!$propertyExists && func_num_args() === 1) {
             throw new ReflectionException("Static property does not exist and no default value is given");
