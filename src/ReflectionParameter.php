@@ -113,6 +113,42 @@ class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
+     * Returns string representation of this parameter.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $isNullableObjectParam = $this->allowsNull();
+        $parameterType         = $this->parameterNode->type;
+        if (is_object($parameterType)) {
+            $parameterType = $parameterType->toString();
+        }
+
+        return sprintf(
+            'Parameter #%d [ %s %s%s%s%s$%s%s ]',
+            $this->parameterIndex,
+            ($this->isVariadic() || $this->isOptional()) ? '<optional>' : '<required>',
+            $parameterType ? ltrim($parameterType, '\\') . ' ' : '',
+            $isNullableObjectParam ? 'or NULL ' : '',
+            $this->isVariadic() ? '...' : '',
+            $this->isPassedByReference() ? '&' : '',
+            $this->getName(),
+            $this->isOptional()
+                ? (' = ' . $this->getDefaultValue())
+                : ''
+        );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function allowsNull()
+    {
+        return $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function canBePassedByValue()
