@@ -62,6 +62,9 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
+            if ('export' === $internalMethodName) {
+                continue;
+            }
             $refMethod    = new \ReflectionMethod(ReflectionProperty::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'ParserReflection') !== 0) {
