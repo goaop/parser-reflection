@@ -79,6 +79,21 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
+     * Return string representation of this little old property.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return sprintf(
+            "Property [%s %s $%s ]\n",
+            $this->isStatic() ? '' : ($this->isDefault() ? ' <default>' : ' <dynamic>'),
+            join(' ', \Reflection::getModifierNames($this->getModifiers())),
+            $this->getName()
+        );
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getDeclaringClass()

@@ -36,7 +36,7 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
     {
         $allNameGetters = [
             'isDefault', 'getName', 'getModifiers', 'getDocComment',
-            'isPrivate', 'isProtected', 'isPublic', 'isStatic'
+            'isPrivate', 'isProtected', 'isPublic', 'isStatic', '__toString'
         ];
 
         $allProperties  = $this->originalRefClass->getProperties();
