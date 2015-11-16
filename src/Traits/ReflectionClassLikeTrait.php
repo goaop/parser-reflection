@@ -490,14 +490,7 @@ trait ReflectionClassLikeTrait
     public function getTraits()
     {
         if (!isset($this->traits)) {
-            $directTraits = $this->getDirectTraits();
-            $parentTraits = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
-                if ($instance->isTrait()) {
-                    $result[$instance->getName()] = $instance;
-                }
-                $result += $instance->getTraits();
-            });
-            $this->traits = $directTraits + $parentTraits;
+            $this->traits = $this->getDirectTraits();
         }
 
         return $this->traits;
