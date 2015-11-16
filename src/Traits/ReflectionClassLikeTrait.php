@@ -95,6 +95,102 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Returns the string representation of the ReflectionClass object.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        $isObject = $this instanceof \ReflectionObject;
+
+        $staticProperties = $staticMethods = $defaultProperties = $dynamicProperties = $methods = [];
+
+        $format  = "%s [ <user> %sclass %s%s%s ] {\n";
+        $format .= "  @@ %s %d-%d\n\n";
+        $format .= "  - Constants [%d] {%s\n  }\n\n";
+        $format .= "  - Static properties [%d] {%s\n  }\n\n";
+        $format .= "  - Static methods [%d] {%s\n  }\n\n";
+        $format .= "  - Properties [%d] {%s\n  }\n\n";
+        $format .= ($isObject ? "  - Dynamic properties [%d] {%s\n  }\n\n" : '%s%s');
+        $format .= "  - Methods [%d] {%s\n  }\n";
+        $format .= "}\n";
+
+        foreach ($this->getProperties() as $property) {
+            if ($property->isStatic()) {
+                $staticProperties[] = $property;
+            } elseif ($property->isDefault()) {
+                $defaultProperties[] = $property;
+            } else {
+                $dynamicProperties[] = $property;
+            }
+        }
+
+        foreach ($this->getMethods() as $method) {
+            if ($method->isStatic()) {
+                $staticMethods[] = $method;
+            } else {
+                $methods[] = $method;
+            }
+        }
+
+        $buildString = function (array $items, $indentLevel = 4) {
+            if (!count($items)) {
+                return '';
+            }
+            $indent = "\n" . str_repeat(' ', $indentLevel);
+            return $indent . implode($indent, explode("\n", implode("\n", $items)));
+        };
+        $buildConstants = function (array $items, $indentLevel = 4) {
+            $str = '';
+            foreach ($items as $name => $value) {
+                $str .= "\n" . str_repeat(' ', $indentLevel);
+                $str .= sprintf(
+                    'Constant [ %s %s ] { %s }',
+                    gettype($value),
+                    $name,
+                    $value
+                );
+            }
+            return $str;
+        };
+        $interfaceNames = $this->getInterfaceNames();
+        $parentClass    = $this->getParentClass();
+        $modifiers      = '';
+        if ($this->isAbstract()) {
+            $modifiers = 'abstract ';
+        } elseif ($this->isFinal()) {
+            $modifiers = 'final ';
+        };
+
+        $string = sprintf(
+            $format,
+            ($isObject ? 'Object of class' : 'Class'),
+            $modifiers,
+            $this->getName(),
+            false !== $parentClass ? (' extends ' . $parentClass->getName()) : '',
+            $interfaceNames ? (' implements ' . implode(', ', $interfaceNames)) : '',
+            $this->getFileName(),
+            $this->getStartLine(),
+            $this->getEndLine(),
+            count($this->getConstants()),
+            $buildConstants($this->getConstants()),
+            count($staticProperties),
+            $buildString($staticProperties),
+            count($staticMethods),
+            $buildString($staticMethods),
+            count($defaultProperties),
+            $buildString($defaultProperties),
+            $isObject ? count($dynamicProperties) : '',
+            $isObject ? $buildString($dynamicProperties) : '',
+            count($methods),
+            $buildString($methods)
+        );
+
+        return $string;
+    }
+
+
+    /**
      * {@inheritDoc}
      */
     public function getConstant($name)
