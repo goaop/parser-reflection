@@ -579,6 +579,11 @@ trait ReflectionClassLikeTrait
      */
     public function getStaticProperties()
     {
+        // In runtime static properties can be changed in any time
+        if ($this->isInitialized()) {
+            return forward_static_call('parent::getStaticProperties');
+        }
+
         $properties = [];
 
         $reflectionProperties = $this->getProperties(ReflectionProperty::IS_STATIC);
@@ -662,6 +667,21 @@ trait ReflectionClassLikeTrait
         $this->initializeInternalReflection();
 
         return parent::$function($args);
+    }
+
+    /**
+     * Sets static property value
+     *
+     * @link http://php.net/manual/en/reflectionclass.setstaticpropertyvalue.php
+     *
+     * @param string $name Property name
+     * @param mixed $value New property value
+     */
+    public function setStaticPropertyValue($name, $value)
+    {
+        $this->initializeInternalReflection();
+
+        forward_static_call('parent::setStaticPropertyValue', $name, $value);
     }
 
     private function getDirectInterfaces()

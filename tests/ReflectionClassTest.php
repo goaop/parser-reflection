@@ -2,6 +2,7 @@
 namespace ParserReflection;
 
 use ParserReflection\Locator\ComposerLocator;
+use ParserReflection\Stub\ClassWithConstantsAndInheritance;
 use ParserReflection\Stub\FinalClass;
 use ParserReflection\Stub\ImplicitAbstractClass;
 use ParserReflection\Stub\SimpleAbstractInheritance;
@@ -87,6 +88,15 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
         $instance       = $parsedRefClass->newInstanceWithoutConstructor($arguments);
         $this->assertInstanceOf(FinalClass::class, $instance);
         $this->assertSame([], $instance->args);
+    }
+
+    public function testSetStaticPropertyValueMethod()
+    {
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass(ClassWithConstantsAndInheritance::class);
+        $originalRefClass = new \ReflectionClass(ClassWithConstantsAndInheritance::class);
+
+        $parsedRefClass->setStaticPropertyValue('h', 'test');
+        $this->assertSame($parsedRefClass->getStaticPropertyValue('h'), $originalRefClass->getStaticPropertyValue('h'));
     }
 
     public function testDirectMethods()
