@@ -145,7 +145,12 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function allowsNull()
     {
-        return $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
+        $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
+        if ($hasDefaultNull) {
+            return true;
+        }
+
+        return !isset($this->parameterNode->type);
     }
 
     /**
