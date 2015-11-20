@@ -314,7 +314,7 @@ class ReflectionFileNamespace implements \Reflector
                 $functionName  = $namespaceName ? $namespaceName .'\\' . $funcShortName : $funcShortName;
 
                 $namespaceLevelNode->setAttribute('fileName', $this->fileName);
-                $functions[$functionName] = new ReflectionFunction($functionName, $namespaceLevelNode);
+                $functions[$funcShortName] = new ReflectionFunction($functionName, $namespaceLevelNode);
             }
         }
 
