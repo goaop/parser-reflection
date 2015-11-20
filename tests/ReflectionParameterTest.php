@@ -2,6 +2,7 @@
 namespace ParserReflection;
 
 use ParserReflection\Locator\ComposerLocator;
+use ParserReflection\Stub\Foo;
 
 class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 {
@@ -81,6 +82,26 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
         $this->assertSame(ReflectionParameter::class, $typehintedParamWithNs->getName());
+    }
+
+
+    public function testGetDeclaringClassMethodReturnsObject()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedClass     = $parsedNamespace->getClass(Foo::class);
+        $parsedFunction  = $parsedClass->getMethod('methodParam');
+
+        $parameters = $parsedFunction->getParameters();
+        $this->assertSame($parsedClass->getName(), $parameters[0]->getDeclaringClass()->getName());
+    }
+
+    public function testGetDeclaringClassMethodReturnsNull()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
+
+        $parameters = $parsedFunction->getParameters();
+        $this->assertFalse($parameters[0]->getDeclaringClass());
     }
 
     public function testCoverAllMethods()
