@@ -25,6 +25,17 @@ class NodeExpressionResolver
 {
 
     /**
+     * List of exception for constant fetch
+     *
+     * @var array
+     */
+    private static $notConstants = [
+        'true'  => true,
+        'false' => true,
+        'null'  => true,
+    ];
+
+    /**
      * Name of the constant (if present)
      *
      * @var null|string
@@ -44,6 +55,13 @@ class NodeExpressionResolver
      * @var bool
      */
     private $isConstant = false;
+
+    /**
+     * Node resolving level, 1 = top-level
+     *
+     * @var int
+     */
+    private $nodeLevel = 0;
 
     /**
      * @var mixed Value of expression/constant
@@ -75,7 +93,10 @@ class NodeExpressionResolver
      */
     public function process(Node $node)
     {
-        $this->value = $this->resolve($node);
+        $this->nodeLevel    = 0;
+        $this->isConstant   = false;
+        $this->constantName = '';
+        $this->value        = $this->resolve($node);
     }
 
     /**
@@ -87,13 +108,20 @@ class NodeExpressionResolver
      */
     protected function resolve(Node $node)
     {
-        $nodeType   = $node->getType();
-        $methodName = 'resolve' . $nodeType;
-        if (method_exists($this, $methodName)) {
-            return $this->$methodName($node);
+        $value = null;
+        try {
+            ++$this->nodeLevel;
+
+            $nodeType   = $node->getType();
+            $methodName = 'resolve' . $nodeType;
+            if (method_exists($this, $methodName)) {
+                $value = $this->$methodName($node);
+            }
+        } finally {
+            --$this->nodeLevel;
         }
 
-        return null;
+        return $value;
     }
 
     protected function resolveScalar_DNumber(Scalar\DNumber $node)
@@ -186,24 +214,35 @@ class NodeExpressionResolver
 
     protected function resolveExpr_ConstFetch(Expr\ConstFetch $node)
     {
+        $constantValue = null;
+        $isResolved    = false;
+
         /** @var ReflectionFileNamespace|null $fileNamespace */
         $fileNamespace = null;
         $isFQNConstant = $node->name instanceof Node\Name\FullyQualified;
         $constantName  = $node->name->toString();
+
         if (!$isFQNConstant) {
             if (method_exists($this->context, 'getFileNamespace')) {
                 $fileNamespace = $this->context->getFileNamespace();
                 if ($fileNamespace->hasConstant($constantName)) {
-                    return $fileNamespace->getConstant($constantName);
+                    $constantValue = $fileNamespace->getConstant($constantName);
+                    $constantName  = $fileNamespace->getName() . '\\' . $constantName;
+                    $isResolved    = true;
                 }
             }
         }
 
-        if (defined($constantName)) {
-            return constant($constantName);
+        if (!$isResolved && defined($constantName)) {
+            $constantValue = constant($constantName);
         }
 
-        return null;
+        if ($this->nodeLevel === 1 && !isset(self::$notConstants[$constantName])) {
+            $this->isConstant   = true;
+            $this->constantName = $constantName;
+        }
+
+        return $constantValue;
     }
 
     protected function resolveExpr_ClassConstFetch(Expr\ClassConstFetch $node)
