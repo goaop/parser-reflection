@@ -13,6 +13,7 @@ namespace ParserReflection\Traits;
 
 use ParserReflection\NodeVisitor\GeneratorDetector;
 use ParserReflection\NodeVisitor\StaticVariablesCollector;
+use ParserReflection\ReflectionFileNamespace;
 use ParserReflection\ReflectionParameter;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
@@ -89,6 +90,16 @@ trait ReflectionFunctionLikeTrait
     public function getFileName()
     {
         return $this->functionLikeNode->getAttribute('fileName');
+    }
+
+    /**
+     * Returns the reflection of current file namespace
+     *
+     * @return ReflectionFileNamespace
+     */
+    public function getFileNamespace()
+    {
+        return new ReflectionFileNamespace($this->getFileName(), $this->namespaceName);
     }
 
     /**
