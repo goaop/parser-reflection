@@ -65,6 +65,24 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testGetClassMethod()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
+
+        $parameters = $parsedFunction->getParameters();
+        $this->assertSame(null, $parameters[0 /* array $arrayParam*/]->getClass());
+        $this->assertSame(null, $parameters[3 /* callable $callableParam */]->getClass());
+
+        $objectParam = $parameters[5 /* \stdClass $objectParam */]->getClass();
+        $this->assertInstanceOf(\ReflectionClass::class, $objectParam);
+        $this->assertSame(\stdClass::class, $objectParam->getName());
+
+        $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
+        $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
+        $this->assertSame(ReflectionParameter::class, $typehintedParamWithNs->getName());
+    }
+
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(\ReflectionParameter::class);

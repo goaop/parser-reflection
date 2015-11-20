@@ -12,6 +12,7 @@ namespace ParserReflection;
 
 use ParserReflection\Traits\InitializationTrait;
 use ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use ReflectionParameter as BaseReflectionParameter;
 
@@ -159,6 +160,25 @@ class ReflectionParameter extends BaseReflectionParameter
     public function canBePassedByValue()
     {
         return !$this->isPassedByReference();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getClass()
+    {
+        $parameterType = $this->parameterNode->type;
+        if ($parameterType instanceof Name) {
+            if (!$parameterType instanceof Name\FullyQualified) {
+                throw new ReflectionException("Can not resolve a class name for parameter");
+            }
+            $className   = $parameterType->toString();
+            $classExists = class_exists($className, false);
+
+            return $classExists ? new \ReflectionClass($className) : new ReflectionClass($className);
+        }
+
+        return null;
     }
 
     /**
