@@ -136,7 +136,7 @@ class ReflectionParameter extends BaseReflectionParameter
             $this->isPassedByReference() ? '&' : '',
             $this->getName(),
             $this->isOptional()
-                ? (' = ' . $this->getDefaultValue())
+                ? (' = ' . var_export($this->getDefaultValue(), true))
                 : ''
         );
     }
