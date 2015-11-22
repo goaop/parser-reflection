@@ -10,7 +10,6 @@
 
 namespace ParserReflection;
 
-use ParserReflection\Traits\InitializationTrait;
 use ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
@@ -127,20 +126,27 @@ class ReflectionParameter extends BaseReflectionParameter
         if (is_object($parameterType)) {
             $parameterType = $parameterType->toString();
         }
-        $isNullableObjectParam = $parameterType && $this->allowsNull();
+        $isNullableParam = $parameterType && $this->allowsNull();
+        $isOptional      = $this->isOptional();
+        $defaultValue    = '';
+        if ($isOptional) {
+            $defaultValue = $this->getDefaultValue();
+            if (is_string($defaultValue) && strlen($defaultValue) > 15) {
+                $defaultValue = substr($defaultValue, 0, 15) . '...';
+            }
+            $defaultValue = var_export($defaultValue, true);
+        }
 
         return sprintf(
             'Parameter #%d [ %s %s%s%s%s$%s%s ]',
             $this->parameterIndex,
-            ($this->isVariadic() || $this->isOptional()) ? '<optional>' : '<required>',
+            ($this->isVariadic() || $isOptional) ? '<optional>' : '<required>',
             $parameterType ? ltrim($parameterType, '\\') . ' ' : '',
-            $isNullableObjectParam ? 'or NULL ' : '',
+            $isNullableParam ? 'or NULL ' : '',
             $this->isVariadic() ? '...' : '',
             $this->isPassedByReference() ? '&' : '',
             $this->getName(),
-            $this->isOptional()
-                ? (' = ' . var_export($this->getDefaultValue(), true))
-                : ''
+            $isOptional ? (' = ' . $defaultValue) : ''
         );
     }
 

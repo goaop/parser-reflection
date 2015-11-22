@@ -4,6 +4,8 @@ namespace ParserReflection\Stub;
 
 abstract class AbstractClassWithMethods
 {
+    const TEST = 5;
+
     public function __construct(){}
     public function __destruct(){}
     public function explicitPublicFunc(){}
@@ -46,4 +48,6 @@ abstract class AbstractClassWithMethods
 
         return 10;
     }
+
+    private function testParam($a, $b = null, $c = self::class, $d = self::TEST) {}
 }

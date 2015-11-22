@@ -66,8 +66,9 @@ class ReflectionMethod extends BaseReflectionMethod
         $methodParameters = $this->getParameters();
 
         $paramString = '';
+        $identation  = str_repeat(' ', 4);
         foreach ($methodParameters as $methodParameter) {
-            $paramString .= "\n" . $methodParameter;
+            $paramString .= "\n{$identation}" . $methodParameter;
         }
 
         return sprintf(

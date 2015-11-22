@@ -20,7 +20,7 @@ function miscParameters(
     &$byReferenceParam,
     &$byReferenceNullable = __CLASS__,
     $constParam = TEST_PARAMETER,
-    $constValueParam = 42.0
+    $constValueParam = __NAMESPACE__ // This line is long and should be truncated
 ) {}
 
 class Foo {
