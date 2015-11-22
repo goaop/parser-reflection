@@ -168,9 +168,9 @@ trait ReflectionFunctionLikeTrait
                     $this->getName(),
                     $parameterNode->name,
                     $parameterNode,
-                    $parameterIndex
+                    $parameterIndex,
+                    $this
                 );
-                $reflectionParameter->setDeclaringFunction($this);
                 $parameters[] = $reflectionParameter;
             }
 

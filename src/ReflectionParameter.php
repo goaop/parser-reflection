@@ -79,23 +79,22 @@ class ReflectionParameter extends BaseReflectionParameter
      * @param string $parameterName Name of the parameter to reflect
      * @param Param $parameterNode Parameter definition node
      * @param int $parameterIndex Index of parameter
+     * @param \ReflectionFunctionAbstract $declaringFunction
      */
     public function __construct(
         $functionName,
         $parameterName,
         Param $parameterNode = null,
-        $parameterIndex = 0)
+        $parameterIndex = 0,
+        \ReflectionFunctionAbstract $declaringFunction = null)
     {
-        $this->functionName = $functionName;
-        if (!$parameterNode) {
-            list ($paramNode, $parameterNode) = ReflectionEngine::parseClassProperty($functionName, $parameterName);
-        }
-
-        $this->parameterNode  = $parameterNode;
-        $this->parameterIndex = $parameterIndex;
+        $this->functionName      = $functionName;
+        $this->parameterNode     = $parameterNode;
+        $this->parameterIndex    = $parameterIndex;
+        $this->declaringFunction = $declaringFunction;
 
         if ($this->isDefaultValueAvailable()) {
-            $expressionSolver = new NodeExpressionResolver(null);
+            $expressionSolver = new NodeExpressionResolver($this);
             $expressionSolver->process($this->parameterNode->default);
             $this->defaultValue             = $expressionSolver->getValue();
             $this->isDefaultValueConstant   = $expressionSolver->isConstant();
@@ -295,16 +294,6 @@ class ReflectionParameter extends BaseReflectionParameter
     public function isVariadic()
     {
         return (bool) $this->parameterNode->variadic;
-    }
-
-    /**
-     * Passes an information about top-level reflection instance
-     *
-     * @param \ReflectionFunctionAbstract $refFunction
-     */
-    public function setDeclaringFunction(\ReflectionFunctionAbstract $refFunction)
-    {
-        $this->declaringFunction = $refFunction;
     }
 
     /**

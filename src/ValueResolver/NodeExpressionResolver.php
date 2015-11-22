@@ -174,7 +174,10 @@ class NodeExpressionResolver
             return $this->context->getName();
         }
         if (method_exists($this->context, 'getDeclaringClass')) {
-            return $this->context->getDeclaringClass()->getName();
+            $declaringClass = $this->context->getDeclaringClass();
+            if ($declaringClass instanceof \ReflectionClass) {
+                return $declaringClass->getName();
+            }
         }
 
         return '';
