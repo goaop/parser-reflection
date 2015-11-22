@@ -123,11 +123,11 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function __toString()
     {
-        $isNullableObjectParam = $this->allowsNull();
-        $parameterType         = $this->parameterNode->type;
+        $parameterType = $this->parameterNode->type;
         if (is_object($parameterType)) {
             $parameterType = $parameterType->toString();
         }
+        $isNullableObjectParam = $parameterType && $this->allowsNull();
 
         return sprintf(
             'Parameter #%d [ %s %s%s%s%s$%s%s ]',

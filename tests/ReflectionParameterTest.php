@@ -31,7 +31,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $allNameGetters = [
             'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
-            'isDefaultValueConstant'
+            'isDefaultValueConstant', '__toString'
         ];
         $onlyWithDefaultValues = array_flip([
             'getDefaultValue', 'getDefaultValueConstantName', 'isDefaultValueConstant'
@@ -55,7 +55,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
                         }
                         $expectedValue = $originalRefParameter->$getterName();
                         $actualValue   = $refParameter->$getterName();
-                        $this->assertEquals(
+                        $this->assertSame(
                             $expectedValue,
                             $actualValue,
                             "{$getterName}() for parameter {$functionName}:{$parameterName} should be equal"

@@ -95,7 +95,7 @@ class NodeExpressionResolver
     {
         $this->nodeLevel    = 0;
         $this->isConstant   = false;
-        $this->constantName = '';
+        $this->constantName = null;
         $this->value        = $this->resolve($node);
     }
 
