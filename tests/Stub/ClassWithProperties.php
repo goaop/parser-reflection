@@ -2,7 +2,7 @@
 
 namespace ParserReflection\Stub;
 
-abstract class AbstractClassWithProperties
+class ClassWithProperties
 {
     private $privateProperty = 123;
     protected $protectedProperty = 'a';

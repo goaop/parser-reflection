@@ -6,7 +6,7 @@ use PhpParser\Lexer;
 
 class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_CLASS = '\ParserReflection\Stub\AbstractClassWithProperties';
+    const STUB_CLASS = 'ParserReflection\Stub\ClassWithProperties';
 
     /**
      * @var \ReflectionClass
@@ -54,6 +54,47 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
                 );
             }
         }
+    }
+
+    public function testSetAccessibleMethod()
+    {
+        $parsedProperty = $this->parsedRefClass->getProperty('protectedStaticProperty');
+        $parsedProperty->setAccessible(true);
+
+        $value = $parsedProperty->getValue();
+        $this->assertSame('foo', $value);
+    }
+
+    public function testGetSetValueForObjectMethods()
+    {
+        $parsedProperty = $this->parsedRefClass->getProperty('protectedProperty');
+        $parsedProperty->setAccessible(true);
+
+        $className = self::STUB_CLASS;
+        $obj       = new $className;
+
+        $value = $parsedProperty->getValue($obj);
+        $this->assertSame('a', $value);
+
+        $parsedProperty->setValue($obj, 43);
+        $value = $parsedProperty->getValue($obj);
+        $this->assertSame(43, $value);
+    }
+
+    public function testCompatibilityWithOriginalConstructor()
+    {
+        $parsedRefProperty = new ReflectionProperty(self::STUB_CLASS, 'publicStaticProperty');
+        $originalValue     = $parsedRefProperty->getValue();
+
+        $this->assertSame(M_PI, $originalValue);
+    }
+
+    public function testDebugInfoMethod()
+    {
+        $parsedRefProperty   = new ReflectionProperty(self::STUB_CLASS, 'publicStaticProperty');
+        $originalRefProperty = new \ReflectionProperty(self::STUB_CLASS, 'publicStaticProperty');
+        $expectedValue     = (array) $originalRefProperty;
+        $this->assertSame($expectedValue, $parsedRefProperty->__debugInfo());
     }
 
     public function testCoverAllMethods()
