@@ -30,7 +30,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
     {
         $allNameGetters = [
             'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
-            'getPosition', 'canBePassedByValue', 'allowsNull', /*'getDefaultValue', 'getDefaultValueConstantName',*/
+            'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
             'isDefaultValueConstant'
         ];
         $onlyWithDefaultValues = array_flip([
