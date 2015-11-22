@@ -8,10 +8,10 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
 
-use ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;

@@ -8,9 +8,9 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\NodeVisitor;
+namespace Go\ParserReflection\NodeVisitor;
 
-use ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;

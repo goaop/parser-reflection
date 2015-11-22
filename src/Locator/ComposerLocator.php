@@ -8,12 +8,12 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\Locator;
+namespace Go\ParserReflection\Locator;
 
 
 use Composer\Autoload\ClassLoader;
-use ParserReflection\LocatorInterface;
-use ParserReflection\ReflectionException;
+use Go\ParserReflection\LocatorInterface;
+use Go\ParserReflection\ReflectionException;
 
 /**
  * Locator, that can find a file for the given class name by asking composer

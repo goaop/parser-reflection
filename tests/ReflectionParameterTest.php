@@ -1,8 +1,8 @@
 <?php
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\Locator\ComposerLocator;
-use ParserReflection\Stub\Foo;
+use Go\ParserReflection\Locator\ComposerLocator;
+use Go\ParserReflection\Stub\Foo;
 
 class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 {
@@ -68,7 +68,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     public function testGetClassMethod()
     {
-        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
 
         $parameters = $parsedFunction->getParameters();
@@ -87,7 +87,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     public function testGetDeclaringClassMethodReturnsObject()
     {
-        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass     = $parsedNamespace->getClass(Foo::class);
         $parsedFunction  = $parsedClass->getMethod('methodParam');
 
@@ -97,7 +97,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     public function testGetDeclaringClassMethodReturnsNull()
     {
-        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
 
         $parameters = $parsedFunction->getParameters();
@@ -106,12 +106,12 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     public function testDebugInfoMethod()
     {
-        $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
 
         $parsedRefParameters  = $parsedFunction->getParameters();
         $parsedRefParameter   = $parsedRefParameters[0];
-        $originalRefParameter = new \ReflectionParameter('ParserReflection\Stub\miscParameters', 'arrayParam');
+        $originalRefParameter = new \ReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
         $expectedValue        = (array) $originalRefParameter;
         $this->assertSame($expectedValue, $parsedRefParameter->__debugInfo());
     }
@@ -127,14 +127,14 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $parsedException   = null;
 
         try {
-            $originalRefParameter = new \ReflectionParameter('ParserReflection\Stub\miscParameters', 'arrayParam');
+            $originalRefParameter = new \ReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
             $originalRefParameter->$getterName();
         } catch (\ReflectionException $e) {
             $originalException = $e;
         }
 
         try {
-            $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+            $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
             $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
 
             $parsedRefParameters  = $parsedFunction->getParameters();
@@ -168,7 +168,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
             }
             $refMethod    = new \ReflectionMethod(ReflectionParameter::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'ParserReflection') !== 0) {
+            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }

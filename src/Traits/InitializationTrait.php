@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\Traits;
+namespace Go\ParserReflection\Traits;
 
 
 trait InitializationTrait

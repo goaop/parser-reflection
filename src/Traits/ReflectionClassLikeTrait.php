@@ -8,16 +8,16 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\Traits;
+namespace Go\ParserReflection\Traits;
 
-use ParserReflection\ReflectionEngine;
-use ParserReflection\ReflectionClass;
-use ParserReflection\ReflectionException;
-use ParserReflection\ReflectionFile;
-use ParserReflection\ReflectionFileNamespace;
-use ParserReflection\ReflectionMethod;
-use ParserReflection\ReflectionProperty;
-use ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\ReflectionEngine;
+use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionException;
+use Go\ParserReflection\ReflectionFile;
+use Go\ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\ReflectionMethod;
+use Go\ParserReflection\ReflectionProperty;
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
@@ -385,7 +385,7 @@ trait ReflectionClassLikeTrait
      * @param int $filter The optional filter, for filtering desired property types.
      *                    It's configured using the ReflectionProperty constants, and defaults to all property types.
      *
-     * @return array|\ParserReflection\ReflectionProperty[]
+     * @return array|\Go\ParserReflection\ReflectionProperty[]
      */
     public function getProperties($filter = null)
     {

@@ -1,11 +1,11 @@
 <?php
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\Locator\ComposerLocator;
-use ParserReflection\Stub\ClassWithConstantsAndInheritance;
-use ParserReflection\Stub\FinalClass;
-use ParserReflection\Stub\ImplicitAbstractClass;
-use ParserReflection\Stub\SimpleAbstractInheritance;
+use Go\ParserReflection\Locator\ComposerLocator;
+use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
+use Go\ParserReflection\Stub\FinalClass;
+use Go\ParserReflection\Stub\ImplicitAbstractClass;
+use Go\ParserReflection\Stub\SimpleAbstractInheritance;
 
 class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 {
@@ -26,7 +26,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
         $reflectionFile = new ReflectionFile($fileName, $fileNode);
 
-        $parsedFileNamespace          = $reflectionFile->getFileNamespace('ParserReflection\Stub');
+        $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
         $this->parsedRefFileNamespace = $parsedFileNamespace;
 
         include_once $fileName;
@@ -57,7 +57,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
         include_once $fileName;
 
-        $parsedFileNamespace = $reflectionFile->getFileNamespace('ParserReflection\Stub');
+        $parsedFileNamespace = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
         foreach ($parsedFileNamespace->getClasses() as $parsedRefClass) {
             $this->performGeneralMethodComparison($parsedRefClass);
         }
@@ -132,7 +132,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             }
             $refMethod    = new \ReflectionMethod(ReflectionClass::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'ParserReflection') !== 0) {
+            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }

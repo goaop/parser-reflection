@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\NodeVisitor;
+namespace Go\ParserReflection\NodeVisitor;
 
 use PhpParser\Node;
 use PhpParser\NodeTraverser;

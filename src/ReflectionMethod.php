@@ -8,9 +8,9 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
 

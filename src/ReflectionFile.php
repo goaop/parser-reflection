@@ -8,7 +8,7 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
 
 use PhpParser\Node;

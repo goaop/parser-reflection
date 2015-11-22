@@ -1,6 +1,6 @@
 <?php
 
-namespace ParserReflection\Stub {
+namespace Go\ParserReflection\Stub {
     function simpleNoArgs() {}
     function simpleArg($test) {}
     function generatorFunc() {

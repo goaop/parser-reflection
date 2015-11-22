@@ -1,6 +1,6 @@
 <?php
 
-namespace ParserReflection\Stub;
+namespace Go\ParserReflection\Stub;
 
 /**
  * @link https://bugs.php.net/bug.php?id=70957 self::class can not be resolved with reflection for abstract class

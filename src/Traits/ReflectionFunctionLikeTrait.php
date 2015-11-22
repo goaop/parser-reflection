@@ -8,13 +8,13 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\Traits;
+namespace Go\ParserReflection\Traits;
 
 
-use ParserReflection\NodeVisitor\GeneratorDetector;
-use ParserReflection\NodeVisitor\StaticVariablesCollector;
-use ParserReflection\ReflectionFileNamespace;
-use ParserReflection\ReflectionParameter;
+use Go\ParserReflection\NodeVisitor\GeneratorDetector;
+use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
+use Go\ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\ReflectionParameter;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassMethod;

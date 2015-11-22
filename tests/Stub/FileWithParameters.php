@@ -1,8 +1,8 @@
 <?php
 
-namespace ParserReflection\Stub;
+namespace Go\ParserReflection\Stub;
 
-use ParserReflection\ReflectionParameter;
+use Go\ParserReflection\ReflectionParameter;
 
 const TEST_PARAMETER = 42;
 

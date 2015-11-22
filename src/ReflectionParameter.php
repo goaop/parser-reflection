@@ -8,9 +8,9 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use ReflectionParameter as BaseReflectionParameter;
@@ -134,7 +134,7 @@ class ReflectionParameter extends BaseReflectionParameter
             if (is_string($defaultValue) && strlen($defaultValue) > 15) {
                 $defaultValue = substr($defaultValue, 0, 15) . '...';
             }
-            $defaultValue = var_export($defaultValue, true);
+            $defaultValue = str_replace('\\\\', '\\', var_export($defaultValue, true));
         }
 
         return sprintf(

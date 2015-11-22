@@ -1,12 +1,12 @@
 <?php
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\Locator\ComposerLocator;
+use Go\ParserReflection\Locator\ComposerLocator;
 use PhpParser\Lexer;
 
 class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_CLASS = 'ParserReflection\Stub\ClassWithProperties';
+    const STUB_CLASS = 'Go\ParserReflection\Stub\ClassWithProperties';
 
     /**
      * @var \ReflectionClass
@@ -108,7 +108,7 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
             }
             $refMethod    = new \ReflectionMethod(ReflectionProperty::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'ParserReflection') !== 0) {
+            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }

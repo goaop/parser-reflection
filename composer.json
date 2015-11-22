@@ -1,5 +1,5 @@
 {
-  "name": "lisachenko/parser-reflection",
+  "name": "goaop/parser-reflection",
   "description": "Provides reflection information, based on raw source",
   "license": "MIT",
   "authors": [
@@ -11,12 +11,12 @@
   "minimum-stability": "dev",
   "autoload": {
     "psr-4": {
-      "ParserReflection\\": "src"
+      "Go\\ParserReflection\\": "src"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "ParserReflection\\": "tests"
+      "Go\\ParserReflection\\": "tests"
     }
   },
   "require": {

@@ -8,10 +8,10 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\Traits\InitializationTrait;
-use ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Traits\InitializationTrait;
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use ReflectionProperty as BaseReflectionProperty;

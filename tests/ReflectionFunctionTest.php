@@ -1,7 +1,7 @@
 <?php
-namespace ParserReflection;
+namespace Go\ParserReflection;
 
-use ParserReflection\Locator\ComposerLocator;
+use Go\ParserReflection\Locator\ComposerLocator;
 
 class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 {
@@ -61,7 +61,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
             }
             $refMethod    = new \ReflectionMethod(ReflectionFunction::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'ParserReflection') !== 0) {
+            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }

@@ -8,11 +8,11 @@
  * with this source code in the file LICENSE.
  */
 
-namespace ParserReflection\ValueResolver;
+namespace Go\ParserReflection\ValueResolver;
 
-use ParserReflection\ReflectionClass;
-use ParserReflection\ReflectionException;
-use ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionException;
+use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar;
