@@ -280,16 +280,6 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * Returns the reflection of current file namespace
-     *
-     * @return ReflectionFileNamespace
-     */
-    public function getFileNamespace()
-    {
-        return new ReflectionFileNamespace($this->getFileName(), $this->namespaceName);
-    }
-
-    /**
      * {@inheritDoc}
      */
     public function getInterfaceNames()
