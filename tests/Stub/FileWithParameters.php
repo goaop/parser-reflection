@@ -24,5 +24,8 @@ function miscParameters(
 ) {}
 
 class Foo {
+    const CLASS_CONST = __CLASS__;
+
     public function methodParam($firstParam, $optionalParam = null) {}
+    public function methodParamConst($firstParam = self::CLASS_CONST, $another = __CLASS__, $ns = TEST_PARAMETER) {}
 }
