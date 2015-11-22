@@ -2,6 +2,9 @@
 
 namespace ParserReflection\Stub;
 
+/**
+ * @link https://bugs.php.net/bug.php?id=70957 self::class can not be resolved with reflection for abstract class
+ */
 abstract class AbstractClassWithMethods
 {
     const TEST = 5;
@@ -49,5 +52,5 @@ abstract class AbstractClassWithMethods
         return 10;
     }
 
-    private function testParam($a, $b = null, $c = self::class, $d = self::TEST) {}
+    private function testParam($a, $b = null, $d = self::TEST) {}
 }
