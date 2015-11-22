@@ -21,8 +21,6 @@ use ReflectionParameter as BaseReflectionParameter;
  */
 class ReflectionParameter extends BaseReflectionParameter
 {
-    use InitializationTrait;
-
     /**
      * Reflection function or method
      *
@@ -318,15 +316,5 @@ class ReflectionParameter extends BaseReflectionParameter
         }
 
         return true;
-    }
-
-    /**
-     * Implementation of internal reflection initialization
-     *
-     * @return void
-     */
-    protected function __initialize()
-    {
-        parent::__construct($this->functionName, $this->getName());
     }
 }
