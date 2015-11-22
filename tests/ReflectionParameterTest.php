@@ -116,6 +116,47 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($expectedValue, $parsedRefParameter->__debugInfo());
     }
 
+    /**
+     * @dataProvider listOfDefaultGetters
+     *
+     * @param string $getterName Name of the getter to call
+     */
+    public function testGetDefaultValueThrowsAnException($getterName)
+    {
+        $originalException = null;
+        $parsedException   = null;
+
+        try {
+            $originalRefParameter = new \ReflectionParameter('ParserReflection\Stub\miscParameters', 'arrayParam');
+            $originalRefParameter->$getterName();
+        } catch (\ReflectionException $e) {
+            $originalException = $e;
+        }
+
+        try {
+            $parsedNamespace = $this->parsedRefFile->getFileNamespace('ParserReflection\Stub');
+            $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
+
+            $parsedRefParameters  = $parsedFunction->getParameters();
+            $parsedRefParameter   = $parsedRefParameters[0];
+            $parsedRefParameter->$getterName();
+        } catch (\ReflectionException $e) {
+            $parsedException = $e;
+        }
+
+        $this->assertInstanceOf(\ReflectionException::class, $originalException);
+        $this->assertInstanceOf(\ReflectionException::class, $parsedException);
+        $this->assertSame($originalException->getMessage(), $parsedException->getMessage());
+    }
+
+    public function listOfDefaultGetters()
+    {
+        return [
+            ['getDefaultValue'],
+            ['getDefaultValueConstantName']
+        ];
+    }
+
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(\ReflectionParameter::class);

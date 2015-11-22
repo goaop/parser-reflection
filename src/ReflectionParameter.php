@@ -210,7 +210,7 @@ class ReflectionParameter extends BaseReflectionParameter
     public function getDefaultValue()
     {
         if (!$this->isDefaultValueAvailable()) {
-            throw new ReflectionException("Can not get the default value for the parameter");
+            throw new ReflectionException('Internal error: Failed to retrieve the default value');
         }
 
         return $this->defaultValue;
@@ -222,7 +222,7 @@ class ReflectionParameter extends BaseReflectionParameter
     public function getDefaultValueConstantName()
     {
         if (!$this->isDefaultValueAvailable()) {
-            throw new ReflectionException("Can not get the default value for the parameter");
+            throw new ReflectionException('Internal error: Failed to retrieve the default value');
         }
 
         return $this->defaultValueConstantName;
