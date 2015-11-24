@@ -12,6 +12,9 @@ before_script:
 script:
   - vendor/bin/phpunit --verbose --coverage-text --coverage-clover=clover.xml --colors
 
+after_script:
+  - sh .travis.coverage.sh
+
 matrix:
   allow_failures:
     - php: hhvm
