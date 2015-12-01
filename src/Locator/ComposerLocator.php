@@ -10,7 +10,6 @@
 
 namespace Go\ParserReflection\Locator;
 
-
 use Composer\Autoload\ClassLoader;
 use Go\ParserReflection\LocatorInterface;
 use Go\ParserReflection\ReflectionException;
