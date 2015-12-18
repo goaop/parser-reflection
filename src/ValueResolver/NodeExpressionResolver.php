@@ -139,7 +139,7 @@ class NodeExpressionResolver
         return $node->value;
     }
 
-    protected function resolveScalarMagicConstMethod(MagicConst\Method $node)
+    protected function resolveScalarMagicConstMethod()
     {
         if ($this->context instanceof \ReflectionMethod) {
             $fullName = $this->context->getDeclaringClass()->getName() . '::' . $this->context->getShortName();
@@ -150,7 +150,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstFunction(MagicConst\Function_ $node)
+    protected function resolveScalarMagicConstFunction()
     {
         if ($this->context instanceof \ReflectionFunctionAbstract) {
             return $this->context->getName();
@@ -159,7 +159,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstNamespace(MagicConst\Namespace_ $node)
+    protected function resolveScalarMagicConstNamespace()
     {
         if (method_exists($this->context, 'getNamespaceName')) {
             return $this->context->getNamespaceName();
@@ -168,7 +168,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstClass(MagicConst\Class_ $node)
+    protected function resolveScalarMagicConstClass()
     {
         if ($this->context instanceof \ReflectionClass) {
             return $this->context->getName();
@@ -183,7 +183,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstDir(MagicConst\Dir $node)
+    protected function resolveScalarMagicConstDir()
     {
         if (method_exists($this->context, 'getFileName')) {
             return dirname($this->context->getFileName());
@@ -192,7 +192,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstFile(MagicConst\File $node)
+    protected function resolveScalarMagicConstFile()
     {
         if (method_exists($this->context, 'getFileName')) {
             return $this->context->getFileName();
@@ -206,7 +206,7 @@ class NodeExpressionResolver
         return $node->hasAttribute('startLine') ? $node->getAttribute('startLine') : 0;
     }
 
-    protected function resolveScalarMagicConstTrait(MagicConst\Trait_ $node)
+    protected function resolveScalarMagicConstTrait()
     {
         if ($this->context instanceof \ReflectionClass && $this->context->isTrait()) {
             return $this->context->getName();
