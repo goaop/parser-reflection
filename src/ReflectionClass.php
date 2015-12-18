@@ -82,7 +82,7 @@ class ReflectionClass extends InternalReflectionClass
     {
         $traits = [];
 
-        if ($classLikeNode->stmts) {
+        if (!empty($classLikeNode->stmts)) {
             foreach ($classLikeNode->stmts as $classLevelNode) {
                 if ($classLevelNode instanceof TraitUse) {
                     foreach ($classLevelNode->traits as $classTraitName) {

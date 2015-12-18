@@ -279,7 +279,7 @@ trait ReflectionClassLikeTrait
         if (!isset($this->interfaceClasses)) {
             $this->interfaceClasses = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
                 if ($instance->isInterface()) {
-                    $result[$instance->getName()] = $instance;
+                    $result[$instance->name] = $instance;
                 }
                 $result += $instance->getInterfaces();
             });
@@ -639,7 +639,7 @@ trait ReflectionClassLikeTrait
     {
         if (is_object($class)) {
             if ($class instanceof ReflectionClass) {
-                $class = $class->getName();
+                $class = $class->name;
             } else {
                 $class = get_class($class);
             }
@@ -647,7 +647,7 @@ trait ReflectionClassLikeTrait
 
         if (!$this->classLikeNode instanceof Class_) {
             return false;
-        } else{
+        } else {
             $extends = $this->classLikeNode->extends;
             if ($extends && $extends->toString() == $class) {
                 return true;
@@ -821,7 +821,7 @@ trait ReflectionClassLikeTrait
         foreach ($this->classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof ClassConst) {
                 $nodeConstants = $classLevelNode->consts;
-                if ($nodeConstants) {
+                if (!empty($nodeConstants)) {
                     foreach ($nodeConstants as $nodeConstant) {
                         $expressionSolver->process($nodeConstant->value);
                         $constants[$nodeConstant->name] = $expressionSolver->getValue();

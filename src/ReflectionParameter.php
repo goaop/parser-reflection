@@ -49,9 +49,9 @@ class ReflectionParameter extends BaseReflectionParameter
     private $defaultValueConstantName;
 
     /**
-     * Name of the function/method
+     * Name of the function or array pair [class name, method name]
      *
-     * @var string
+     * @var string|array
      */
     private $functionName;
 
@@ -83,8 +83,8 @@ class ReflectionParameter extends BaseReflectionParameter
         $parameterName,
         Param $parameterNode = null,
         $parameterIndex = 0,
-        \ReflectionFunctionAbstract $declaringFunction = null)
-    {
+        \ReflectionFunctionAbstract $declaringFunction = null
+    ) {
         $this->functionName      = $functionName;
         $this->parameterNode     = $parameterNode;
         $this->parameterIndex    = $parameterIndex;
@@ -126,7 +126,7 @@ class ReflectionParameter extends BaseReflectionParameter
         if (is_object($parameterType)) {
             $parameterType = $parameterType->toString();
         }
-        $isNullableParam = $parameterType && $this->allowsNull();
+        $isNullableParam = !empty($parameterType) && $this->allowsNull();
         $isOptional      = $this->isOptional();
         $defaultValue    = '';
         if ($isOptional) {
@@ -199,7 +199,7 @@ class ReflectionParameter extends BaseReflectionParameter
             return $this->declaringFunction->getDeclaringClass();
         };
 
-        return false;
+        return null;
     }
 
     /**

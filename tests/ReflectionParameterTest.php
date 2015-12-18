@@ -101,7 +101,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
 
         $parameters = $parsedFunction->getParameters();
-        $this->assertFalse($parameters[0]->getDeclaringClass());
+        $this->assertNull($parameters[0]->getDeclaringClass());
     }
 
     public function testDebugInfoMethod()

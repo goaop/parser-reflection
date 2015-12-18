@@ -99,7 +99,6 @@ class ReflectionEngine
         $className      = array_pop($namespaceParts);
         $namespaceName  = join('\\', $namespaceParts);
 
-        $namespaceNodes = null;
         if ($namespaceName) {
             // we have a namespace nodes somewhere
             $namespace      = self::parseFileNamespace($classFileName, $namespaceName);

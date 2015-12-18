@@ -33,7 +33,7 @@ class ReflectionFile implements \Reflector
     /**
      * Top-level nodes for the file
      *
-     * @var Node
+     * @var Node[]
      */
     private $topLevelNodes;
 

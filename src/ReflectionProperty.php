@@ -57,8 +57,8 @@ class ReflectionProperty extends BaseReflectionProperty
         $className,
         $propertyName,
         Property $propertyType = null,
-        PropertyProperty $propertyNode = null)
-    {
+        PropertyProperty $propertyNode = null
+    ) {
         $this->className    = $className;
         if (!$propertyType || !$propertyNode) {
             list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
@@ -149,6 +149,9 @@ class ReflectionProperty extends BaseReflectionProperty
     {
         if (!isset($object)) {
             $solver = new NodeExpressionResolver($this->getDeclaringClass());
+            if (!isset($this->propertyNode->default)) {
+                return null;
+            }
             $solver->process($this->propertyNode->default);
 
             return $solver->getValue();
