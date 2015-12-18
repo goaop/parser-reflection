@@ -87,16 +87,6 @@ trait ReflectionClassLikeTrait
     protected $properties;
 
     /**
-     * Emulating original behaviour of reflection
-     */
-    public function __debugInfo()
-    {
-        return array(
-            'name' => $this->getName()
-        );
-    }
-
-    /**
      * Returns the string representation of the ReflectionClass object.
      *
      * @return string

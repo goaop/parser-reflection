@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
@@ -23,7 +24,7 @@ use ReflectionClass as InternalReflectionClass;
  */
 class ReflectionClass extends InternalReflectionClass
 {
-    use ReflectionClassLikeTrait;
+    use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 
     /**
      * Initializes reflection instance
@@ -36,6 +37,9 @@ class ReflectionClass extends InternalReflectionClass
         $fullClassName       = is_object($argument) ? get_class($argument) : $argument;
         $namespaceParts      = explode('\\', $fullClassName);
         $this->className     = array_pop($namespaceParts);
+        // Let's unset original read-only property to have a control over it via __get
+        unset($this->name);
+
         $this->namespaceName = join('\\', $namespaceParts);
 
         $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
@@ -87,8 +91,8 @@ class ReflectionClass extends InternalReflectionClass
                 if ($classLevelNode instanceof TraitUse) {
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
-                            $traitName  = $classTraitName->toString();
-                            $trait      = trait_exists($traitName, false)
+                            $traitName          = $classTraitName->toString();
+                            $trait              = trait_exists($traitName, false)
                                 ? new parent($traitName)
                                 : new static($traitName);
                             $traits[$traitName] = $trait;
@@ -99,6 +103,16 @@ class ReflectionClass extends InternalReflectionClass
         }
 
         return $traits;
+    }
+
+    /**
+     * Emulating original behaviour of reflection
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'name' => $this->getName()
+        );
     }
 
     /**

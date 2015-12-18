@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -20,7 +21,7 @@ use ReflectionMethod as BaseReflectionMethod;
  */
 class ReflectionMethod extends BaseReflectionMethod
 {
-    use ReflectionFunctionLikeTrait;
+    use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
     /**
      * Name of the class
@@ -41,6 +42,9 @@ class ReflectionMethod extends BaseReflectionMethod
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = $className;
         $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
+
+        // Let's unset original read-only properties to have a control over them via __get
+        unset($this->name, $this->class);
     }
 
     /**

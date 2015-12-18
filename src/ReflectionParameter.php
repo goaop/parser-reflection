@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
@@ -20,6 +21,8 @@ use ReflectionParameter as BaseReflectionParameter;
  */
 class ReflectionParameter extends BaseReflectionParameter
 {
+    use InternalPropertiesEmulationTrait;
+
     /**
      * Reflection function or method
      *
@@ -86,6 +89,9 @@ class ReflectionParameter extends BaseReflectionParameter
         \ReflectionFunctionAbstract $declaringFunction = null
     ) {
         $this->functionName      = $functionName;
+        // Let's unset original read-only property to have a control over it via __get
+        unset($this->name);
+
         $this->parameterNode     = $parameterNode;
         $this->parameterIndex    = $parameterIndex;
         $this->declaringFunction = $declaringFunction;

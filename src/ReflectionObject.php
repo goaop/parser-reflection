@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
@@ -23,7 +24,7 @@ use ReflectionObject as InternalReflectionObject;
  */
 class ReflectionObject extends InternalReflectionObject
 {
-    use ReflectionClassLikeTrait;
+    use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 
     /**
      * Instance of object
@@ -44,9 +45,22 @@ class ReflectionObject extends InternalReflectionObject
         $fullClassName       = get_class($instance);
         $namespaceParts      = explode('\\', $fullClassName);
         $this->className     = array_pop($namespaceParts);
+        // Let's unset original read-only property to have a control over it via __get
+        unset($this->name);
+
         $this->namespaceName = join('\\', $namespaceParts);
 
         $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
+    }
+
+    /**
+     * Emulating original behaviour of reflection
+     */
+    public function __debugInfo()
+    {
+        return array(
+            'name' => $this->getName()
+        );
     }
 
     /**

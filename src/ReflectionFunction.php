@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\Function_;
 use ReflectionFunction as BaseReflectionFunction;
@@ -19,7 +20,7 @@ use ReflectionFunction as BaseReflectionFunction;
  */
 class ReflectionFunction extends BaseReflectionFunction
 {
-    use ReflectionFunctionLikeTrait;
+    use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
     /**
      * Initializes reflection instance for given AST-node

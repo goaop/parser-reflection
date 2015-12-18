@@ -11,6 +11,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\InitializationTrait;
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
@@ -22,7 +23,7 @@ use ReflectionProperty as BaseReflectionProperty;
  */
 class ReflectionProperty extends BaseReflectionProperty
 {
-    use InitializationTrait;
+    use InitializationTrait, InternalPropertiesEmulationTrait;
 
     /**
      * Type of property node
@@ -66,6 +67,9 @@ class ReflectionProperty extends BaseReflectionProperty
 
         $this->propertyTypeNode = $propertyType;
         $this->propertyNode     = $propertyNode;
+
+        // Let's unset original read-only properties to have a control over them via __get
+        unset($this->name, $this->class);
     }
 
     /**
