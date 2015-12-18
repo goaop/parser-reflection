@@ -10,11 +10,8 @@
 
 namespace Go\ParserReflection\Traits;
 
-use Go\ParserReflection\ReflectionEngine;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
-use Go\ParserReflection\ReflectionFile;
-use Go\ParserReflection\ReflectionFileNamespace;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
@@ -22,11 +19,8 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Interface_;
-use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\Trait_;
-use PhpParser\Node\Stmt\TraitUse;
 
 /**
  * General class-like reflection
@@ -264,16 +258,6 @@ trait ReflectionClassLikeTrait
         return false;
     }
 
-    /**
-     * Returns the reflection of current file
-     *
-     * @return ReflectionFile
-     */
-    public function getFile()
-    {
-        return new ReflectionFile($this->getFileName());
-    }
-
     public function getFileName()
     {
         return $this->classLikeNode->getAttribute('fileName');
@@ -327,7 +311,7 @@ trait ReflectionClassLikeTrait
     public function getMethods($filter = null)
     {
         if (!isset($this->methods)) {
-            $directMethods = $this->getDirectMethods();
+            $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this->getName());
             $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
                 $result = array_merge($result, $instance->getMethods());
             });
@@ -390,7 +374,7 @@ trait ReflectionClassLikeTrait
     public function getProperties($filter = null)
     {
         if (!isset($this->properties)) {
-            $directProperties = $this->getDirectProperties();
+            $directProperties = ReflectionProperty::collectFromClassNode($this->classLikeNode, $this->getName());
             $parentProperties = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
                 $reflectionProperties = [];
                 foreach ($instance->getProperties() as $reflectionProperty) {
@@ -480,7 +464,7 @@ trait ReflectionClassLikeTrait
     public function getTraits()
     {
         if (!isset($this->traits)) {
-            $this->traits = $this->getDirectTraits();
+            $this->traits = ReflectionClass::collectTraitsFromClassNode($this->classLikeNode);
         }
 
         return $this->traits;
@@ -806,90 +790,6 @@ trait ReflectionClassLikeTrait
         forward_static_call('parent::setStaticPropertyValue', $name, $value);
     }
 
-    private function getDirectInterfaces()
-    {
-        $interfaces = array();
-
-        $interfaceField = $this->isInterface() ? 'extends' : 'implements';
-        $hasInterfaces  = in_array($interfaceField, $this->classLikeNode->getSubNodeNames());
-        $implementsList = $hasInterfaces ? $this->classLikeNode->$interfaceField : array();
-        if ($implementsList) {
-            foreach ($implementsList as $implementNode) {
-                if ($implementNode instanceof FullyQualified) {
-                    $implementName  = $implementNode->toString();
-                    $interface      = interface_exists($implementName, false)
-                        ? new parent($implementName)
-                        : new static($implementName);
-                    $interfaces[$implementName] = $interface;
-                }
-            }
-        }
-
-        return $interfaces;
-    }
-
-    private function getDirectMethods()
-    {
-        $methods = array();
-
-        foreach ($this->classLikeNode->stmts as $classLevelNode) {
-            if ($classLevelNode instanceof ClassMethod) {
-                $classLevelNode->setAttribute('fileName', $this->getFileName());
-
-                $methods[] = new ReflectionMethod(
-                    $this->getName(),
-                    $classLevelNode->name,
-                    $classLevelNode
-                );
-            }
-        }
-
-        return $methods;
-    }
-
-    private function getDirectProperties()
-    {
-        $properties = array();
-
-        foreach ($this->classLikeNode->stmts as $classLevelNode) {
-            if ($classLevelNode instanceof Property) {
-                foreach ($classLevelNode->props as $classPropertyNode) {
-                    $properties[] = new ReflectionProperty(
-                        $this->getName(),
-                        $classPropertyNode->name,
-                        $classLevelNode,
-                        $classPropertyNode
-                    );
-                }
-            }
-        }
-
-        return $properties;
-    }
-
-    private function getDirectTraits()
-    {
-        $traits = [];
-
-        if ($this->classLikeNode->stmts) {
-            foreach ($this->classLikeNode->stmts as $classLevelNode) {
-                if ($classLevelNode instanceof TraitUse) {
-                    foreach ($classLevelNode->traits as $classTraitName) {
-                        if ($classTraitName instanceof FullyQualified) {
-                            $traitName  = $classTraitName->toString();
-                            $trait      = trait_exists($traitName, false)
-                                ? new parent($traitName)
-                                : new static($traitName);
-                            $traits[$traitName] = $trait;
-                        }
-                    }
-                }
-            }
-        }
-
-        return $traits;
-    }
-
     private function recursiveCollect(\Closure $collector)
     {
         $result = array();
@@ -899,7 +799,7 @@ trait ReflectionClassLikeTrait
             $collector($result, $parentClass);
         }
 
-        $interfaces = $this->getDirectInterfaces();
+        $interfaces = ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode);
         foreach ($interfaces as $interface) {
             $collector($result, $interface);
         }

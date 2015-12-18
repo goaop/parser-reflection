@@ -12,7 +12,10 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\Interface_;
+use PhpParser\Node\Stmt\TraitUse;
 use ReflectionClass as InternalReflectionClass;
 
 /**
@@ -36,6 +39,66 @@ class ReflectionClass extends InternalReflectionClass
         $this->namespaceName = join('\\', $namespaceParts);
 
         $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
+    }
+
+    /**
+     * Parses interfaces from the concrete class node
+     *
+     * @param ClassLike $classLikeNode Class-like node
+     *
+     * @return array|\ReflectionClass[] List of reflections of interfaces
+     */
+    public static function collectInterfacesFromClassNode(ClassLike $classLikeNode)
+    {
+        $interfaces = [];
+
+        $isInterface    = $classLikeNode instanceof Interface_;
+        $interfaceField = $isInterface ? 'extends' : 'implements';
+        $hasInterfaces  = in_array($interfaceField, $classLikeNode->getSubNodeNames());
+        $implementsList = $hasInterfaces ? $classLikeNode->$interfaceField : array();
+        if ($implementsList) {
+            foreach ($implementsList as $implementNode) {
+                if ($implementNode instanceof FullyQualified) {
+                    $implementName  = $implementNode->toString();
+                    $interface      = interface_exists($implementName, false)
+                        ? new parent($implementName)
+                        : new static($implementName);
+                    $interfaces[$implementName] = $interface;
+                }
+            }
+        }
+
+        return $interfaces;
+    }
+
+    /**
+     * Parses traits from the concrete class node
+     *
+     * @param ClassLike $classLikeNode Class-like node
+     *
+     * @return array|\ReflectionClass[] List of reflections of traits
+     */
+    public static function collectTraitsFromClassNode(ClassLike $classLikeNode)
+    {
+        $traits = [];
+
+        if ($classLikeNode->stmts) {
+            foreach ($classLikeNode->stmts as $classLevelNode) {
+                if ($classLevelNode instanceof TraitUse) {
+                    foreach ($classLevelNode->traits as $classTraitName) {
+                        if ($classTraitName instanceof FullyQualified) {
+                            $traitName  = $classTraitName->toString();
+                            $trait      = trait_exists($traitName, false)
+                                ? new parent($traitName)
+                                : new static($traitName);
+                            $traits[$traitName] = $trait;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $traits;
     }
 
     /**

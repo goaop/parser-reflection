@@ -12,6 +12,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use ReflectionProperty as BaseReflectionProperty;
@@ -216,6 +217,34 @@ class ReflectionProperty extends BaseReflectionProperty
         $this->initializeInternalReflection();
 
         parent::setValue($object, $value);
+    }
+
+    /**
+     * Parses properties from the concrete class node
+     *
+     * @param ClassLike $classLikeNode Class-like node
+     * @param string    $fullClassName FQN of the class
+     *
+     * @return array|ReflectionProperty[]
+     */
+    public static function collectFromClassNode(ClassLike $classLikeNode, $fullClassName)
+    {
+        $properties = [];
+
+        foreach ($classLikeNode->stmts as $classLevelNode) {
+            if ($classLevelNode instanceof Property) {
+                foreach ($classLevelNode->props as $classPropertyNode) {
+                    $properties[] = new static(
+                        $fullClassName,
+                        $classPropertyNode->name,
+                        $classLevelNode,
+                        $classPropertyNode
+                    );
+                }
+            }
+        }
+
+        return $properties;
     }
 
     /**

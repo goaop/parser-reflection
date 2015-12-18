@@ -11,6 +11,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
 
@@ -245,6 +246,33 @@ class ReflectionMethod extends BaseReflectionMethod
         $this->initializeInternalReflection();
 
         parent::setAccessible($accessible);
+    }
+
+    /**
+     * Parses methods from the concrete class node
+     *
+     * @param ClassLike $classLikeNode Class-like node
+     * @param string    $fullClassName FQN of the class
+     *
+     * @return array|ReflectionMethod[]
+     */
+    public static function collectFromClassNode(ClassLike $classLikeNode, $fullClassName)
+    {
+        $methods = [];
+
+        foreach ($classLikeNode->stmts as $classLevelNode) {
+            if ($classLevelNode instanceof ClassMethod) {
+                $classLevelNode->setAttribute('fileName', $classLikeNode->getAttribute('fileName'));
+
+                $methods[] = new ReflectionMethod(
+                    $fullClassName,
+                    $classLevelNode->name,
+                    $classLevelNode
+                );
+            }
+        }
+
+        return $methods;
     }
 
     /**
