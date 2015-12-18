@@ -29,8 +29,9 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     public function __construct($functionName, Function_ $functionNode)
     {
-        $namespaceParts      = explode('\\', $functionName);
-        $this->funcName      = array_pop($namespaceParts);
+        $namespaceParts = explode('\\', $functionName);
+        // Remove the last one part with function name
+        array_pop($namespaceParts);
         $this->namespaceName = join('\\', $namespaceParts);
 
         $this->functionLikeNode = $functionNode;
@@ -41,9 +42,13 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     public function __debugInfo()
     {
-        return array(
-            'name'  => $this->functionLikeNode->name,
-        );
+        $nodeName = 'unknown';
+
+        if ($this->functionLikeNode instanceof Function_) {
+            $nodeName = $this->functionLikeNode->name;
+        }
+
+        return ['name' => $nodeName];
     }
 
     /**

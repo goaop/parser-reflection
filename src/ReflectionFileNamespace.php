@@ -10,7 +10,6 @@
 
 namespace Go\ParserReflection;
 
-
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Const_;
@@ -335,7 +334,7 @@ class ReflectionFileNamespace implements \Reflector
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof Const_) {
                 $nodeConstants = $namespaceLevelNode->consts;
-                if ($nodeConstants) {
+                if (!empty($nodeConstants)) {
                     foreach ($nodeConstants as $nodeConstant) {
                         $expressionSolver->process($nodeConstant->value);
                         $constants[$nodeConstant->name] = $expressionSolver->getValue();

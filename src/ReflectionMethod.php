@@ -47,10 +47,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function __debugInfo()
     {
-        return array(
-            'name'  => $this->functionLikeNode->name,
+        return [
+            'name'  => $this->getClassMethodNode()->name,
             'class' => $this->className
-        );
+        ];
     }
 
     /**
@@ -178,7 +178,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isAbstract()
     {
-        return $this->functionLikeNode->isAbstract();
+        return $this->getClassMethodNode()->isAbstract();
     }
 
     /**
@@ -186,7 +186,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isConstructor()
     {
-        return $this->functionLikeNode->name == '__construct';
+        return $this->getClassMethodNode()->name == '__construct';
     }
 
     /**
@@ -194,7 +194,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isDestructor()
     {
-        return $this->functionLikeNode->name == '__destruct';
+        return $this->getClassMethodNode()->name == '__destruct';
     }
 
     /**
@@ -202,7 +202,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isFinal()
     {
-        return $this->functionLikeNode->isFinal();
+        return $this->getClassMethodNode()->isFinal();
     }
 
     /**
@@ -210,7 +210,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isPrivate()
     {
-        return $this->functionLikeNode->isPrivate();
+        return $this->getClassMethodNode()->isPrivate();
     }
 
     /**
@@ -218,7 +218,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isProtected()
     {
-        return $this->functionLikeNode->isProtected();
+        return $this->getClassMethodNode()->isProtected();
     }
 
     /**
@@ -226,7 +226,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isPublic()
     {
-        return $this->functionLikeNode->isPublic();
+        return $this->getClassMethodNode()->isPublic();
     }
 
     /**
@@ -234,7 +234,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isStatic()
     {
-        return $this->functionLikeNode->isStatic();
+        return $this->getClassMethodNode()->isStatic();
     }
 
     /**
@@ -255,5 +255,15 @@ class ReflectionMethod extends BaseReflectionMethod
     protected function __initialize()
     {
         parent::__construct($this->className, $this->getName());
+    }
+
+    /**
+     * Returns ClassMethod node to prevent all possible type checks with instanceof
+     *
+     * @return ClassMethod
+     */
+    private function getClassMethodNode()
+    {
+        return $this->functionLikeNode;
     }
 }
