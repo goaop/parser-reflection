@@ -36,6 +36,7 @@ class ReflectionFunction extends BaseReflectionFunction
         $this->namespaceName = join('\\', $namespaceParts);
 
         $this->functionLikeNode = $functionNode;
+        unset($this->name);
     }
 
     /**
