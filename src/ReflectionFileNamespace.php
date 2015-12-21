@@ -15,17 +15,40 @@ use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Use_;
 
 /**
  * AST-based reflection for the concrete namespace in the file
  */
-class ReflectionFileNamespace implements \Reflector
+class ReflectionFileNamespace
 {
+    /**
+     * List of classes in the namespace
+     *
+     * @var array|ReflectionClass[]
+     */
     protected $fileClasses;
 
+    /**
+     * List of functions in the namespace
+     *
+     * @var array|ReflectionFunction[]
+     */
     protected $fileFunctions;
 
+    /**
+     * List of constants in the namespace
+     *
+     * @var array
+     */
     protected $fileConstants;
+
+    /**
+     * List of imported namespaces (aliases)
+     *
+     * @var array
+     */
+    protected $fileNamespaceAliases;
 
     /**
      * Namespace node
@@ -41,6 +64,13 @@ class ReflectionFileNamespace implements \Reflector
      */
     private $fileName;
 
+    /**
+     * File namespace constructor
+     *
+     * @param string          $fileName      Name of the file
+     * @param string          $namespaceName Name of the namespace
+     * @param Namespace_|null $namespaceNode Optional AST-node for this namespace block
+     */
     public function __construct($fileName, $namespaceName, Namespace_ $namespaceNode = null)
     {
         if (!$namespaceNode) {
@@ -48,28 +78,6 @@ class ReflectionFileNamespace implements \Reflector
         }
         $this->namespaceNode = $namespaceNode;
         $this->fileName      = $fileName;
-    }
-
-    /**
-     * (PHP 5)<br/>
-     * Exports
-     * @link http://php.net/manual/en/reflector.export.php
-     * @return string
-     */
-    public static function export()
-    {
-        // TODO: Implement export() method.
-    }
-
-    /**
-     * (PHP 5)<br/>
-     * To string
-     * @link http://php.net/manual/en/reflector.tostring.php
-     * @return string
-     */
-    public function __toString()
-    {
-        // TODO: Implement __toString() method.
     }
 
     /**
@@ -160,16 +168,6 @@ class ReflectionFileNamespace implements \Reflector
     }
 
     /**
-     * Returns the reflection of current file
-     *
-     * @return ReflectionFile
-     */
-    public function getFile()
-    {
-        return new ReflectionFile($this->fileName);
-    }
-
-    /**
      * Returns the name of file
      *
      * @return string
@@ -219,6 +217,20 @@ class ReflectionFileNamespace implements \Reflector
         $nameNode = $this->namespaceNode->name;
 
         return $nameNode ? $nameNode->toString() : '';
+    }
+
+    /**
+     * Returns a list of namespace aliases
+     *
+     * @return array
+     */
+    public function getNamespaceAliases()
+    {
+        if (!isset($this->fileNamespaceAliases)) {
+            $this->fileNamespaceAliases = $this->findNamespaceAliases();
+        }
+
+        return $this->fileNamespaceAliases;
     }
 
     /**
@@ -344,5 +356,29 @@ class ReflectionFileNamespace implements \Reflector
         }
 
         return $constants;
+    }
+
+    /**
+     * Searchse for namespace aliases for the current block
+     *
+     * @return array
+     */
+    private function findNamespaceAliases()
+    {
+        $namespaceAliases = [];
+
+        // aliases can be only top-level nodes in the namespace, so we can scan them directly
+        foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
+            if ($namespaceLevelNode instanceof Use_) {
+                $useAliases = $namespaceLevelNode->uses;
+                if (!empty($useAliases)) {
+                    foreach ($useAliases as $useNode) {
+                        $namespaceAliases[$useNode->name->toString()] = $useNode->alias;
+                    }
+                }
+            }
+        }
+
+        return $namespaceAliases;
     }
 }
