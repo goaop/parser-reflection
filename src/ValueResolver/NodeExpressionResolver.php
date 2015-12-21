@@ -165,6 +165,10 @@ class NodeExpressionResolver
             return $this->context->getNamespaceName();
         }
 
+        if ($this->context instanceof ReflectionFileNamespace) {
+            return $this->context->getName();
+        }
+
         return '';
     }
 
