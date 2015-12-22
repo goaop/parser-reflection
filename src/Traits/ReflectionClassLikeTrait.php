@@ -237,17 +237,23 @@ trait ReflectionClassLikeTrait
     {
         $defaultValues = [];
         $properties    = $this->getProperties();
-        foreach ($properties as $property) {
-            $isStaticProperty     = $property->isStatic();
-            $propertyName         = $property->getName();
-            $isInternalReflection = get_class($property) == \ReflectionProperty::class;
+        $staticOrder   = [true, false];
+        foreach ($staticOrder as $shouldBeStatic) {
+            foreach ($properties as $property) {
+                $isStaticProperty     = $property->isStatic();
+                if ($shouldBeStatic !== $isStaticProperty) {
+                    continue;
+                }
+                $propertyName         = $property->getName();
+                $isInternalReflection = get_class($property) == \ReflectionProperty::class;
 
-            if (!$isInternalReflection || $isStaticProperty) {
-                $defaultValues[$propertyName] = $property->getValue();
-            } elseif (!$isStaticProperty) {
-                // Internal reflection and dynamic property
-                $classProperties = $property->getDeclaringClass()->getDefaultProperties();
-                $defaultValues[$propertyName] = $classProperties[$propertyName];
+                if (!$isInternalReflection || $isStaticProperty) {
+                    $defaultValues[$propertyName] = $property->getValue();
+                } elseif (!$isStaticProperty) {
+                    // Internal reflection and dynamic property
+                    $classProperties = $property->getDeclaringClass()->getDefaultProperties();
+                    $defaultValues[$propertyName] = $classProperties[$propertyName];
+                }
             }
         }
 
@@ -547,6 +553,8 @@ trait ReflectionClassLikeTrait
         if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
             return true;
         } elseif ($this->isInterface() && !empty($this->getMethods())) {
+            return true;
+        } elseif ($this->isTrait()) {
             return true;
         }
 
