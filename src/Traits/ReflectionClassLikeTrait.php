@@ -386,16 +386,7 @@ trait ReflectionClassLikeTrait
 
         $properties = [];
         foreach ($this->properties as $property) {
-            if (($filter & ReflectionProperty::IS_STATIC) && !($property->isStatic())) {
-                continue;
-            }
-            if (($filter & ReflectionProperty::IS_PUBLIC) && !($property->isPublic())) {
-                continue;
-            }
-            if (($filter & ReflectionProperty::IS_PROTECTED) && !($property->isProtected())) {
-                continue;
-            }
-            if (($filter & ReflectionProperty::IS_PRIVATE) && !($property->isPrivate())) {
+            if (!($filter & $property->getModifiers())) {
                 continue;
             }
             $properties[] = $property;
