@@ -11,7 +11,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
-use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
@@ -296,7 +296,7 @@ class ReflectionFileNamespace
         $namespaceName = $this->getName();
         // classes can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
-            if ($namespaceLevelNode instanceof Class_) {
+            if ($namespaceLevelNode instanceof ClassLike) {
                 $classShortName = $namespaceLevelNode->name;
                 $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 
