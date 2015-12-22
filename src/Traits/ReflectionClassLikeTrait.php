@@ -226,6 +226,35 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Gets default properties from a class (including inherited properties). 
+     *
+     * @link http://php.net/manual/en/reflectionclass.getdefaultproperties.php
+     *
+     * @return array An array of default properties, with the key being the name of the property and the value being
+     * the default value of the property or NULL if the property doesn't have a default value
+     */
+    public function getDefaultProperties()
+    {
+        $defaultValues = [];
+        $properties    = $this->getProperties();
+        foreach ($properties as $property) {
+            $isStaticProperty     = $property->isStatic();
+            $propertyName         = $property->getName();
+            $isInternalReflection = get_class($property) == \ReflectionProperty::class;
+
+            if (!$isInternalReflection || $isStaticProperty) {
+                $defaultValues[$propertyName] = $property->getValue();
+            } elseif (!$isStaticProperty) {
+                // Internal reflection and dynamic property
+                $classProperties = $property->getDeclaringClass()->getDefaultProperties();
+                $defaultValues[$propertyName] = $classProperties[$propertyName];
+            }
+        }
+
+        return $defaultValues;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getDocComment()
