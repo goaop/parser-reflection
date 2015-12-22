@@ -241,9 +241,10 @@ class ReflectionProperty extends BaseReflectionProperty
         foreach ($classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classPropertyNode) {
-                    $properties[] = new static(
+                    $propertyName = $classPropertyNode->name;
+                    $properties[$propertyName] = new static(
                         $fullClassName,
-                        $classPropertyNode->name,
+                        $propertyName,
                         $classLevelNode,
                         $classPropertyNode
                     );

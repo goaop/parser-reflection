@@ -369,19 +369,19 @@ trait ReflectionClassLikeTrait
                 $reflectionProperties = [];
                 foreach ($instance->getProperties() as $reflectionProperty) {
                     if (!$reflectionProperty->isPrivate()) {
-                        $reflectionProperties[] = $reflectionProperty;
+                        $reflectionProperties[$reflectionProperty->name] = $reflectionProperty;
                     }
                 }
-                $result = array_merge($result, $reflectionProperties);
+                $result += $reflectionProperties;
             });
-            $properties = array_merge($directProperties, $parentProperties);
+            $properties = $directProperties + $parentProperties;
 
             $this->properties = $properties;
         }
 
         // Without filter we can just return the full list
         if (!isset($filter)) {
-            return $this->properties;
+            return array_values($this->properties);
         }
 
         $properties = [];
