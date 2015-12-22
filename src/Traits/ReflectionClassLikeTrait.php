@@ -555,7 +555,7 @@ trait ReflectionClassLikeTrait
         } elseif ($this->isInterface() && !empty($this->getMethods())) {
             return true;
         } elseif ($this->isTrait()) {
-            return true;
+            return PHP_VERSION_ID < 70000 ? true : false;
         }
 
         return false;
@@ -574,7 +574,7 @@ trait ReflectionClassLikeTrait
      */
     public function isCloneable()
     {
-        if ($this->isInterface() || $this->isAbstract()) {
+        if ($this->isInterface() || $this->isTrait() || $this->isAbstract()) {
             return false;
         }
 
@@ -614,7 +614,7 @@ trait ReflectionClassLikeTrait
      */
     public function isInstantiable()
     {
-        if ($this->isInterface() || $this->isAbstract()) {
+        if ($this->isInterface() || $this->isTrait() || $this->isAbstract()) {
             return false;
         }
 
