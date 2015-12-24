@@ -268,9 +268,10 @@ class ReflectionMethod extends BaseReflectionMethod
             if ($classLevelNode instanceof ClassMethod) {
                 $classLevelNode->setAttribute('fileName', $classLikeNode->getAttribute('fileName'));
 
-                $methods[] = new ReflectionMethod(
+                $methodName = $classLevelNode->name;
+                $methods[$methodName] = new ReflectionMethod(
                     $fullClassName,
-                    $classLevelNode->name,
+                    $methodName,
                     $classLevelNode
                 );
             }

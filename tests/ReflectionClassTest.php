@@ -3,6 +3,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Locator\ComposerLocator;
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
+use Go\ParserReflection\Stub\ClassWithMethodsAndProperties;
 use Go\ParserReflection\Stub\FinalClass;
 use Go\ParserReflection\Stub\ImplicitAbstractClass;
 use Go\ParserReflection\Stub\SimpleAbstractInheritance;
@@ -97,6 +98,22 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
         $parsedRefClass->setStaticPropertyValue('h', 'test');
         $this->assertSame($parsedRefClass->getStaticPropertyValue('h'), $originalRefClass->getStaticPropertyValue('h'));
+    }
+
+    public function testGetMethodsFiltering()
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithMethodsAndProperties::class);
+        $originalRefClass = new \ReflectionClass(ClassWithMethodsAndProperties::class);
+
+        $parsedMethods   = $parsedRefClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+        $originalMethods = $originalRefClass->getMethods(\ReflectionMethod::IS_PUBLIC);
+
+        $this->assertCount(count($originalMethods), $parsedMethods);
+
+        $parsedMethods   = $parsedRefClass->getMethods(\ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_STATIC);
+        $originalMethods = $originalRefClass->getMethods(\ReflectionMethod::IS_PRIVATE | \ReflectionMethod::IS_STATIC);
+
+        $this->assertCount(count($originalMethods), $parsedMethods);
     }
 
     public function testDirectMethods()

@@ -226,7 +226,7 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * Gets default properties from a class (including inherited properties). 
+     * Gets default properties from a class (including inherited properties).
      *
      * @link http://php.net/manual/en/reflectionclass.getdefaultproperties.php
      *
@@ -331,22 +331,40 @@ trait ReflectionClassLikeTrait
     /**
      * Returns list of reflection methods
      *
-     * @return ReflectionMethod[]|array
+     * @param null|integer $filter Optional filter
+     *
+     * @return array|\ReflectionMethod[]
      */
     public function getMethods($filter = null)
     {
         if (!isset($this->methods)) {
             $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this->getName());
             $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
-                $result = array_merge($result, $instance->getMethods());
+                $reflectionMethods = [];
+                foreach ($instance->getMethods() as $reflectionMethod) {
+                    if (!$reflectionMethod->isPrivate()) {
+                        $reflectionMethods[$reflectionMethod->name] = $reflectionMethod;
+                    }
+                }
+                $result += $reflectionMethods;
             });
             $methods = array_merge($directMethods, $parentMethods);
 
             $this->methods = $methods;
         }
-        // TODO: Implement filtration of methods
+        if (!isset($filter)) {
+            return array_values($this->methods);
+        }
 
-        return $this->methods;
+        $methods = [];
+        foreach ($this->methods as $method) {
+            if (!($filter & $method->getModifiers())) {
+                continue;
+            }
+            $methods[] = $method;
+        }
+
+        return $methods;
     }
 
     /**

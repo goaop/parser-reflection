@@ -22,6 +22,32 @@ final class FinalClass
     }
 }
 
+abstract class ClassWithMethodsAndProperties
+{
+    public $publicProperty;
+    protected $protectedProperty;
+    private $privateProperty;
+
+    static public $staticPublicProperty;
+    static protected $staticProtectedProperty;
+    static private $staticPrivateProperty;
+
+    public function publicMethod() {}
+    protected function protectedMethod() {}
+    private function privateMethod() {}
+
+    static public function publicStaticMethod() {}
+    static protected function protectedStaticMethod() {}
+    static private function privateStaticMethod() {}
+
+    abstract public function publicAbstractMethod();
+    abstract protected function protectedAbstractMethod();
+
+    final public function publicFinalMethod() {}
+    final protected function protectedFinalMethod() {}
+    final private function privateFinalMethod() {}
+}
+
 interface SimpleInterface {}
 
 interface InterfaceWithMethod {
