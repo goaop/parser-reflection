@@ -2,11 +2,26 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Locator\ComposerLocator;
+use Go\ParserReflection\Stub\AbstractInterface;
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
+use Go\ParserReflection\Stub\ClassWithInterface;
+use Go\ParserReflection\Stub\ClassWithMagicConstants;
 use Go\ParserReflection\Stub\ClassWithMethodsAndProperties;
+use Go\ParserReflection\Stub\ClassWithScalarConstants;
+use Go\ParserReflection\Stub\ClassWithTrait;
+use Go\ParserReflection\Stub\ClassWithTraitAndAdaptation;
+use Go\ParserReflection\Stub\ClassWithTraitAndInterface;
+use Go\ParserReflection\Stub\ExplicitAbstractClass;
 use Go\ParserReflection\Stub\FinalClass;
 use Go\ParserReflection\Stub\ImplicitAbstractClass;
+use Go\ParserReflection\Stub\InterfaceWithMethod;
+use Go\ParserReflection\Stub\NoCloneable;
+use Go\ParserReflection\Stub\NoInstantiable;
 use Go\ParserReflection\Stub\SimpleAbstractInheritance;
+use Go\ParserReflection\Stub\SimpleInheritance;
+use Go\ParserReflection\Stub\SimpleInterface;
+use Go\ParserReflection\Stub\SimpleTrait;
+use Go\ParserReflection\Stub\TraitWithProperties;
 
 class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 {
@@ -35,12 +50,74 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Tests that names are correct for reflection data
+     *
+     * @dataProvider listOfClasses55
+     *
+     * @param string $className Class name to test
      */
-    public function testGeneralInfoGetters()
+    public function testGeneralInfoGetters($className)
     {
-        foreach ($this->parsedRefFileNamespace->getClasses() as $parsedRefClass) {
-            $this->performGeneralMethodComparison($parsedRefClass);
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass($className);
+        $this->performGeneralMethodComparison($parsedRefClass);
+    }
+
+    /**
+     * Tests getModifier() method
+     * NB: value is masked because there are many internal constants that aren't exported in the userland
+     *
+     * @dataProvider listOfClasses55
+     *
+     * @param string $className Class name to test
+     */
+    public function testGetModifiers($className)
+    {
+        $mask =
+            \ReflectionClass::IS_EXPLICIT_ABSTRACT
+            + \ReflectionClass::IS_FINAL
+            + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
+
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass($className);
+        $originalRefClass = new \ReflectionClass($className);
+
+        $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
+        $originalModifiers = $originalRefClass->getModifiers() & $mask;
+
+        if ($originalModifiers !== $parsedModifiers) {
+            $this->markTestIncomplete("Incomplete asserting that $parsedModifiers matches expected $originalModifiers");
         }
+        $this->assertEquals($originalModifiers, $parsedModifiers);
+    }
+
+    /**
+     * Data provider with list of all class names to test for PHP5.5 and upper
+     *
+     * @return array
+     */
+    public function listOfClasses55()
+    {
+        $classNames = [
+            ExplicitAbstractClass::class            => [ExplicitAbstractClass::class],
+            ImplicitAbstractClass::class            => [ImplicitAbstractClass::class],
+            FinalClass::class                       => [FinalClass::class],
+            ClassWithMethodsAndProperties::class    => [ClassWithMethodsAndProperties::class],
+            SimpleInterface::class                  => [SimpleInterface::class],
+            InterfaceWithMethod::class              => [InterfaceWithMethod::class],
+            SimpleTrait::class                      => [SimpleTrait::class],
+            SimpleInheritance::class                => [SimpleInheritance::class],
+            SimpleAbstractInheritance::class        => [SimpleAbstractInheritance::class],
+            ClassWithInterface::class               => [ClassWithInterface::class],
+            ClassWithTrait::class                   => [ClassWithTrait::class],
+            ClassWithTraitAndInterface::class       => [ClassWithTraitAndInterface::class],
+            NoCloneable::class                      => [NoCloneable::class],
+            NoInstantiable::class                   => [NoInstantiable::class],
+            AbstractInterface::class                => [AbstractInterface::class],
+            ClassWithScalarConstants::class         => [ClassWithScalarConstants::class],
+            ClassWithMagicConstants::class          => [ClassWithMagicConstants::class],
+            ClassWithConstantsAndInheritance::class => [ClassWithConstantsAndInheritance::class],
+            TraitWithProperties::class              => [TraitWithProperties::class],
+        ];
+
+        return $classNames;
     }
 
     /**

@@ -368,6 +368,43 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Returns a bitfield of the access modifiers for this class.
+     *
+     * @link http://php.net/manual/en/reflectionclass.getmodifiers.php
+     *
+     * NB: this method is not fully compatible with original value because of hidden internal constants
+     *
+     * @return int
+     */
+    public function getModifiers()
+    {
+        $modifiers = 0;
+
+        if ($this->isFinal()) {
+            $modifiers += \ReflectionClass::IS_FINAL;
+        }
+
+        if ($this->isTrait()) {
+            $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
+        }
+
+        if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
+            $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
+        }
+
+        if ($this->isInterface()) {
+            $abstractMethods = $this->getMethods();
+        } else {
+            $abstractMethods = $this->getMethods(\ReflectionMethod::IS_ABSTRACT);
+        }
+        if (!empty($abstractMethods)) {
+            $modifiers += \ReflectionClass::IS_IMPLICIT_ABSTRACT;
+        }
+
+        return $modifiers;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getName()
