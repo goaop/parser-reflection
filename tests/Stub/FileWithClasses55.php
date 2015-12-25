@@ -13,6 +13,9 @@ abstract class ImplicitAbstractClass
     abstract function test();
 }
 
+/**
+ * Some docblock for the class
+ */
 final class FinalClass
 {
     public $args = [];

@@ -273,7 +273,9 @@ trait ReflectionClassLikeTrait
      */
     public function getDocComment()
     {
-        return $this->classLikeNode->getDocComment() ?: false;
+        $docComment = $this->classLikeNode->getDocComment();
+
+        return $docComment ? $docComment->getText() : false;
     }
 
     public function getEndLine()
