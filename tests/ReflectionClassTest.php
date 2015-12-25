@@ -82,9 +82,6 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
         $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
         $originalModifiers = $originalRefClass->getModifiers() & $mask;
 
-        if ($originalModifiers !== $parsedModifiers) {
-            $this->markTestIncomplete("Incomplete asserting that $parsedModifiers matches expected $originalModifiers");
-        }
         $this->assertEquals($originalModifiers, $parsedModifiers);
     }
 

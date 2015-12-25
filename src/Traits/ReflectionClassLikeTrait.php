@@ -339,16 +339,16 @@ trait ReflectionClassLikeTrait
     {
         if (!isset($this->methods)) {
             $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this->getName());
-            $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+            $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance, $isParent) {
                 $reflectionMethods = [];
                 foreach ($instance->getMethods() as $reflectionMethod) {
-                    if (!$reflectionMethod->isPrivate()) {
+                    if (!$isParent || !$reflectionMethod->isPrivate()) {
                         $reflectionMethods[$reflectionMethod->name] = $reflectionMethod;
                     }
                 }
                 $result += $reflectionMethods;
             });
-            $methods = array_merge($directMethods, $parentMethods);
+            $methods = $directMethods + $parentMethods;
 
             $this->methods = $methods;
         }
@@ -455,10 +455,10 @@ trait ReflectionClassLikeTrait
     {
         if (!isset($this->properties)) {
             $directProperties = ReflectionProperty::collectFromClassNode($this->classLikeNode, $this->getName());
-            $parentProperties = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+            $parentProperties = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance, $isParent) {
                 $reflectionProperties = [];
                 foreach ($instance->getProperties() as $reflectionProperty) {
-                    if (!$reflectionProperty->isPrivate()) {
+                    if (!$isParent || !$reflectionProperty->isPrivate()) {
                         $reflectionProperties[$reflectionProperty->name] = $reflectionProperty;
                     }
                 }
@@ -867,14 +867,19 @@ trait ReflectionClassLikeTrait
     {
         $result = array();
 
+        $traits = $this->getTraits();
+        foreach ($traits as $trait) {
+            $collector($result, $trait, $isParent = false);
+        }
+
         $parentClass = $this->getParentClass();
         if ($parentClass) {
-            $collector($result, $parentClass);
+            $collector($result, $parentClass, $isParent = true);
         }
 
         $interfaces = ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode);
         foreach ($interfaces as $interface) {
-            $collector($result, $interface);
+            $collector($result, $interface, $isParent = true);
         }
 
         return $result;
