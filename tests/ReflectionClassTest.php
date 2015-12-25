@@ -86,6 +86,42 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Tests getMethods() returns correct number of methods for the class
+     *
+     * @dataProvider listOfClasses55
+     *
+     * @param string $className Class name to test
+     */
+    public function testGetMethods($className)
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass($className);
+        $originalRefClass = new \ReflectionClass($className);
+
+        $parsedMethods   = $parsedRefClass->getMethods();
+        $originalMethods = $originalRefClass->getMethods();
+
+        $this->assertCount(count($originalMethods), $parsedMethods);
+    }
+
+    /**
+     * Tests getProperties() returns correct number of properties for the class
+     *
+     * @dataProvider listOfClasses55
+     *
+     * @param string $className Class name to test
+     */
+    public function testGetProperties($className)
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass($className);
+        $originalRefClass = new \ReflectionClass($className);
+
+        $parsedProperties   = $parsedRefClass->getProperties();
+        $originalProperties = $originalRefClass->getProperties();
+
+        $this->assertCount(count($originalProperties), $parsedProperties);
+    }
+
+    /**
      * Data provider with list of all class names to test for PHP5.5 and upper
      *
      * @return array
