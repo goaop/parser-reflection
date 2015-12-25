@@ -79,10 +79,11 @@ class ReflectionClass extends InternalReflectionClass
      * Parses traits from the concrete class node
      *
      * @param ClassLike $classLikeNode Class-like node
+     * @param array     $traitAdaptations List of method adaptations
      *
      * @return array|\ReflectionClass[] List of reflections of traits
      */
-    public static function collectTraitsFromClassNode(ClassLike $classLikeNode)
+    public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations)
     {
         $traits = [];
 
@@ -98,6 +99,7 @@ class ReflectionClass extends InternalReflectionClass
                             $traits[$traitName] = $trait;
                         }
                     }
+                    $traitAdaptations = $classLevelNode->adaptations;
                 }
             }
         }

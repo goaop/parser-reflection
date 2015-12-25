@@ -10,6 +10,7 @@ use Go\ParserReflection\Stub\ClassWithMethodsAndProperties;
 use Go\ParserReflection\Stub\ClassWithScalarConstants;
 use Go\ParserReflection\Stub\ClassWithTrait;
 use Go\ParserReflection\Stub\ClassWithTraitAndAdaptation;
+use Go\ParserReflection\Stub\ClassWithTraitAndConflict;
 use Go\ParserReflection\Stub\ClassWithTraitAndInterface;
 use Go\ParserReflection\Stub\ExplicitAbstractClass;
 use Go\ParserReflection\Stub\FinalClass;
@@ -99,7 +100,9 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
         $parsedMethods   = $parsedRefClass->getMethods();
         $originalMethods = $originalRefClass->getMethods();
-
+        if ($parsedRefClass->getTraitAliases()) {
+            $this->markTestIncomplete("Adoptation methods for traits are not supported yet");
+        }
         $this->assertCount(count($originalMethods), $parsedMethods);
     }
 
@@ -148,6 +151,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             ClassWithMagicConstants::class          => [ClassWithMagicConstants::class],
             ClassWithConstantsAndInheritance::class => [ClassWithConstantsAndInheritance::class],
             TraitWithProperties::class              => [TraitWithProperties::class],
+            ClassWithTraitAndAdaptation::class      => [ClassWithTraitAndAdaptation::class],
+            ClassWithTraitAndConflict::class        => [ClassWithTraitAndConflict::class],
         ];
 
         return $classNames;
@@ -283,7 +288,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
             'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
             'getConstants', 'getTraitNames', 'getInterfaceNames', 'getStaticProperties',
-            'getDefaultProperties'
+            'getDefaultProperties', 'getTraitAliases'
         ];
 
         $className        = $parsedRefClass->getName();

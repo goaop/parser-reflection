@@ -21,6 +21,7 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
+use PhpParser\Node\Stmt\TraitUseAdaptation;
 
 /**
  * General class-like reflection
@@ -61,6 +62,13 @@ trait ReflectionClassLikeTrait
      * @var  \ReflectionClass[]|array|null
      */
     protected $traits;
+
+    /**
+     * Additional list of trait adaptations
+     *
+     * @var TraitUseAdaptation[]|array
+     */
+    protected $traitAdaptations;
 
     /**
      * @var array|ReflectionMethod[]
@@ -514,6 +522,35 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Returns an array of trait aliases
+     *
+     * @link http://php.net/manual/en/reflectionclass.gettraitaliases.php
+     *
+     * @return array|null an array with new method names in keys and original names (in the format "TraitName::original") in
+     * values.
+     */
+    public function getTraitAliases()
+    {
+        $aliases = [];
+        $traits  = $this->getTraits();
+        foreach ($this->traitAdaptations as $adaptation) {
+            if ($adaptation instanceof TraitUseAdaptation\Alias) {
+                $methodName = $adaptation->method;
+                $traitName  = null;
+                foreach ($traits as $trait) {
+                    if ($trait->hasMethod($methodName)) {
+                        $traitName = $trait->getName();
+                        break;
+                    }
+                }
+                $aliases[$adaptation->newName] = $traitName . '::'. $methodName;
+            }
+        }
+
+        return $aliases;
+    }
+
+    /**
      * Returns an array of names of traits used by this class
      *
      * @link http://php.net/manual/en/reflectionclass.gettraitnames.php
@@ -535,7 +572,9 @@ trait ReflectionClassLikeTrait
     public function getTraits()
     {
         if (!isset($this->traits)) {
-            $this->traits = ReflectionClass::collectTraitsFromClassNode($this->classLikeNode);
+            $traitAdaptations = [];
+            $this->traits     = ReflectionClass::collectTraitsFromClassNode($this->classLikeNode, $traitAdaptations);
+            $this->traitAdaptations = $traitAdaptations;
         }
 
         return $this->traits;

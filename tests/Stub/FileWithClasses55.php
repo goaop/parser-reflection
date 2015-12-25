@@ -59,6 +59,11 @@ trait SimpleTrait
     function foo() { return __CLASS__; }
 }
 
+trait ConflictedSimpleTrait
+{
+    function foo() { return 'BAZ'; }
+}
+
 class SimpleInheritance extends ExplicitAbstractClass {}
 
 abstract class SimpleAbstractInheritance extends ImplicitAbstractClass
@@ -73,6 +78,22 @@ class ClassWithInterface implements SimpleInterface {}
 class ClassWithTrait
 {
     use SimpleTrait;
+}
+
+class ClassWithTraitAndAdaptation
+{
+    use SimpleTrait {
+        foo as protected fooBar;
+        foo as private fooBaz;
+    }
+}
+
+class ClassWithTraitAndConflict
+{
+    use SimpleTrait, ConflictedSimpleTrait {
+        foo as protected fooBar;
+        ConflictedSimpleTrait::foo insteadof SimpleTrait;
+    }
 }
 
 class ClassWithTraitAndInterface implements InterfaceWithMethod
