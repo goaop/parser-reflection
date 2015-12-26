@@ -19,6 +19,7 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
+use PhpParser\ParserFactory;
 
 /**
  * AST-based reflection engine, powered by PHP-Parser
@@ -49,9 +50,15 @@ class ReflectionEngine
 
     public static function init(LocatorInterface $locator)
     {
-        self::$parser = new Parser(new Lexer(['usedAttributes' => [
-            'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-        ]]));
+        $refParser   = new \ReflectionClass(Parser::class);
+        $isNewParser = $refParser->isInterface();
+        if (!$isNewParser) {
+            self::$parser = new Parser(new Lexer(['usedAttributes' => [
+                'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
+            ]]));
+        } else {
+            self::$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        }
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
