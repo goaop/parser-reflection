@@ -180,6 +180,10 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     public function testGetTypeMethod()
     {
+        if (PHP_VERSION_ID < 70000) {
+            $this->markTestSkipped('Test available only for PHP7.0 and newer');
+        }
+
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
                 $functionName = $refFunction->getName();
