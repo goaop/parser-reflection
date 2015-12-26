@@ -83,4 +83,57 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
             $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
         }
     }
+
+    public function testGetClosureMethod()
+    {
+        $refMethod = $this->parsedRefClass->getMethod('funcWithDocAndBody');
+        $closure   = $refMethod->getClosure(null);
+
+        $this->assertInstanceOf(\Closure::class, $closure);
+        $retValue = $closure();
+        $this->assertEquals('hello', $retValue);
+    }
+
+    public function testInvokeMethod()
+    {
+        $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
+        $retValue  = $refMethod->invoke(null, 1, 2, 3);
+        $this->assertEquals([1, 2, 3], $retValue);
+    }
+
+    public function testInvokeArgsMethod()
+    {
+        $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
+        $retValue  = $refMethod->invokeArgs(null, [1, 2, 3]);
+        $this->assertEquals([1, 2, 3], $retValue);
+    }
+
+    public function testDebugInfoMethod()
+    {
+        $parsedRefMethod   = new ReflectionMethod(self::STUB_CLASS, 'funcWithDocAndBody');
+        $originalRefMethod = new \ReflectionMethod(self::STUB_CLASS, 'funcWithDocAndBody');
+        $expectedValue     = (array) $originalRefMethod;
+        $this->assertSame($expectedValue, $parsedRefMethod->__debugInfo());
+    }
+
+    public function testSetAccessibleMethod()
+    {
+        $refMethod = $this->parsedRefClass->getMethod('protectedStaticFunc');
+        $refMethod->setAccessible(true);
+        $retValue = $refMethod->invokeArgs(null, []);
+        $this->assertEquals(null, $retValue);
+    }
+
+    public function testGetPrototypeMethod()
+    {
+        $refMethod = $this->parsedRefClass->getMethod('prototypeMethod');
+        $retValue  = $refMethod->invokeArgs(null, []);
+        $this->assertEquals(self::STUB_CLASS, $retValue);
+
+        $prototype = $refMethod->getPrototype();
+        $this->assertInstanceOf(\ReflectionMethod::class, $prototype);
+        $prototype->setAccessible(true);
+        $retValue  = $prototype->invokeArgs(null, []);
+        $this->assertNotEquals(self::STUB_CLASS, $retValue);
+    }
 }
