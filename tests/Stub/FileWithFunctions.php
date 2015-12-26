@@ -22,6 +22,9 @@ namespace Go\ParserReflection\Stub {
         };
         return $a;
     }
+    function funcWithReturnArgs($a, $b = 100, $c = 10.0) {
+        return [$a, $b, $c];
+    }
 }
 
 namespace {

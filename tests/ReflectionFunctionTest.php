@@ -30,7 +30,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
-            'getNumberOfParameters', 'getNumberOfRequiredParameters'
+            'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString', 'isDisabled'
         ];
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
@@ -69,5 +69,32 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         if ($allMissedMethods) {
             $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
         }
+    }
+
+    public function testGetClosureMethod()
+    {
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $refFunc       = $fileNamespace->getFunction('noGeneratorFunc');
+        $closure       = $refFunc->getClosure();
+
+        $this->assertInstanceOf(\Closure::class, $closure);
+        $retValue = $closure();
+        $this->assertEquals(100, $retValue);
+    }
+
+    public function testInvokeMethod()
+    {
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
+        $retValue      = $refFunc->invoke(1, 2, 3);
+        $this->assertEquals([1, 2, 3], $retValue);
+    }
+
+    public function testInvokeArgsMethod()
+    {
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
+        $retValue      = $refFunc->invokeArgs([1, 2, 3]);
+        $this->assertEquals([1, 2, 3], $retValue);
     }
 }

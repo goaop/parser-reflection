@@ -91,14 +91,7 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     public function isDisabled()
     {
-        if (!$this->isInternal()) {
-            return false;
-        }
-
-        $disabledFunctions = explode(',', ini_get('disable_functions'));
-        $disabledFunctions = array_map('trim', $disabledFunctions);
-
-        return in_array($this->getName(), $disabledFunctions);
+        return false;
     }
 
     /**
@@ -109,10 +102,11 @@ class ReflectionFunction extends BaseReflectionFunction
     public function __toString()
     {
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
-        $reflectionFormat = "Function [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";
+        $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";
 
         return sprintf(
             $reflectionFormat,
+            $this->getDocComment() ? $this->getDocComment() . "\n" : '',
             $this->getName(),
             $this->getFileName(),
             $this->getStartLine(),
