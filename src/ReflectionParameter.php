@@ -52,13 +52,6 @@ class ReflectionParameter extends BaseReflectionParameter
     private $defaultValueConstantName;
 
     /**
-     * Name of the function or array pair [class name, method name]
-     *
-     * @var string|array
-     */
-    private $functionName;
-
-    /**
      * Index of parameter in the list
      *
      * @var int
@@ -75,20 +68,19 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Initializes a reflection for the property
      *
-     * @param string|array $functionName Name of the function/method
+     * @param string|array $unusedFunctionName Name of the function/method
      * @param string $parameterName Name of the parameter to reflect
      * @param Param $parameterNode Parameter definition node
      * @param int $parameterIndex Index of parameter
      * @param \ReflectionFunctionAbstract $declaringFunction
      */
     public function __construct(
-        $functionName,
+        $unusedFunctionName,
         $parameterName,
         Param $parameterNode = null,
         $parameterIndex = 0,
         \ReflectionFunctionAbstract $declaringFunction = null
     ) {
-        $this->functionName      = $functionName;
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
 

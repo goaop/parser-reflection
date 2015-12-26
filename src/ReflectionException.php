@@ -17,5 +17,4 @@ use ReflectionException as BaseException;
  */
 class ReflectionException extends BaseException
 {
-
 }

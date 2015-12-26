@@ -58,7 +58,6 @@ class StaticVariablesCollector extends NodeVisitorAbstract
                     $expressionSolver->process($expr);
                     $value = $expressionSolver->getValue();
                 } else {
-                    // TODO: emit warning
                     $value = null;
                 }
 

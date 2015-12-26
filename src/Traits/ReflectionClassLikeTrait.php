@@ -906,21 +906,22 @@ trait ReflectionClassLikeTrait
 
     private function recursiveCollect(\Closure $collector)
     {
-        $result = array();
+        $result   = [];
+        $isParent = true;
 
         $traits = $this->getTraits();
         foreach ($traits as $trait) {
-            $collector($result, $trait, $isParent = false);
+            $collector($result, $trait, !$isParent);
         }
 
         $parentClass = $this->getParentClass();
         if ($parentClass) {
-            $collector($result, $parentClass, $isParent = true);
+            $collector($result, $parentClass, $isParent);
         }
 
         $interfaces = ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode);
         foreach ($interfaces as $interface) {
-            $collector($result, $interface, $isParent = true);
+            $collector($result, $interface, $isParent);
         }
 
         return $result;
