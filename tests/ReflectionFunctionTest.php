@@ -26,7 +26,8 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
-            'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString', 'isDisabled'
+            'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString', 'isDisabled',
+            'returnsReference', 'getClosureScopeClass', 'getClosureThis'
         ];
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
