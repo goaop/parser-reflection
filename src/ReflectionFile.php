@@ -18,9 +18,14 @@ use PhpParser\Node\Stmt\Namespace_;
 /**
  * AST-based reflector for the source file
  */
-class ReflectionFile implements \Reflector
+class ReflectionFile
 {
 
+    /**
+     * Name of the file for reflectino
+     *
+     * @var string
+     */
     protected $fileName;
 
     /**
@@ -37,32 +42,16 @@ class ReflectionFile implements \Reflector
      */
     private $topLevelNodes;
 
+    /**
+     * ReflectionFile constructor.
+     *
+     * @param string $fileName Name of the file to reflect
+     * @param null|array|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
+     */
     public function __construct($fileName, $topLevelNodes = null)
     {
         $this->fileName      = $fileName;
         $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
-    }
-
-    /**
-     * (PHP 5)<br/>
-     * Exports
-     * @link http://php.net/manual/en/reflector.export.php
-     * @return string
-     */
-    public static function export()
-    {
-        // TODO: Implement export() method.
-    }
-
-    /**
-     * (PHP 5)<br/>
-     * To string
-     * @link http://php.net/manual/en/reflector.tostring.php
-     * @return string
-     */
-    public function __toString()
-    {
-        // TODO: Implement __toString() method.
     }
 
     /**
@@ -95,6 +84,11 @@ class ReflectionFile implements \Reflector
         return $this->fileNamespaces;
     }
 
+    /**
+     * Returns the name of current reflected file
+     *
+     * @return string
+     */
     public function getName()
     {
         return $this->fileName;
@@ -103,7 +97,7 @@ class ReflectionFile implements \Reflector
     /**
      * Returns the presence of namespace in the file
      *
-     * @param string $namespaceName
+     * @param string $namespaceName Namespace to check
      *
      * @return bool
      */

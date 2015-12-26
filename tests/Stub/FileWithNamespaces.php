@@ -21,3 +21,11 @@ namespace Go\ParserReflection\Stub
 
     const END_MARKER = __LINE__; // Do not move it anywhere
 }
+
+namespace Go\ParserReflection\Stub1
+{
+}
+
+namespace Go\ParserReflection\Stub2
+{
+}
