@@ -36,6 +36,9 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         if (PHP_VERSION_ID >= 50600) {
             $allNameGetters[] = 'isVariadic';
         }
+        if (PHP_VERSION_ID >= 70000) {
+            $allNameGetters[] = 'hasType';
+        }
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
@@ -172,6 +175,32 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
         if ($allMissedMethods) {
             $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+        }
+    }
+
+    public function testGetTypeMethod()
+    {
+        foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
+            foreach ($fileNamespace->getFunctions() as $refFunction) {
+                $functionName = $refFunction->getName();
+                foreach ($refFunction->getParameters() as $refParameter) {
+                    $parameterName        = $refParameter->getName();
+                    $originalRefParameter = new \ReflectionParameter($functionName, $parameterName);
+                    $hasType              = $refParameter->hasType();
+                    $this->assertSame(
+                        $originalRefParameter->hasType(),
+                        $hasType,
+                        "Presence of type for parameter {$functionName}:{$parameterName} should be equal"
+                    );
+                    if ($hasType) {
+                        $parsedReturnType   = $refParameter->getType();
+                        $originalReturnType = $originalRefParameter->getType();
+                        $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
+                        $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
+                        $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
+                    }
+                }
+            }
         }
     }
 }

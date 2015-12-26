@@ -251,6 +251,33 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
+    public function getType()
+    {
+        $isBuiltin     = false;
+        $allowsNull    = $this->allowsNull();
+        $parameterType = $this->parameterNode->type;
+        if (is_object($parameterType)) {
+            $parameterType = $parameterType->toString();
+        } elseif (is_string($parameterType)) {
+            $isBuiltin = true;
+        }
+
+        return new ReflectionType($parameterType, $allowsNull, $isBuiltin);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasType()
+    {
+        $hasType = isset($this->parameterNode->type);
+
+        return $hasType;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function isArray()
     {
         return 'array' === $this->parameterNode->type;
