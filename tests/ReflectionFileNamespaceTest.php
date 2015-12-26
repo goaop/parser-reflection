@@ -1,7 +1,6 @@
 <?php
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Locator\ComposerLocator;
 use Go\ParserReflection\Stub\TestNamespaceClassFoo;
 
 class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
@@ -15,8 +14,6 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        ReflectionEngine::init(new ComposerLocator());
-
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
         $fileNode = ReflectionEngine::parseFile($fileName);
 

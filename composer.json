@@ -12,7 +12,9 @@
   "autoload": {
     "psr-4": {
       "Go\\ParserReflection\\": "src"
-    }
+    },
+    "files": ["src/bootstrap.php"],
+    "exclude-from-classmap": ["/tests/"]
   },
   "autoload-dev": {
     "psr-4": {

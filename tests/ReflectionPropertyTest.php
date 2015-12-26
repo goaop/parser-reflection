@@ -1,7 +1,6 @@
 <?php
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Locator\ComposerLocator;
 use PhpParser\Lexer;
 
 class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
@@ -23,7 +22,6 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
         $this->originalRefClass = $refClass = new \ReflectionClass(self::STUB_CLASS);
 
         $fileName = $refClass->getFileName();
-        ReflectionEngine::init(new ComposerLocator());
 
         $fileNode       = ReflectionEngine::parseFile($fileName);
         $reflectionFile = new ReflectionFile($fileName, $fileNode);
