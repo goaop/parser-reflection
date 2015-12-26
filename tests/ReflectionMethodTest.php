@@ -1,8 +1,6 @@
 <?php
 namespace Go\ParserReflection;
 
-use PhpParser\Lexer;
-
 class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
 {
     const STUB_CLASS = 'Go\ParserReflection\Stub\AbstractClassWithMethods';
@@ -21,10 +19,8 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
     {
         $this->originalRefClass = $refClass = new \ReflectionClass(self::STUB_CLASS);
 
-        $fileName = $refClass->getFileName();
-
-        $fileNode       = ReflectionEngine::parseFile($fileName);
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        $fileName       = $refClass->getFileName();
+        $reflectionFile = new ReflectionFile($fileName);
 
         $parsedClass = $reflectionFile->getFileNamespace($refClass->getNamespaceName())->getClass($refClass->getName());
         $this->parsedRefClass = $parsedClass;
@@ -47,6 +43,10 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
             $allNameGetters[] = 'isGenerator';
         }
 
+        if (PHP_VERSION_ID >= 70000) {
+            $allNameGetters[] = 'hasReturnType';
+        }
+
         $allMethods = $this->originalRefClass->getMethods();
 
         foreach ($allMethods as $refMethod) {
@@ -55,7 +55,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
             foreach ($allNameGetters as $getterName) {
                 $expectedValue = $refMethod->$getterName();
                 $actualValue   = $parsedMethod->$getterName();
-                $this->assertEquals(
+                $this->assertSame(
                     $expectedValue,
                     $actualValue,
                     "$getterName() for method $methodName should be equal"

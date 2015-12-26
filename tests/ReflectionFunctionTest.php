@@ -3,7 +3,8 @@ namespace Go\ParserReflection;
 
 class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_FILE = '/Stub/FileWithFunctions.php';
+    const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
+    const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
 
     /**
      * @var ReflectionFile
@@ -12,10 +13,9 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
-        $fileNode = ReflectionEngine::parseFile($fileName);
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
 
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        $reflectionFile = new ReflectionFile($fileName);
         $this->parsedRefFile = $reflectionFile;
 
         include_once $fileName;
@@ -29,6 +29,10 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
             'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString', 'isDisabled',
             'returnsReference', 'getClosureScopeClass', 'getClosureThis'
         ];
+
+        if (PHP_VERSION_ID >= 70000) {
+            $allNameGetters[] = 'hasReturnType';
+        }
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
@@ -93,5 +97,37 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
         $retValue      = $refFunc->invokeArgs([1, 2, 3]);
         $this->assertEquals([1, 2, 3], $retValue);
+    }
+
+    public function testGetReturnTypeMethod()
+    {
+        if (PHP_VERSION_ID < 70000) {
+            $this->markTestSkipped('Test available only for PHP7.0 and newer');
+        }
+
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE70);
+
+        $reflectionFile = new ReflectionFile($fileName);
+        include $fileName;
+
+        foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+            foreach ($fileNamespace->getFunctions() as $refFunction) {
+                $functionName        = $refFunction->getName();
+                $originalRefFunction = new \ReflectionFunction($functionName);
+                $hasReturnType       = $refFunction->hasReturnType();
+                $this->assertSame(
+                    $originalRefFunction->hasReturnType(),
+                    $hasReturnType,
+                    "Presence of return type for function {$functionName} should be equal"
+                );
+                if ($hasReturnType) {
+                    $parsedReturnType   = $refFunction->getReturnType();
+                    $originalReturnType = $originalRefFunction->getReturnType();
+                    $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
+                    $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
+                    $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
+                }
+            }
+        }
     }
 }

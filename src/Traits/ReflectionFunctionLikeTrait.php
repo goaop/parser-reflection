@@ -15,6 +15,7 @@ use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
 use Go\ParserReflection\ReflectionFileNamespace;
 use Go\ParserReflection\ReflectionParameter;
+use Go\ParserReflection\ReflectionType;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -171,6 +172,26 @@ trait ReflectionFunctionLikeTrait
     }
 
     /**
+     * Gets the specified return type of a function
+     *
+     * @return \ReflectionType
+     *
+     * @link http://php.net/manual/en/reflectionfunctionabstract.getreturntype.php
+     */
+    public function getReturnType()
+    {
+        $isBuiltin  = false;
+        $returnType = $this->functionLikeNode->getReturnType();
+        if (is_object($returnType)) {
+            $returnType = $returnType->toString();
+        } elseif (is_string($returnType)) {
+            $isBuiltin = true;
+        }
+
+        return new ReflectionType($returnType, false, $isBuiltin);
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getShortName()
@@ -200,6 +221,20 @@ trait ReflectionFunctionLikeTrait
         $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
 
         return $variablesCollector->getStaticVariables();
+    }
+
+    /**
+     * Checks if the function has a specified return type
+     *
+     * @return bool
+     *
+     * @link http://php.net/manual/en/reflectionfunctionabstract.hasreturntype.php
+     */
+    public function hasReturnType()
+    {
+        $returnType = $this->functionLikeNode->getReturnType();
+
+        return isset($returnType);
     }
 
     /**
