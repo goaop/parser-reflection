@@ -394,7 +394,7 @@ trait ReflectionClassLikeTrait
             $modifiers += \ReflectionClass::IS_FINAL;
         }
 
-        if ($this->isTrait()) {
+        if (PHP_VERSION_ID < 70000 && $this->isTrait()) {
             $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
         }
 
