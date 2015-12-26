@@ -5,8 +5,10 @@ Parser Reflection API library provides a set of classes that extend original int
 
 This library can be used for analysing the source code, automatic proxy creation and much more.
 
-[![Build Status](https://secure.travis-ci.org/goaop/parser-reflection.png?branch=master)](https://travis-ci.org/goaop/parser-reflection)
-[![Minimum PHP Version](http://img.shields.io/badge/php-%3E%3D%205.5-8892BF.svg)](https://php.net/)
+[![Build Status](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/build.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/build-status/master)
+[![Code Coverage](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
+[![SensioLabs Insight](https://img.shields.io/sensiolabs/i/1fdfee9c-839a-4209-a2f2-42dadc859621.svg)](https://insight.sensiolabs.com/projects/1fdfee9c-839a-4209-a2f2-42dadc859621)[![Minimum PHP Version](http://img.shields.io/badge/php-%3E%3D%205.5-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
 
 Installation
@@ -20,20 +22,10 @@ $ composer require goaop/parser-reflection
 
 Composer will install the library to your project's `vendor/goaop/parser-reflection` directory.
 
-Initialization
+Usage
 ------------
 
-Next step is initialization of `ReflectionEngine` in your application: 
-
-```php
-use Go\ParserReflection\Locator\ComposerLocator;
-use Go\ParserReflection\ReflectionEngine;
-
-ReflectionEngine::init(new ComposerLocator());
-```
-As you can see, engine just requires a locator instance - object that will be responsible for resolving class names into the file names. Best way for that is to utilize composer's `\Composer\Autoload\ClassLoader::findFile()` method. To use composer information, just pass a `ComposerLocator` instance to the reflection engine.
-
-After initialization, you can use reflection classes like traditional ones:
+Just use `Go\ParserReflection` package reflection classes like traditional ones:
 
 ```php
 $parsedClass = new \Go\ParserReflection\ReflectionClass(SomeClass::class);
@@ -51,8 +43,8 @@ To understand how library works let's look at what happens during the call to th
  * Reflection engine loads the content of file and passes it to the [PHP-Parser](https://github.com/nikic/PHP-Parser) for tokenization and processing
  * PHP-Parser returns an AST (Abstract Syntax Tree)
  * Reflection engine then analyse this AST to extract specific nodes an wrap them into corresponding reflection classes.
- 
+
 Compatibility
 ------------
 
-All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the autoloading of class and switching to the internal reflection. 
+All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the autoloading of class and switching to the internal reflection.
