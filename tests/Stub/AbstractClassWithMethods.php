@@ -2,10 +2,18 @@
 
 namespace Go\ParserReflection\Stub;
 
+class BaseClass
+{
+    protected static function prototypeMethod()
+    {
+        return __CLASS__;
+    }
+}
+
 /**
  * @link https://bugs.php.net/bug.php?id=70957 self::class can not be resolved with reflection for abstract class
  */
-abstract class AbstractClassWithMethods
+abstract class AbstractClassWithMethods extends BaseClass
 {
     const TEST = 5;
 
@@ -16,17 +24,28 @@ abstract class AbstractClassWithMethods
     protected function protectedFunc(){}
     private function privateFunc(){}
     static function staticFunc(){}
+    protected static function protectedStaticFunc(){}
     abstract function abstractFunc();
     final function finalFunc(){}
 
     /**
      * @return string
      */
-    public function funcWithDocAndBody()
+    public static function funcWithDocAndBody()
     {
         static $a =5, $test = '1234';
 
         return 'hello';
+    }
+
+    public static function funcWithReturnArgs($a, $b = 100, $c = 10.0)
+    {
+        return [$a, $b, $c];
+    }
+
+    public static function prototypeMethod()
+    {
+        return __CLASS__;
     }
 
     /**

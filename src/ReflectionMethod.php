@@ -69,6 +69,12 @@ class ReflectionMethod extends BaseReflectionMethod
     {
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $methodParameters = $this->getParameters();
+        try {
+            $prototype = $this->getPrototype();
+        } catch (\ReflectionException $e) {
+            $prototype = null;
+        }
+        $prototypeClass = $prototype ? $prototype->getDeclaringClass()->name : '';
 
         $paramString = '';
         $identation  = str_repeat(' ', 4);
@@ -77,8 +83,9 @@ class ReflectionMethod extends BaseReflectionMethod
         }
 
         return sprintf(
-            "%sMethod [ <user%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n",
+            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n",
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
+            $prototype ? ", overwrites {$prototypeClass}, prototype {$prototypeClass}" : '',
             $this->isConstructor() ? ', ctor' : '',
             $this->isDestructor() ? ', dtor' : '',
             $this->isFinal() ? ' final' : '',
