@@ -175,19 +175,22 @@ class ReflectionEngine
     /**
      * Parses a file and returns an AST for it
      *
-     * @param string $fileName Name of the file
+     * @param string      $fileName Name of the file
+     * @param string|null $fileContent Optional content of the file
      *
-     * @return Node[]
+     * @return \PhpParser\Node[]
      */
-    public static function parseFile($fileName)
+    public static function parseFile($fileName, $fileContent = null)
     {
         if (isset(self::$parsedFiles[$fileName])) {
             return self::$parsedFiles[$fileName];
         }
 
-        $fileContent = file_get_contents($fileName);
-        $treeNode    = self::$parser->parse($fileContent);
-        $treeNode    = self::$traverser->traverse($treeNode);
+        if (!isset($fileContent)) {
+            $fileContent = file_get_contents($fileName);
+        }
+        $treeNode = self::$parser->parse($fileContent);
+        $treeNode = self::$traverser->traverse($treeNode);
 
         self::$parsedFiles[$fileName] = $treeNode;
 
