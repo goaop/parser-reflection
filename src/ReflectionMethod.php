@@ -31,16 +31,29 @@ class ReflectionMethod extends BaseReflectionMethod
     private $className;
 
     /**
+     * Optional declaring class reference
+     *
+     * @var ReflectionClass
+     */
+    private $declaringClass;
+
+    /**
      * Initializes reflection instance for the method node
      *
      * @param string $className Name of the class
      * @param string $methodName Name of the method
      * @param ClassMethod $classMethodNode AST-node for method
+     * @param ReflectionClass $declaringClass Optional declaring class
      */
-    public function __construct($className, $methodName, ClassMethod $classMethodNode = null)
-    {
+    public function __construct(
+        $className,
+        $methodName,
+        ClassMethod $classMethodNode = null,
+        ReflectionClass $declaringClass = null
+    ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = $className;
+        $this->declaringClass   = $declaringClass;
         $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
 
         // Let's unset original read-only properties to have a control over them via __get
@@ -116,7 +129,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getDeclaringClass()
     {
-        return new ReflectionClass($this->className);
+        return isset($this->declaringClass) ? $this->declaringClass : new ReflectionClass($this->className);
     }
 
     /**
@@ -263,11 +276,11 @@ class ReflectionMethod extends BaseReflectionMethod
      * Parses methods from the concrete class node
      *
      * @param ClassLike $classLikeNode Class-like node
-     * @param string    $fullClassName FQN of the class
+     * @param ReflectionClass $reflectionClass Reflection of the class
      *
      * @return array|ReflectionMethod[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, $fullClassName)
+    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass)
     {
         $methods = [];
 
@@ -277,9 +290,10 @@ class ReflectionMethod extends BaseReflectionMethod
 
                 $methodName = $classLevelNode->name;
                 $methods[$methodName] = new ReflectionMethod(
-                    $fullClassName,
+                    $reflectionClass->name,
                     $methodName,
-                    $classLevelNode
+                    $classLevelNode,
+                    $reflectionClass
                 );
             }
         }

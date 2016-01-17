@@ -348,7 +348,7 @@ trait ReflectionClassLikeTrait
     public function getMethods($filter = null)
     {
         if (!isset($this->methods)) {
-            $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this->getName());
+            $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this);
             $parentMethods = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance, $isParent) {
                 $reflectionMethods = [];
                 foreach ($instance->getMethods() as $reflectionMethod) {

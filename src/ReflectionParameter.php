@@ -132,6 +132,10 @@ class ReflectionParameter extends BaseReflectionParameter
             if (is_string($defaultValue) && strlen($defaultValue) > 15) {
                 $defaultValue = substr($defaultValue, 0, 15) . '...';
             }
+            /* @see https://3v4l.org/DJOEb for behaviour changes */
+            if (is_double($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
+                $defaultValue = (int) $defaultValue;
+            }
             $defaultValue = str_replace('\\\\', '\\', var_export($defaultValue, true));
         }
 
