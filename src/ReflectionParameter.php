@@ -106,7 +106,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Emulating original behaviour of reflection
      */
-    public function __debugInfo()
+    public function ___debugInfo()
     {
         return array(
             'name' => $this->parameterNode->name,

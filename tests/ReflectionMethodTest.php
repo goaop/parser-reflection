@@ -114,7 +114,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         $parsedRefMethod   = new ReflectionMethod(self::STUB_CLASS, 'funcWithDocAndBody');
         $originalRefMethod = new \ReflectionMethod(self::STUB_CLASS, 'funcWithDocAndBody');
         $expectedValue     = (array) $originalRefMethod;
-        $this->assertSame($expectedValue, $parsedRefMethod->__debugInfo());
+        $this->assertSame($expectedValue, $parsedRefMethod->___debugInfo());
     }
 
     public function testSetAccessibleMethod()

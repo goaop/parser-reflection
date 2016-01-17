@@ -20,7 +20,7 @@ trait InternalPropertiesEmulationTrait
      *
      * @return array
      */
-    abstract public function __debugInfo();
+    abstract public function ___debugInfo();
 
     /**
      * Magic implementation of properties
@@ -31,7 +31,7 @@ trait InternalPropertiesEmulationTrait
      */
     public function __get($propertyName)
     {
-        $internalInfo = $this->__debugInfo();
+        $internalInfo = $this->___debugInfo();
         if (!isset($internalInfo[$propertyName])) {
             $className = get_class($this);
             trigger_error("Undefined property {$className}::\${$propertyName}");

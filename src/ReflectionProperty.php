@@ -75,7 +75,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Emulating original behaviour of reflection
      */
-    public function __debugInfo()
+    public function ___debugInfo()
     {
         return array(
             'name'  => isset($this->propertyNode) ? $this->propertyNode->name : 'unknown',

@@ -42,7 +42,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * Emulating original behaviour of reflection
      */
-    public function __debugInfo()
+    public function ___debugInfo()
     {
         $nodeName = 'unknown';
 

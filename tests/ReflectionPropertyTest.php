@@ -92,7 +92,7 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
         $parsedRefProperty   = new ReflectionProperty(self::STUB_CLASS, 'publicStaticProperty');
         $originalRefProperty = new \ReflectionProperty(self::STUB_CLASS, 'publicStaticProperty');
         $expectedValue     = (array) $originalRefProperty;
-        $this->assertSame($expectedValue, $parsedRefProperty->__debugInfo());
+        $this->assertSame($expectedValue, $parsedRefProperty->___debugInfo());
     }
 
     public function testCoverAllMethods()
