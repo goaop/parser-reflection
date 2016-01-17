@@ -49,8 +49,8 @@ class ReflectionMethod extends BaseReflectionMethod
         $className,
         $methodName,
         ClassMethod $classMethodNode = null,
-        ReflectionClass $declaringClass = null)
-    {
+        ReflectionClass $declaringClass = null
+    ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = $className;
         $this->declaringClass   = $declaringClass;
@@ -290,7 +290,7 @@ class ReflectionMethod extends BaseReflectionMethod
 
                 $methodName = $classLevelNode->name;
                 $methods[$methodName] = new ReflectionMethod(
-                    $reflectionClass->getName(),
+                    $reflectionClass->name,
                     $methodName,
                     $classLevelNode,
                     $reflectionClass
