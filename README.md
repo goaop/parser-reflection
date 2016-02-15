@@ -3,7 +3,7 @@ Parser Reflection API Library
 
 Parser Reflection API library provides a set of classes that extend original internal Reflection classes, but powered by [PHP-Parser](https://github.com/nikic/PHP-Parser) library thus allowing to create a reflection instance without loading classes into the memory.
 
-This library can be used for analysing the source code, automatic proxy creation and much more.
+This library can be used for analysing the source code for PHP versions 5.5, 5.6, 7.0; for automatic proxy creation and much more.
 
 [![Build Status](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/build.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/build-status/master)
 [![Code Coverage](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
@@ -31,6 +31,14 @@ Just use `Go\ParserReflection` package reflection classes like traditional ones:
 $parsedClass = new \Go\ParserReflection\ReflectionClass(SomeClass::class);
 var_dump($parsedClass->getMethods());
 ```
+Or you can use an additional classes [`ReflectionFile`][0] and [`ReflectionFileNamespace`][1] to analyse a raw PHP files
+
+```php
+$parsedFile     = new \Go\ParserReflection\ReflectionFile('SomeClass.php');
+$fileNameSpaces = $parsedFile->getFileNamespaces()
+var_dump($fileNameSpaces);
+var_dump($fileNameSpaces[0]->getClass(SomeClass::class)->getMethods();
+```
 
 How it works?
 ------------
@@ -48,3 +56,6 @@ Compatibility
 ------------
 
 All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the autoloading of class and switching to the internal reflection.
+
+[0]: docs/reflection_file.md
+[1]: docs/reflection_file_namespace.md
