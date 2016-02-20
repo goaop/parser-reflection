@@ -264,6 +264,8 @@ class ReflectionParameter extends BaseReflectionParameter
             $parameterType = $parameterType->toString();
         } elseif (is_string($parameterType)) {
             $isBuiltin = true;
+        } else {
+            return null;
         }
 
         return new ReflectionType($parameterType, $allowsNull, $isBuiltin);
