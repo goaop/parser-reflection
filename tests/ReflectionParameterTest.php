@@ -202,6 +202,11 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
                         $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
                         $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
                         $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
+                    } else {
+                        $this->assertSame(
+                            $originalRefParameter->getType(),
+                            $refParameter->getType()
+                        );
                     }
                 }
             }
