@@ -186,6 +186,8 @@ trait ReflectionFunctionLikeTrait
             $returnType = $returnType->toString();
         } elseif (is_string($returnType)) {
             $isBuiltin = true;
+        } else {
+            return null;
         }
 
         return new ReflectionType($returnType, false, $isBuiltin);
