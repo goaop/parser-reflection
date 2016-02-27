@@ -117,6 +117,8 @@ class ReflectionEngine
 
         foreach ($namespaceNodes as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof ClassLike && $namespaceLevelNode->name == $className) {
+                $namespaceLevelNode->setAttribute('fileName', $classFileName);
+
                 return $namespaceLevelNode;
             }
         }
