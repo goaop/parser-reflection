@@ -35,7 +35,7 @@ class ReflectionFileTest extends \PHPUnit_Framework_TestCase
     public function testGetFileNamespace()
     {
         $reflectionFileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
-        $this->assertInstanceOf(ReflectionFileNamespace::class, $reflectionFileNamespace);
+        $this->assertInstanceOf('Go\ParserReflection\ReflectionFileNamespace', $reflectionFileNamespace);
 
         $reflectionFileNamespace = $this->parsedRefFile->getFileNamespace('Unknown');
         $this->assertFalse($reflectionFileNamespace);
@@ -56,6 +56,6 @@ class ReflectionFileTest extends \PHPUnit_Framework_TestCase
         $reflectionFile = new ReflectionFile($fileName);
 
         $reflectionFileNamespace = $reflectionFile->getFileNamespace('\\');
-        $this->assertInstanceOf(ReflectionFileNamespace::class, $reflectionFileNamespace);
+        $this->assertInstanceOf('Go\ParserReflection\ReflectionFileNamespace', $reflectionFileNamespace);
     }
 }

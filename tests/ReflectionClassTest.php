@@ -129,27 +129,27 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
     public function listOfClasses55()
     {
         $classNames = [
-            ExplicitAbstractClass::class            => [ExplicitAbstractClass::class],
-            ImplicitAbstractClass::class            => [ImplicitAbstractClass::class],
-            FinalClass::class                       => [FinalClass::class],
-            ClassWithMethodsAndProperties::class    => [ClassWithMethodsAndProperties::class],
-            SimpleInterface::class                  => [SimpleInterface::class],
-            InterfaceWithMethod::class              => [InterfaceWithMethod::class],
-            SimpleTrait::class                      => [SimpleTrait::class],
-            SimpleInheritance::class                => [SimpleInheritance::class],
-            SimpleAbstractInheritance::class        => [SimpleAbstractInheritance::class],
-            ClassWithInterface::class               => [ClassWithInterface::class],
-            ClassWithTrait::class                   => [ClassWithTrait::class],
-            ClassWithTraitAndInterface::class       => [ClassWithTraitAndInterface::class],
-            NoCloneable::class                      => [NoCloneable::class],
-            NoInstantiable::class                   => [NoInstantiable::class],
-            AbstractInterface::class                => [AbstractInterface::class],
-            ClassWithScalarConstants::class         => [ClassWithScalarConstants::class],
-            ClassWithMagicConstants::class          => [ClassWithMagicConstants::class],
-            ClassWithConstantsAndInheritance::class => [ClassWithConstantsAndInheritance::class],
-            TraitWithProperties::class              => [TraitWithProperties::class],
-            ClassWithTraitAndAdaptation::class      => [ClassWithTraitAndAdaptation::class],
-            ClassWithTraitAndConflict::class        => [ClassWithTraitAndConflict::class],
+            'Go\ParserReflection\Stub\ExplicitAbstractClass'            => ['Go\ParserReflection\Stub\ExplicitAbstractClass'],
+            'Go\ParserReflection\Stub\ImplicitAbstractClass'            => ['Go\ParserReflection\Stub\ImplicitAbstractClass'],
+            'Go\ParserReflection\Stub\FinalClass'                       => ['Go\ParserReflection\Stub\FinalClass'],
+            'Go\ParserReflection\Stub\ClassWithMethodsAndProperties'    => ['Go\ParserReflection\Stub\ClassWithMethodsAndProperties'],
+            'Go\ParserReflection\Stub\SimpleInterface'                  => ['Go\ParserReflection\Stub\SimpleInterface'],
+            'Go\ParserReflection\Stub\InterfaceWithMethod'              => ['Go\ParserReflection\Stub\InterfaceWithMethod'],
+            'Go\ParserReflection\Stub\SimpleTrait'                      => ['Go\ParserReflection\Stub\SimpleTrait'],
+            'Go\ParserReflection\Stub\SimpleInheritance'                => ['Go\ParserReflection\Stub\SimpleInheritance'],
+            'Go\ParserReflection\Stub\SimpleAbstractInheritance'        => ['Go\ParserReflection\Stub\SimpleAbstractInheritance'],
+            'Go\ParserReflection\Stub\ClassWithInterface'               => ['Go\ParserReflection\Stub\ClassWithInterface'],
+            'Go\ParserReflection\Stub\ClassWithTrait'                   => ['Go\ParserReflection\Stub\ClassWithTrait'],
+            'Go\ParserReflection\Stub\ClassWithTraitAndInterface'       => ['Go\ParserReflection\Stub\ClassWithTraitAndInterface'],
+            'Go\ParserReflection\Stub\NoCloneable'                      => ['Go\ParserReflection\Stub\NoCloneable'],
+            'Go\ParserReflection\Stub\NoInstantiable'                   => ['Go\ParserReflection\Stub\NoInstantiable'],
+            'Go\ParserReflection\Stub\AbstractInterface'                => ['Go\ParserReflection\Stub\AbstractInterface'],
+            'Go\ParserReflection\Stub\ClassWithScalarConstants'         => ['Go\ParserReflection\Stub\ClassWithScalarConstants'],
+            'Go\ParserReflection\Stub\ClassWithMagicConstants'          => ['Go\ParserReflection\Stub\ClassWithMagicConstants'],
+            'Go\ParserReflection\Stub\ClassWithConstantsAndInheritance' => ['Go\ParserReflection\Stub\ClassWithConstantsAndInheritance'],
+            'Go\ParserReflection\Stub\TraitWithProperties'              => ['Go\ParserReflection\Stub\TraitWithProperties'],
+            'Go\ParserReflection\Stub\ClassWithTraitAndAdaptation'      => ['Go\ParserReflection\Stub\ClassWithTraitAndAdaptation'],
+            'Go\ParserReflection\Stub\ClassWithTraitAndConflict'        => ['Go\ParserReflection\Stub\ClassWithTraitAndConflict'],
         ];
 
         return $classNames;
@@ -178,9 +178,9 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     public function testNewInstanceMethod()
     {
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\FinalClass');
         $instance = $parsedRefClass->newInstance();
-        $this->assertInstanceOf(FinalClass::class, $instance);
+        $this->assertInstanceOf('Go\ParserReflection\Stub\FinalClass', $instance);
         $this->assertSame([], $instance->args);
     }
 
@@ -188,25 +188,25 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
     {
         $someValueByRef = 5;
         $arguments      = [1, &$someValueByRef];
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\FinalClass');
         $instance       = $parsedRefClass->newInstanceArgs($arguments);
-        $this->assertInstanceOf(FinalClass::class, $instance);
+        $this->assertInstanceOf('Go\ParserReflection\Stub\FinalClass', $instance);
         $this->assertSame($arguments, $instance->args);
     }
 
     public function testNewInstanceWithoutConstructorMethod()
     {
         $arguments      = [1, 2];
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\FinalClass');
         $instance       = $parsedRefClass->newInstanceWithoutConstructor($arguments);
-        $this->assertInstanceOf(FinalClass::class, $instance);
+        $this->assertInstanceOf('Go\ParserReflection\Stub\FinalClass', $instance);
         $this->assertSame([], $instance->args);
     }
 
     public function testSetStaticPropertyValueMethod()
     {
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass(ClassWithConstantsAndInheritance::class);
-        $originalRefClass = new \ReflectionClass(ClassWithConstantsAndInheritance::class);
+        $parsedRefClass = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\ClassWithConstantsAndInheritance');
+        $originalRefClass = new \ReflectionClass('Go\ParserReflection\Stub\ClassWithConstantsAndInheritance');
 
         $parsedRefClass->setStaticPropertyValue('h', 'test');
         $this->assertSame($parsedRefClass->getStaticPropertyValue('h'), $originalRefClass->getStaticPropertyValue('h'));
@@ -214,8 +214,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     public function testGetMethodsFiltering()
     {
-        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithMethodsAndProperties::class);
-        $originalRefClass = new \ReflectionClass(ClassWithMethodsAndProperties::class);
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\ClassWithMethodsAndProperties');
+        $originalRefClass = new \ReflectionClass('Go\ParserReflection\Stub\ClassWithMethodsAndProperties');
 
         $parsedMethods   = $parsedRefClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         $originalMethods = $originalRefClass->getMethods(\ReflectionMethod::IS_PUBLIC);
@@ -230,8 +230,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     public function testDirectMethods()
     {
-        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ImplicitAbstractClass::class);
-        $originalRefClass = new \ReflectionClass(ImplicitAbstractClass::class);
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\ImplicitAbstractClass');
+        $originalRefClass = new \ReflectionClass('Go\ParserReflection\Stub\ImplicitAbstractClass');
 
         $this->assertEquals($originalRefClass->hasMethod('test'), $parsedRefClass->hasMethod('test'));
         $this->assertCount(count($originalRefClass->getMethods()), $parsedRefClass->getMethods());
@@ -243,8 +243,8 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     public function testInheritedMethods()
     {
-        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(SimpleAbstractInheritance::class);
-        $originalRefClass = new \ReflectionClass(SimpleAbstractInheritance::class);
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\SimpleAbstractInheritance');
+        $originalRefClass = new \ReflectionClass('Go\ParserReflection\Stub\SimpleAbstractInheritance');
 
         $this->assertEquals($originalRefClass->hasMethod('test'), $parsedRefClass->hasMethod('test'));
     }
@@ -252,14 +252,14 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionClass::class);
+        $allInternalMethods = get_class_methods('ReflectionClass');
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionClass::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod('Go\ParserReflection\ReflectionClass', $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;

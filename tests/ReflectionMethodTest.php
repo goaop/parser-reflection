@@ -5,6 +5,8 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
 {
     const STUB_CLASS = 'Go\ParserReflection\Stub\AbstractClassWithMethods';
 
+    const STUB_CLASS54 = 'Go\ParserReflection\Stub\AbstractClassWithMethodsPhp54';
+
     /**
      * @var \ReflectionClass
      */
@@ -17,7 +19,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->originalRefClass = $refClass = new \ReflectionClass(self::STUB_CLASS);
+        $this->originalRefClass = $refClass = new \ReflectionClass($this->getStubClass());
 
         $fileName       = $refClass->getFileName();
         $reflectionFile = new ReflectionFile($fileName);
@@ -66,14 +68,14 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionMethod::class);
+        $allInternalMethods = get_class_methods('ReflectionMethod');
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionMethod::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod('Go\ParserReflection\ReflectionMethod', $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
@@ -90,7 +92,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         $refMethod = $this->parsedRefClass->getMethod('funcWithDocAndBody');
         $closure   = $refMethod->getClosure(null);
 
-        $this->assertInstanceOf(\Closure::class, $closure);
+        $this->assertInstanceOf('Closure', $closure);
         $retValue = $closure();
         $this->assertEquals('hello', $retValue);
     }
@@ -111,8 +113,8 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
 
     public function testDebugInfoMethod()
     {
-        $parsedRefMethod   = new ReflectionMethod(self::STUB_CLASS, 'funcWithDocAndBody');
-        $originalRefMethod = new \ReflectionMethod(self::STUB_CLASS, 'funcWithDocAndBody');
+        $parsedRefMethod   = new ReflectionMethod($this->getStubClass(), 'funcWithDocAndBody');
+        $originalRefMethod = new \ReflectionMethod($this->getStubClass(), 'funcWithDocAndBody');
         $expectedValue     = (array) $originalRefMethod;
         $this->assertSame($expectedValue, $parsedRefMethod->___debugInfo());
     }
@@ -129,12 +131,18 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
     {
         $refMethod = $this->parsedRefClass->getMethod('prototypeMethod');
         $retValue  = $refMethod->invokeArgs(null, []);
-        $this->assertEquals(self::STUB_CLASS, $retValue);
+        $this->assertEquals($this->getStubClass(), $retValue);
 
         $prototype = $refMethod->getPrototype();
-        $this->assertInstanceOf(\ReflectionMethod::class, $prototype);
+        $this->assertInstanceOf('ReflectionMethod', $prototype);
         $prototype->setAccessible(true);
         $retValue  = $prototype->invokeArgs(null, []);
-        $this->assertNotEquals(self::STUB_CLASS, $retValue);
+        $this->assertNotEquals($this->getStubClass(), $retValue);
     }
+
+    protected function getStubClass()
+    {
+        return PHP_VERSION_ID < 50500 ? self::STUB_CLASS54 : self::STUB_CLASS;
+    }
+
 }

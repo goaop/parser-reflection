@@ -13,6 +13,10 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
+        if (PHP_VERSION_ID < 50500) {
+            $this->markTestSkipped("Can not test new features on old version of PHP");
+        }
+
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
 
         $reflectionFile = new ReflectionFile($fileName);
@@ -53,14 +57,14 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionFunction::class);
+        $allInternalMethods = get_class_methods('ReflectionFunction');
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionFunction::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod('Go\ParserReflection\ReflectionFunction', $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
@@ -78,7 +82,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         $refFunc       = $fileNamespace->getFunction('noGeneratorFunc');
         $closure       = $refFunc->getClosure();
 
-        $this->assertInstanceOf(\Closure::class, $closure);
+        $this->assertInstanceOf('Closure', $closure);
         $retValue = $closure();
         $this->assertEquals(100, $retValue);
     }

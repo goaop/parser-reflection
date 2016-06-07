@@ -30,9 +30,9 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
         $refClass = $this->parsedRefFileNamespace->getClass('Unknown');
         $this->assertFalse($refClass);
 
-        $refClass = $this->parsedRefFileNamespace->getClass(TestNamespaceClassFoo::class);
-        $this->assertInstanceOf(\ReflectionClass::class, $refClass);
-        $this->assertEquals(TestNamespaceClassFoo::class, $refClass->name);
+        $refClass = $this->parsedRefFileNamespace->getClass('Go\ParserReflection\Stub\TestNamespaceClassFoo');
+        $this->assertInstanceOf('ReflectionClass', $refClass);
+        $this->assertEquals('Go\ParserReflection\Stub\TestNamespaceClassFoo', $refClass->name);
     }
 
     public function testGetClasses()
@@ -75,7 +75,7 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
         $this->assertFalse($refFunction);
 
         $refFunction = $this->parsedRefFileNamespace->getFunction('testFunctionBar');
-        $this->assertInstanceOf(\ReflectionFunction::class, $refFunction);
+        $this->assertInstanceOf('ReflectionFunction', $refFunction);
         $this->assertEquals('testFunctionBar', $refFunction->name);
     }
 
@@ -114,7 +114,7 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
         $hasClass = $this->parsedRefFileNamespace->hasClass('Unknown');
         $this->assertFalse($hasClass);
 
-        $hasClass = $this->parsedRefFileNamespace->hasClass(TestNamespaceClassFoo::class);
+        $hasClass = $this->parsedRefFileNamespace->hasClass('Go\ParserReflection\Stub\TestNamespaceClassFoo');
         $this->assertTrue($hasClass);
     }
 
