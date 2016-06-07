@@ -50,7 +50,7 @@ class ReflectionEngine
 
     public static function init(LocatorInterface $locator)
     {
-        $refParser   = new \ReflectionClass(Parser::class);
+        $refParser   = new \ReflectionClass('PhpParser\Parser');
         $isNewParser = $refParser->isInterface();
         if (!$isNewParser) {
             self::$parser = new Parser(new Lexer(['usedAttributes' => [

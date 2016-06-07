@@ -97,14 +97,14 @@ class ReflectionPropertyTest extends \PHPUnit_Framework_TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionProperty::class);
+        $allInternalMethods = get_class_methods('ReflectionProperty');
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionProperty::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod('Go\ParserReflection\ReflectionProperty', $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;

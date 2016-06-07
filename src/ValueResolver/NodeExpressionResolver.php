@@ -117,7 +117,9 @@ class NodeExpressionResolver
             if (method_exists($this, $methodName)) {
                 $value = $this->$methodName($node);
             }
-        } finally {
+
+            --$this->nodeLevel;
+        } catch (\Exception $e) {
             --$this->nodeLevel;
         }
 

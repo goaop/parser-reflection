@@ -76,19 +76,19 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(null, $parameters[3 /* callable $callableParam */]->getClass());
 
         $objectParam = $parameters[5 /* \stdClass $objectParam */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $objectParam);
-        $this->assertSame(\stdClass::class, $objectParam->getName());
+        $this->assertInstanceOf('ReflectionClass', $objectParam);
+        $this->assertSame('stdClass', $objectParam->getName());
 
         $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
-        $this->assertSame(ReflectionParameter::class, $typehintedParamWithNs->getName());
+        $this->assertInstanceOf('ReflectionClass', $typehintedParamWithNs);
+        $this->assertSame('Go\ParserReflection\ReflectionParameter', $typehintedParamWithNs->getName());
     }
 
 
     public function testGetDeclaringClassMethodReturnsObject()
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
-        $parsedClass     = $parsedNamespace->getClass(Foo::class);
+        $parsedClass     = $parsedNamespace->getClass('Go\ParserReflection\Stub\Foo');
         $parsedFunction  = $parsedClass->getMethod('methodParam');
 
         $parameters = $parsedFunction->getParameters();
@@ -144,8 +144,8 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
             $parsedException = $e;
         }
 
-        $this->assertInstanceOf(\ReflectionException::class, $originalException);
-        $this->assertInstanceOf(\ReflectionException::class, $parsedException);
+        $this->assertInstanceOf('ReflectionException', $originalException);
+        $this->assertInstanceOf('ReflectionException', $parsedException);
         $this->assertSame($originalException->getMessage(), $parsedException->getMessage());
     }
 
@@ -159,14 +159,14 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionParameter::class);
+        $allInternalMethods = get_class_methods('ReflectionParameter');
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionParameter::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod('Go\ParserReflection\ReflectionParameter', $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
