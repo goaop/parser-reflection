@@ -37,6 +37,11 @@ class ReflectionEngine
     protected static $parsedFiles = array();
 
     /**
+     * @var null|integer
+     */
+    protected static $maximumCachedFiles;
+
+    /**
      * @var null|Parser
      */
     protected static $parser = null;
@@ -64,6 +69,18 @@ class ReflectionEngine
         $traverser->addVisitor(new NameResolver());
 
         self::$locator = $locator;
+    }
+
+    /**
+     * Limits number of files, that can be cached at any given moment
+     *
+     * @param integer $newLimit New limit
+     *
+     * @return void
+     */
+    public static function setMaximumCachedFiles($newLimit)
+    {
+        self::$maximumCachedFiles = $newLimit;
     }
 
     /**
@@ -186,6 +203,10 @@ class ReflectionEngine
     {
         if (isset(self::$parsedFiles[$fileName])) {
             return self::$parsedFiles[$fileName];
+        }
+
+        if (isset(self::$maximumCachedFiles) && (count(self::$parsedFiles) === self::$maximumCachedFiles)) {
+            array_shift(self::$parsedFiles);
         }
 
         if (!isset($fileContent)) {
