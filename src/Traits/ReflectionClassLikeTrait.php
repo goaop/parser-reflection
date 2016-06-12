@@ -588,7 +588,7 @@ trait ReflectionClassLikeTrait
     public function hasConstant($name)
     {
         $constants   = $this->getConstants();
-        $hasConstant = isset($constants[$name]) || array_key_exists($constants, $name);
+        $hasConstant = isset($constants[$name]) || array_key_exists($name, $constants);
 
         return $hasConstant;
     }
