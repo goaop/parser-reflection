@@ -2,6 +2,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\Foo;
+use Go\ParserReflection\Stub\SubFoo;
 
 class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 {
@@ -88,6 +89,21 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame(\Traversable::class, $internalInterfaceParam->getName());
     }
 
+    public function testGetClassMethodReturnsSelfAndParent()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $parsedClass     = $parsedNamespace->getClass(SubFoo::class);
+        $parsedFunction  = $parsedClass->getMethod('anotherMethodParam');
+
+        $parameters = $parsedFunction->getParameters();
+        $selfParam = $parameters[0 /* self $selfParam */]->getClass();
+        $this->assertInstanceOf(\ReflectionClass::class, $selfParam);
+        $this->assertSame(SubFoo::class, $selfParam->getName());
+
+        $parentParam = $parameters[1 /* parent $parentParam */]->getClass();
+        $this->assertInstanceOf(\ReflectionClass::class, $parentParam);
+        $this->assertSame(Foo::class, $parentParam->getName());
+    }
 
     public function testGetDeclaringClassMethodReturnsObject()
     {

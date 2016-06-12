@@ -181,6 +181,16 @@ class ReflectionParameter extends BaseReflectionParameter
         $parameterType = $this->parameterNode->type;
         if ($parameterType instanceof Name) {
             if (!$parameterType instanceof Name\FullyQualified) {
+                $parameterTypeName = $parameterType->toString();
+
+                if ('self' === $parameterTypeName) {
+                    return $this->getDeclaringClass();
+                }
+
+                if ('parent' === $parameterTypeName) {
+                    return $this->getDeclaringClass()->getParentClass();
+                }
+
                 throw new ReflectionException("Can not resolve a class name for parameter");
             }
             $className   = $parameterType->toString();

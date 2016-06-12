@@ -30,3 +30,7 @@ class Foo {
     public function methodParam($firstParam, $optionalParam = null) {}
     public function methodParamConst($firstParam = self::CLASS_CONST, $another = __CLASS__, $ns = TEST_PARAMETER) {}
 }
+
+class SubFoo extends Foo {
+    public function anotherMethodParam(self $selfParam, parent $parentParam) {}
+}
