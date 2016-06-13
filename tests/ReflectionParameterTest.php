@@ -82,6 +82,10 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
         $this->assertSame(ReflectionParameter::class, $typehintedParamWithNs->getName());
+
+        $internalInterfaceParam = $parameters[12 /* \Traversable $traversable */]->getClass();
+        $this->assertInstanceOf(\ReflectionClass::class, $internalInterfaceParam);
+        $this->assertSame(\Traversable::class, $internalInterfaceParam->getName());
     }
 
 

@@ -184,9 +184,9 @@ class ReflectionParameter extends BaseReflectionParameter
                 throw new ReflectionException("Can not resolve a class name for parameter");
             }
             $className   = $parameterType->toString();
-            $classExists = class_exists($className, false);
+            $classOrInterfaceExists = class_exists($className, false) || interface_exists($className, false);
 
-            return $classExists ? new \ReflectionClass($className) : new ReflectionClass($className);
+            return $classOrInterfaceExists ? new \ReflectionClass($className) : new ReflectionClass($className);
         }
 
         return null;

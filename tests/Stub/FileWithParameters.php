@@ -20,7 +20,8 @@ function miscParameters(
     &$byReferenceParam,
     &$byReferenceNullable = __CLASS__,
     $constParam = TEST_PARAMETER,
-    $constValueParam = __NAMESPACE__ // This line is long and should be truncated
+    $constValueParam = __NAMESPACE__, // This line is long and should be truncated
+    \Traversable $traversable
 ) {}
 
 class Foo {
