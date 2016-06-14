@@ -300,4 +300,22 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
             );
         }
     }
+
+    public function testHasConstant()
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
+        $originalRefClass = new \ReflectionClass(ClassWithScalarConstants::class);
+
+        $this->assertSame($originalRefClass->hasConstant('D'), $parsedRefClass->hasConstant('D'));
+        $this->assertSame($originalRefClass->hasConstant('E'), $parsedRefClass->hasConstant('E'));
+    }
+
+    public function testGetConstant()
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
+        $originalRefClass = new \ReflectionClass(ClassWithScalarConstants::class);
+
+        $this->assertSame($originalRefClass->getConstant('D'), $parsedRefClass->getConstant('D'));
+        $this->assertSame($originalRefClass->getConstant('E'), $parsedRefClass->getConstant('E'));
+    }
 }

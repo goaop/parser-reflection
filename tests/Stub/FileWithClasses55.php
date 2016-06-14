@@ -126,6 +126,7 @@ class ClassWithScalarConstants
     const B = 42.0;
     const C = 'foo';
     const D = false;
+    const E = null;
 }
 
 class ClassWithMagicConstants
