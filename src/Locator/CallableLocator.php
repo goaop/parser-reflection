@@ -10,9 +10,7 @@
 
 namespace Go\ParserReflection\Locator;
 
-use Composer\Autoload\ClassLoader;
 use Go\ParserReflection\LocatorInterface;
-use Go\ParserReflection\ReflectionException;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
