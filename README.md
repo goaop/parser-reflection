@@ -14,7 +14,7 @@ This library can be used for analysing the source code for PHP versions 5.5, 5.6
 Installation
 ------------
 
-Library can be installed with composer. Installation is quite easy:
+Library can be installed with Composer. Installation is quite easy:
 
 ```bash
 $ composer require goaop/parser-reflection
@@ -31,13 +31,13 @@ Just use `Go\ParserReflection` package reflection classes like traditional ones:
 $parsedClass = new \Go\ParserReflection\ReflectionClass(SomeClass::class);
 var_dump($parsedClass->getMethods());
 ```
-Or you can use an additional classes [`ReflectionFile`][0] and [`ReflectionFileNamespace`][1] to analyse a raw PHP files
+Or you can use an additional classes [`ReflectionFile`][0] and [`ReflectionFileNamespace`][1] to analyse a raw PHP files:
 
 ```php
 $parsedFile     = new \Go\ParserReflection\ReflectionFile('SomeClass.php');
-$fileNameSpaces = $parsedFile->getFileNamespaces()
+$fileNameSpaces = $parsedFile->getFileNamespaces();
 var_dump($fileNameSpaces);
-var_dump($fileNameSpaces[0]->getClass(SomeClass::class)->getMethods();
+var_dump($fileNameSpaces[0]->getClass(SomeClass::class)->getMethods());
 ```
 
 How it works?
