@@ -81,6 +81,9 @@ class ReflectionEngine
     public static function setMaximumCachedFiles($newLimit)
     {
         self::$maximumCachedFiles = $newLimit;
+        if (count(self::$parsedFiles) > $newLimit) {
+            self::$parsedFiles = array_slice(self::$parsedFiles, 0, $newLimit);
+        }
     }
 
     /**
