@@ -27,12 +27,41 @@ Composer will install the library to your project's `vendor/goaop/parser-reflect
 Usage
 ------------
 
+### Initialization
+
+Prior to first use library can be optionally initialized.
+
+Following example uses the Composer autoloader from the project, where library is used, as a dependency:
+
+```php
+$locator = new \Go\ParserReflection\Locator\ComposerLocator();
+\Go\ParserReflection\ReflectionEngine::init($locator);
+```
+
+Following example uses Composer's autoloader located at a given path:
+
+```php
+$composerLoader = require_once '/path/to/vendor/autoload.php';
+$composerLoader->unregister();
+
+$locator = new \Go\ParserReflection\Locator\ComposerLocator($composerLoader);
+\Go\ParserReflection\ReflectionEngine::init($locator);
+```
+
+If project uses a custom autoloader then you should follow the next steps:
+
+1. Create a class, that implements `\Go\ParserReflection\LocatorInterface`
+2. Create an instance of that class and pass it to the `ReflectionEngine::init()` method for initial configuration
+
+### Actual Usage
+
 Just use `Go\ParserReflection` package reflection classes like traditional ones:
 
 ```php
 $parsedClass = new \Go\ParserReflection\ReflectionClass(SomeClass::class);
 var_dump($parsedClass->getMethods());
 ```
+
 Or you can use an additional classes [`ReflectionFile`][0] and [`ReflectionFileNamespace`][1] to analyse a raw PHP files:
 
 ```php
