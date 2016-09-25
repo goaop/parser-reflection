@@ -1,10 +1,15 @@
 <?php
 
 namespace {
-    function testResolveDefaults($a=null, $b=false, $c=true) {}
+    function testResolveDefaults($a = null, $b = false, $c = true)
+    {
+    }
 
-    class TestParametersForRootNsClass {
-        function foo($a=null, $b=false, $c=true) {}
+    class TestParametersForRootNsClass
+    {
+        public function foo($a = null, $b = false, $c = true)
+        {
+        }
     }
 }
 
