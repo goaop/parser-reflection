@@ -11,6 +11,7 @@
 namespace Go\ParserReflection;
 
 
+use Go\ParserReflection\Instrument\PathResolver;
 use PhpParser\Node;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
@@ -50,6 +51,7 @@ class ReflectionFile
      */
     public function __construct($fileName, $topLevelNodes = null)
     {
+        $fileName            = PathResolver::realpath($fileName);
         $this->fileName      = $fileName;
         $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
     }

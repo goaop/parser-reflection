@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Const_;
@@ -73,6 +74,7 @@ class ReflectionFileNamespace
      */
     public function __construct($fileName, $namespaceName, Namespace_ $namespaceNode = null)
     {
+        $fileName = PathResolver::realpath($fileName);
         if (!$namespaceNode) {
             $namespaceNode = ReflectionEngine::parseFileNamespace($fileName, $namespaceName);
         }

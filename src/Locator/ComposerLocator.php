@@ -11,6 +11,7 @@
 namespace Go\ParserReflection\Locator;
 
 use Composer\Autoload\ClassLoader;
+use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\LocatorInterface;
 use Go\ParserReflection\ReflectionException;
 
@@ -50,6 +51,11 @@ class ComposerLocator implements LocatorInterface
      */
     public function locateClass($className)
     {
-        return $this->loader->findFile($className);
+        $filePath = $this->loader->findFile($className);
+        if (!empty($filePath)) {
+            $filePath = PathResolver::realpath($filePath);
+        }
+
+        return $filePath;
     }
 }

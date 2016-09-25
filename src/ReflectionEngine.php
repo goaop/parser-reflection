@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Instrument\PathResolver;
 use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
@@ -204,6 +205,7 @@ class ReflectionEngine
      */
     public static function parseFile($fileName, $fileContent = null)
     {
+        $fileName = PathResolver::realpath($fileName);
         if (isset(self::$parsedFiles[$fileName])) {
             return self::$parsedFiles[$fileName];
         }
