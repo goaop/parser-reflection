@@ -3,6 +3,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\Foo;
 use Go\ParserReflection\Stub\SubFoo;
+use TestParametersForRootNsClass;
 
 class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 {
@@ -103,6 +104,18 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $parentParam = $parameters[1 /* parent $parentParam */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $parentParam);
         $this->assertSame(Foo::class, $parentParam->getName());
+    }
+
+    public function testNonConstantsResolvedForGlobalNamespace()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('');
+        $parsedClass     = $parsedNamespace->getClass(TestParametersForRootNsClass::class);
+        $parsedFunction  = $parsedClass->getMethod('foo');
+
+        $parameters = $parsedFunction->getParameters();
+        $this->assertSame(null, $parameters[0]->getDefaultValue());
+        $this->assertSame(false, $parameters[1]->getDefaultValue());
+        $this->assertSame(true, $parameters[2]->getDefaultValue());
     }
 
     public function testGetDeclaringClassMethodReturnsObject()

@@ -13,7 +13,6 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
 use PhpParser\Node;
-use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Namespace_;
 
 /**
@@ -122,7 +121,7 @@ class ReflectionFile
         // namespaces can be only top-level nodes, so we can scan them directly
         foreach ($this->topLevelNodes as $topLevelNode) {
             if ($topLevelNode instanceof Namespace_) {
-                $namespaceName = $topLevelNode->name ? $topLevelNode->name->toString() : '\\';
+                $namespaceName = $topLevelNode->name ? $topLevelNode->name->toString() : '';
 
                 $namespaces[$namespaceName] = new ReflectionFileNamespace(
                     $this->fileName,
@@ -130,12 +129,6 @@ class ReflectionFile
                     $topLevelNode
                 );
             }
-        }
-
-        if (!$namespaces) {
-            // if we don't have a namespaces at all, this is global namespace
-            $globalNamespaceNode = new Namespace_(new FullyQualified(''), $this->topLevelNodes);
-            $namespaces['\\']    = new ReflectionFileNamespace($this->fileName, '\\', $globalNamespaceNode);
         }
 
         return $namespaces;

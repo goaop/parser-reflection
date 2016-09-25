@@ -11,6 +11,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
+use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
 use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
@@ -68,6 +69,7 @@ class ReflectionEngine
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
+        $traverser->addVisitor(new RootNamespaceNormalizer());
 
         self::$locator = $locator;
     }
@@ -127,14 +129,9 @@ class ReflectionEngine
         $className      = array_pop($namespaceParts);
         $namespaceName  = join('\\', $namespaceParts);
 
-        if ($namespaceName) {
-            // we have a namespace nodes somewhere
-            $namespace      = self::parseFileNamespace($classFileName, $namespaceName);
-            $namespaceNodes = $namespace->stmts;
-        } else {
-            // global namespace
-            $namespaceNodes = self::parseFile($classFileName);
-        }
+        // we have a namespace node somewhere
+        $namespace      = self::parseFileNamespace($classFileName, $namespaceName);
+        $namespaceNodes = $namespace->stmts;
 
         foreach ($namespaceNodes as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof ClassLike && $namespaceLevelNode->name == $className) {
@@ -238,7 +235,11 @@ class ReflectionEngine
         $topLevelNodes = self::parseFile($fileName);
         // namespaces can be only top-level nodes, so we can scan them directly
         foreach ($topLevelNodes as $topLevelNode) {
-            if ($topLevelNode instanceof Namespace_ && ($topLevelNode->name->toString() == $namespaceName)) {
+            if (!$topLevelNode instanceof Namespace_) {
+                continue;
+            }
+            $topLevelNodeName = $topLevelNode->name ? $topLevelNode->name->toString() : '';
+            if ($topLevelNodeName === $namespaceName) {
                 return $topLevelNode;
             }
         }
