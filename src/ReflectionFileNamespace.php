@@ -12,6 +12,8 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Expr\FuncCall;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Const_;
 use PhpParser\Node\Stmt\Function_;
@@ -43,6 +45,13 @@ class ReflectionFileNamespace
      * @var array
      */
     protected $fileConstants;
+
+    /**
+     * List of constants in the namespace including defined via "define(...)"
+     *
+     * @var array
+     */
+    protected $fileConstantsWithDefined;
 
     /**
      * List of imported namespaces (aliases)
@@ -131,10 +140,20 @@ class ReflectionFileNamespace
     /**
      * Returns a list of defined constants in the namespace
      *
+     * @param bool $withDefined Include constants defined via "define(...)" in results.
+     *
      * @return array
      */
-    public function getConstants()
+    public function getConstants($withDefined = false)
     {
+        if ($withDefined) {
+            if (!isset($this->fileConstantsWithDefined)) {
+                $this->fileConstantsWithDefined = $this->findConstants(true);
+            }
+
+            return $this->fileConstantsWithDefined;
+        }
+
         if (!isset($this->fileConstants)) {
             $this->fileConstants = $this->findConstants();
         }
@@ -337,9 +356,11 @@ class ReflectionFileNamespace
     /**
      * Searches for constants in the given AST
      *
+     * @param bool $withDefined Include constants defined via "define(...)" in results.
+     *
      * @return array
      */
-    private function findConstants()
+    private function findConstants($withDefined = false)
     {
         $constants        = array();
         $expressionSolver = new NodeExpressionResolver($this);
@@ -352,6 +373,26 @@ class ReflectionFileNamespace
                     foreach ($nodeConstants as $nodeConstant) {
                         $expressionSolver->process($nodeConstant->value);
                         $constants[$nodeConstant->name] = $expressionSolver->getValue();
+                    }
+                }
+            }
+        }
+
+        if ($withDefined) {
+            foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
+                if ($namespaceLevelNode instanceof FuncCall
+                    && $namespaceLevelNode->name instanceof Name
+                    && (string)$namespaceLevelNode->name === 'define'
+                ) {
+                    $expressionSolver->process($namespaceLevelNode->args[0]->value);
+                    $constantName = $expressionSolver->getValue();
+
+                    // Ignore constants, for which name can't be determined.
+                    if (strlen($constantName)) {
+                        $expressionSolver->process($namespaceLevelNode->args[1]->value);
+                        $constantValue = $expressionSolver->getValue();
+
+                        $constants[$constantName] = $constantValue;
                     }
                 }
             }
