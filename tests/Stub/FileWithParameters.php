@@ -52,13 +52,15 @@ namespace Go\ParserReflection\Stub {
         {
         }
 
-        public function methodParamConst($firstParam = self::CLASS_CONST, $another = __CLASS__, $ns = TEST_PARAMETER)
+        public function methodParamConst($firstParam = self::CLASS_CONST, $another = __CLASS__, $ns = TEST_PARAMETER, $someOther = SubFoo::ANOTHER_CLASS_CONST)
         {
         }
     }
 
     class SubFoo extends Foo
     {
+        const ANOTHER_CLASS_CONST = __CLASS__;
+    
         public function anotherMethodParam(self $selfParam, parent $parentParam)
         {
         }

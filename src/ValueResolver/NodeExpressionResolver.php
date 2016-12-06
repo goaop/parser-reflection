@@ -263,6 +263,9 @@ class NodeExpressionResolver
         if ('class' === $constantName) {
             return $refClass->getName();
         }
+        
+        $this->isConstant = true;
+        $this->constantName = (string)$node->class . '::' . $constantName;
 
         return $refClass->getConstant($constantName);
     }
