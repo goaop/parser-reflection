@@ -127,7 +127,18 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $parameters = $parsedFunction->getParameters();
         $this->assertSame($parsedClass->getName(), $parameters[0]->getDeclaringClass()->getName());
     }
+    
+    public function testParamWithDefaultConstValue()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $parsedClass     = $parsedNamespace->getClass(Foo::class);
+        $parsedFunction  = $parsedClass->getMethod('methodParamConst');
 
+        $parameters = $parsedFunction->getParameters();
+        $this->assertTrue($parameters[0]->isDefaultValueConstant());
+        $this->assertSame('self::CLASS_CONST', $parameters[0]->getDefaultValueConstantName());
+    }
+    
     public function testGetDeclaringClassMethodReturnsNull()
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
