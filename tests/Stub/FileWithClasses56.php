@@ -14,6 +14,7 @@ class ClassWithComplexConstantsAndInheritance extends ClassWithArrayConstants
 {
     const K = array(1, NS_CONST56);
     const L = [self::class, ClassWithArrayConstants::A, parent::B];
+    const M = \DateTime::ATOM;
 }
 
 const ONE = 1;
