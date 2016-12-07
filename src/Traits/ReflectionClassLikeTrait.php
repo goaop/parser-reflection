@@ -212,9 +212,8 @@ trait ReflectionClassLikeTrait
             $parentConstants = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
                 $result += $instance->getConstants();
             });
-            $constants = $directConstants + $parentConstants;
 
-            $this->constants = $constants;
+            $this->constants = $directConstants + $parentConstants;
         }
 
         return $this->constants;
@@ -934,7 +933,6 @@ trait ReflectionClassLikeTrait
      */
     private function findConstants()
     {
-        $constants        = array();
         $expressionSolver = new NodeExpressionResolver($this);
 
         // constants can be only top-level nodes in the class, so we can scan them directly
@@ -944,12 +942,12 @@ trait ReflectionClassLikeTrait
                 if (!empty($nodeConstants)) {
                     foreach ($nodeConstants as $nodeConstant) {
                         $expressionSolver->process($nodeConstant->value);
-                        $constants[$nodeConstant->name] = $expressionSolver->getValue();
+                        $this->constants[$nodeConstant->name] = $expressionSolver->getValue();
                     }
                 }
             }
         }
 
-        return $constants;
+        return $this->constants ?: [];
     }
 }
