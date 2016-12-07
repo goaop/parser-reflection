@@ -15,3 +15,70 @@ class ClassWithComplexConstantsAndInheritance extends ClassWithArrayConstants
     const K = array(1, NS_CONST56);
     const L = [self::class, ClassWithArrayConstants::A, parent::B];
 }
+
+const ONE = 1;
+
+/**
+ * The following operations are currently supported for scalar expressions:
+ *
+ * + - Addition
+ * - - Subtraction
+ * * - Multiplication
+ * / - Division
+ * % - Modulus
+ * ! - Boolean Negation
+ * ~ - Bitwise Negation
+ * | - Bitwise OR
+ * & - Bitwise AND
+ * ^ - Bitwise XOR
+ * << - Bitwise Shift Left
+ * >> - Bitwise Shift Right
+ * . - Concatenation
+ * ?: - Ternary Operator
+ * <= - Smaller or Equal
+ * => - Greater or Equal
+ * == - Equal
+ * != - Not Equal
+ * < - Smaller
+ * > - Greater
+ * === - Identical
+ * !== - Not Identical
+ * && / and - Boolean AND
+ * || / or - Boolean OR
+ * xor - Boolean XOR
+ *
+ * Also supported is grouping static operations: (1 + 2) * 3.
+ */
+class ClassWithConstantExpressions
+{
+    const ADDITION            = ONE + 1;
+    const SUBTRACTION         = 2 - ONE;
+    const MULTIPLICATION      = ONE * 2;
+    const DIVISION            = ONE / 2;
+    const MODULUS             = ONE % 2;
+    const BOOLEAN_NEGATION    = !ONE;
+    const BITWISE_NEGATION    = ~ONE;
+    const BITWISE_OR          = ONE | 2;
+    const BITWISE_AND         = ONE & 2;
+    const BITWISE_XOR         = ONE ^ 2;
+    const BITWISE_SHIFT_LEFT  = ONE << 3;
+    const BITWISE_SHIFT_RIGHT = ONE >> 3;
+    const CONCATENATION       = 'Value of shift left is ' . self::BITWISE_SHIFT_LEFT;
+    const TERNARY_OPERATOR    = true ?: false;
+    const SMALLER_OR_EQUAL    = ONE <= 2;
+    const GREATER_OR_EQUAL    = ONE >= 2;
+    const EQUAL               = ONE == true;
+    const NOT_EQUAL           = ONE != 2;
+    const SMALLER             = ONE < 2;
+    const GREATER             = ONE > 2;
+    const IDENTICAL           = ONE === true;
+    const NOT_IDENTICAL       = ONE !== true;
+    const BOOLEAN_AND         = ONE && false;
+    const LOGICAL_AND         = ONE and false;
+    const BOOLEAN_OR          = ONE || true;
+    const LOGICAL_OR          = ONE or true;
+    const LOGICAL_XOR         = ONE xor true;
+    const GROUPING            = (ONE + 2) * 3;
+
+    const REFERENCE = self::ADDITION;
+}
