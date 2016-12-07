@@ -263,7 +263,7 @@ class NodeExpressionResolver
         if ('class' === $constantName) {
             return $refClass->getName();
         }
-        
+
         $this->isConstant = true;
         $this->constantName = (string)$node->class . '::' . $constantName;
 
@@ -280,6 +280,149 @@ class NodeExpressionResolver
         }
 
         return $result;
+    }
+
+    protected function resolveExprBinaryOpPlus(Expr\BinaryOp\Plus $node)
+    {
+        return $this->resolve($node->left) + $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpMinus(Expr\BinaryOp\Minus $node)
+    {
+        return $this->resolve($node->left) - $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpMul(Expr\BinaryOp\Mul $node)
+    {
+        return $this->resolve($node->left) * $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpDiv(Expr\BinaryOp\Div $node)
+    {
+        return $this->resolve($node->left) / $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpMod(Expr\BinaryOp\Mod $node)
+    {
+        return $this->resolve($node->left) % $this->resolve($node->right);
+    }
+
+    protected function resolveExprBooleanNot(Expr\BooleanNot $node)
+    {
+        return !$this->resolve($node->expr);
+    }
+
+    protected function resolveExprBitwiseNot(Expr\BitwiseNot $node)
+    {
+        return ~$this->resolve($node->expr);
+    }
+
+    protected function resolveExprBinaryOpBitwiseOr(Expr\BinaryOp\BitwiseOr $node)
+    {
+        return $this->resolve($node->left) | $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpBitwiseAnd(Expr\BinaryOp\BitwiseAnd $node)
+    {
+        return $this->resolve($node->left) & $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpBitwiseXor(Expr\BinaryOp\BitwiseXor $node)
+    {
+        return $this->resolve($node->left) ^ $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpShiftLeft(Expr\BinaryOp\ShiftLeft $node)
+    {
+        return $this->resolve($node->left) << $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpShiftRight(Expr\BinaryOp\ShiftRight $node)
+    {
+        return $this->resolve($node->left) >> $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpConcat(Expr\BinaryOp\Concat $node)
+    {
+        return $this->resolve($node->left) . $this->resolve($node->right);
+    }
+
+    protected function resolveExprTernary(Expr\Ternary $node)
+    {
+        if (isset($node->if)) {
+            // Full syntax $a ? $b : $c;
+
+            return $this->resolve($node->cond) ? $this->resolve($node->if) : $this->resolve($node->else);
+        } else {
+            // Short syntax $a ?: $c;
+
+            return $this->resolve($node->cond) ?: $this->resolve($node->else);
+        }
+    }
+
+    protected function resolveExprBinaryOpSmallerOrEqual(Expr\BinaryOp\SmallerOrEqual $node)
+    {
+        return $this->resolve($node->left) <= $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpGreaterOrEqual(Expr\BinaryOp\GreaterOrEqual $node)
+    {
+        return $this->resolve($node->left) >= $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpEqual(Expr\BinaryOp\Equal $node)
+    {
+        return $this->resolve($node->left) == $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpNotEqual(Expr\BinaryOp\NotEqual $node)
+    {
+        return $this->resolve($node->left) != $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpSmaller(Expr\BinaryOp\Smaller $node)
+    {
+        return $this->resolve($node->left) < $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpGreater(Expr\BinaryOp\Greater $node)
+    {
+        return $this->resolve($node->left) > $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpIdentical(Expr\BinaryOp\Identical $node)
+    {
+        return $this->resolve($node->left) === $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpNotIdentical(Expr\BinaryOp\NotIdentical $node)
+    {
+        return $this->resolve($node->left) !== $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpBooleanAnd(Expr\BinaryOp\BooleanAnd $node)
+    {
+        return $this->resolve($node->left) && $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpLogicalAnd(Expr\BinaryOp\LogicalAnd $node)
+    {
+        return $this->resolve($node->left) and $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpBooleanOr(Expr\BinaryOp\BooleanOr $node)
+    {
+        return $this->resolve($node->left) || $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpLogicalOr(Expr\BinaryOp\LogicalOr $node)
+    {
+        return $this->resolve($node->left) or $this->resolve($node->right);
+    }
+
+    protected function resolveExprBinaryOpLogicalXor(Expr\BinaryOp\LogicalXor $node)
+    {
+        return $this->resolve($node->left) xor $this->resolve($node->right);
     }
 
     /**
