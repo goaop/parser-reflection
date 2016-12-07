@@ -446,9 +446,9 @@ class NodeExpressionResolver
         if ($isFQNClass) {
             // check to see if the class is already loaded and is safe to use
             // PHP's ReflectionClass to determine if the class is user defined
-            if(class_exists($className, false)){
+            if (class_exists($className, false)) {
                 $refClass = new \ReflectionClass($className);
-                if(!$refClass->isUserDefined()){
+                if (!$refClass->isUserDefined()) {
                     return $refClass;
                 }
             }
