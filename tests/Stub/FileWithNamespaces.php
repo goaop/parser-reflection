@@ -19,6 +19,8 @@ namespace Go\ParserReflection\Stub
 
     $a = testFunctionBar(); // Some top-level code, just for the smoke test
 
+    define('INT_CONST', 5);
+
     const END_MARKER = __LINE__; // Do not move it anywhere
 }
 

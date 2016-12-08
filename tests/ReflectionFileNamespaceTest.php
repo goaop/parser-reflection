@@ -6,6 +6,7 @@ use Go\ParserReflection\Stub\TestNamespaceClassFoo;
 class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
 {
     const STUB_FILE = '/Stub/FileWithNamespaces.php';
+    const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
 
     /**
      * @var ReflectionFileNamespace
@@ -49,6 +50,45 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
         $constValue = $this->parsedRefFileNamespace->getConstant('NAMESPACE_NAME');
         $this->assertNotFalse($constValue);
         $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $constValue);
+    }
+
+    public function testGetConstantsCacheIndependence()
+    {
+        $globalConstants = $this->parsedRefFileNamespace->getConstants(true);
+        $this->assertArrayHasKey('FILE_NAME', $globalConstants, 'Namespaced constant found.');
+        $this->assertArrayHasKey('INT_CONST', $globalConstants, 'Global constant found.');
+
+        $constants = $this->parsedRefFileNamespace->getConstants();
+        $this->assertArrayHasKey('FILE_NAME', $constants, 'Namespaced constant found.');
+        $this->assertArrayNotHasKey('INT_CONST', $constants, 'Global constant not found.');
+
+        $this->assertNotEmpty($this->parsedRefFileNamespace->getConstant('FILE_NAME'), 'Namespaced constant found.');
+        $this->assertTrue($this->parsedRefFileNamespace->hasConstant('FILE_NAME'), 'Namespaced constant found.');
+
+        $this->assertFalse($this->parsedRefFileNamespace->hasConstant('INT_CONST'), 'Global constant not found.');
+        $this->assertFalse($this->parsedRefFileNamespace->getConstant('INT_CONST'), 'Global constant not found.');
+    }
+
+    public function testGetGlobalConstants()
+    {
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_GLOBAL_FILE);
+        $reflectionFile = new ReflectionFile($fileName);
+
+        $reflectionFileNamespace = $reflectionFile->getFileNamespace('');
+
+        $this->assertSame(
+            array(
+                // Scalar types are handled.
+                'INT_CONST' => 5,
+                'STRING_CONST' => 'text',
+                'BOOLEAN_CONST' => true,
+
+                // Expressions are handled partially.
+                'EXPRESSION_CONST' => false,
+                'FUNCTION_CONST' => null,
+            ),
+            $reflectionFileNamespace->getConstants(true)
+        );
     }
 
     public function testGetDocComment()
