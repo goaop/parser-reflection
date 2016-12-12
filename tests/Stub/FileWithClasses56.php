@@ -13,7 +13,7 @@ const NS_CONST56 = 'test';
 class ClassWithComplexConstantsAndInheritance extends ClassWithArrayConstants
 {
     const K = array(1, NS_CONST56);
-    const L = [self::class, ClassWithArrayConstants::A, parent::B];
+    const L = [self::class, ClassWithArrayConstants::A, parent::B, self::A];
     const M = \DateTime::ATOM;
 }
 
