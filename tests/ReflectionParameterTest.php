@@ -257,16 +257,18 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
                         $hasType,
                         "Presence of type for parameter {$functionName}:{$parameterName} should be equal"
                     );
+                    $message= "Parameter $functionName:$parameterName not equals to the original reflection";
                     if ($hasType) {
                         $parsedReturnType   = $refParameter->getType();
                         $originalReturnType = $originalRefParameter->getType();
-                        $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
-                        $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
-                        $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
+                        $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull(), $message);
+                        $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin(), $message);
+                        $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString(), $message);
                     } else {
                         $this->assertSame(
                             $originalRefParameter->getType(),
-                            $refParameter->getType()
+                            $refParameter->getType(),
+                            $message
                         );
                     }
                 }
