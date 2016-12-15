@@ -328,7 +328,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isOptional()
     {
-        return $this->isDefaultValueAvailable() && $this->haveSiblingsDefalutValues();
+        return $this->isVariadic() || ($this->isDefaultValueAvailable() && $this->haveSiblingsDefalutValues());
     }
 
     /**
