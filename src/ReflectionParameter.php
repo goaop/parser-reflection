@@ -126,8 +126,9 @@ class ReflectionParameter extends BaseReflectionParameter
         }
         $isNullableParam = !empty($parameterType) && $this->allowsNull();
         $isOptional      = $this->isOptional();
+        $hasDefaultValue = $this->isDefaultValueAvailable();
         $defaultValue    = '';
-        if ($isOptional) {
+        if ($hasDefaultValue) {
             $defaultValue = $this->getDefaultValue();
             if (is_string($defaultValue) && strlen($defaultValue) > 15) {
                 $defaultValue = substr($defaultValue, 0, 15) . '...';
@@ -136,19 +137,20 @@ class ReflectionParameter extends BaseReflectionParameter
             if (is_double($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
                 $defaultValue = (int) $defaultValue;
             }
+
             $defaultValue = str_replace('\\\\', '\\', var_export($defaultValue, true));
         }
 
         return sprintf(
             'Parameter #%d [ %s %s%s%s%s$%s%s ]',
             $this->parameterIndex,
-            ($this->isVariadic() || $isOptional) ? '<optional>' : '<required>',
+            $isOptional ? '<optional>' : '<required>',
             $parameterType ? ltrim($parameterType, '\\') . ' ' : '',
             $isNullableParam ? 'or NULL ' : '',
             $this->isVariadic() ? '...' : '',
             $this->isPassedByReference() ? '&' : '',
             $this->getName(),
-            $isOptional ? (' = ' . $defaultValue) : ''
+            ($isOptional && $hasDefaultValue) ? (' = ' . $defaultValue) : ''
         );
     }
 
