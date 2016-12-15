@@ -120,10 +120,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function __toString()
     {
-        $parameterType = $this->parameterNode->type;
-        if (is_object($parameterType)) {
-            $parameterType = $parameterType->toString();
-        }
+        $parameterType   = $this->getType();
         $isNullableParam = !empty($parameterType) && $this->allowsNull();
         $isOptional      = $this->isOptional();
         $hasDefaultValue = $this->isDefaultValueAvailable();
@@ -145,7 +142,7 @@ class ReflectionParameter extends BaseReflectionParameter
             'Parameter #%d [ %s %s%s%s%s$%s%s ]',
             $this->parameterIndex,
             $isOptional ? '<optional>' : '<required>',
-            $parameterType ? ltrim($parameterType, '\\') . ' ' : '',
+            $parameterType ? ReflectionType::convertToDisplayType($parameterType) . ' ' : '',
             $isNullableParam ? 'or NULL ' : '',
             $this->isVariadic() ? '...' : '',
             $this->isPassedByReference() ? '&' : '',

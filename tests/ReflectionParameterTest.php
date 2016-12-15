@@ -259,6 +259,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         if (PHP_VERSION_ID < 70000) {
             $this->markTestSkipped('Test available only for PHP7.0 and newer');
         }
+        $this->setUpFile(__DIR__ . '/Stub/FileWithParameters70.php');
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
