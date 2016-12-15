@@ -80,7 +80,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function __toString()
     {
-        $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
+        $hasReturnType    = $this->hasReturnType();
+        $paramsNeeded     = $hasReturnType || $this->getNumberOfParameters() > 0;
+        $paramFormat      = $paramsNeeded ? "\n\n  - Parameters [%d] {%s\n  }" : '';
+        $returnFormat     = $hasReturnType ? "\n  - Return [ %s ]" : '';
         $methodParameters = $this->getParameters();
         try {
             $prototype = $this->getPrototype();
@@ -96,7 +99,7 @@ class ReflectionMethod extends BaseReflectionMethod
         }
 
         return sprintf(
-            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n",
+            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}{$returnFormat}\n}\n",
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
             $prototype ? ", overwrites {$prototypeClass}, prototype {$prototypeClass}" : '',
             $this->isConstructor() ? ', ctor' : '',
@@ -110,7 +113,8 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->getStartLine(),
             $this->getEndLine(),
             count($methodParameters),
-            $paramString
+            $paramString,
+            $hasReturnType ? ReflectionType::convertToDisplayType($this->getReturnType()) : ''
         );
     }
 
