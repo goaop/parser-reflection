@@ -203,7 +203,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isAbstract()
     {
-        return $this->getClassMethodNode()->isAbstract();
+        return $this->getDeclaringClass()->isInterface() || $this->getClassMethodNode()->isAbstract();
     }
 
     /**
