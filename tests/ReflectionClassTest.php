@@ -46,7 +46,7 @@ class ReflectionClassTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetModifiers($fileName)
     {
-        static $mask =
+        $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
             + \ReflectionClass::IS_FINAL
             + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
