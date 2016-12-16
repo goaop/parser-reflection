@@ -171,7 +171,9 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isDefault()
     {
-        return isset($this->propertyNode->default);
+        // TRUE if the property was declared at compile-time
+
+        return true;
     }
 
     /**
