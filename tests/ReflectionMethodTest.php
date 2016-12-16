@@ -1,45 +1,9 @@
 <?php
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Stub\AbstractClassWithMethods;
-
-class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
+class ReflectionMethodTest extends AbstractTestCase
 {
-    /**
-     * @var ReflectionFileNamespace
-     */
-    protected $parsedRefFileNamespace;
-
-    /**
-     * @var ReflectionClass
-     */
-    protected $parsedRefClass;
-
-    protected function setUp()
-    {
-        $this->setUpFile(__DIR__ . '/Stub/FileWithClasses55.php');
-    }
-
-    public function testCoverAllMethods()
-    {
-        $allInternalMethods = get_class_methods(\ReflectionMethod::class);
-        $allMissedMethods   = [];
-
-        foreach ($allInternalMethods as $internalMethodName) {
-            if ('export' === $internalMethodName) {
-                continue;
-            }
-            $refMethod    = new \ReflectionMethod(ReflectionMethod::class, $internalMethodName);
-            $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
-                $allMissedMethods[] = $internalMethodName;
-            }
-        }
-
-        if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
-        }
-    }
+    protected static $reflectionClassToTest = \ReflectionMethod::class;
 
     public function testGetClosureMethod()
     {
@@ -97,7 +61,7 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
     /**
      * Performs method-by-method comparison with original reflection
      *
-     * @dataProvider testCaseProvider
+     * @dataProvider caseProvider
      *
      * @param ReflectionClass   $parsedClass Parsed class
      * @param \ReflectionMethod $refMethod Method to analyze
@@ -130,12 +94,12 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
      *
      * @return array
      */
-    public function testCaseProvider()
+    public function caseProvider()
     {
         $allNameGetters = $this->getGettersToCheck();
 
         $testCases = [];
-        $files = $this->getFilesToAnalyze();
+        $files     = $this->getFilesToAnalyze();
         foreach ($files as $fileList) {
             foreach ($fileList as $fileName) {
                 $fileName = stream_resolve_include_path($fileName);
@@ -150,7 +114,9 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
                             $caseName = $parsedClass->getName() . '->' . $classMethod->getName() . '()';
                             foreach ($allNameGetters as $getterName) {
                                 $testCases[$caseName . ', ' . $getterName] = [
-                                    $parsedClass, $classMethod, $getterName
+                                    $parsedClass,
+                                    $classMethod,
+                                    $getterName
                                 ];
                             }
                         }
@@ -162,50 +128,13 @@ class ReflectionMethodTest extends \PHPUnit_Framework_TestCase
         return $testCases;
     }
 
-    /**
-     * Setups file for parsing
-     *
-     * @param string $fileName File to use
-     */
-    private function setUpFile($fileName)
-    {
-        $fileName = stream_resolve_include_path($fileName);
-        $fileNode = ReflectionEngine::parseFile($fileName);
-
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
-
-        $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
-        $this->parsedRefFileNamespace = $parsedFileNamespace;
-        $this->parsedRefClass         = $parsedFileNamespace->getClass(AbstractClassWithMethods::class);
-
-        include_once $fileName;
-    }
-
-    /**
-     * Provides a list of files for analysis
-     *
-     * @return array
-     */
-    protected function getFilesToAnalyze()
-    {
-        $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php']];
-
-        if (PHP_VERSION_ID >= 50600) {
-            $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithClasses56.php'];
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithClasses70.php'];
-        }
-
-        return $files;
-    }
 
     /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
      *
      * @return array
      */
-    private function getGettersToCheck()
+    protected function getGettersToCheck()
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName', 'getName',
