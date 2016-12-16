@@ -79,7 +79,7 @@ class ReflectionType extends BaseReflectionType
      *
      * @return string
      */
-    public static function convertToDisplayType(ReflectionType $type)
+    public static function convertToDisplayType(\ReflectionType $type)
     {
         static $typeMap = [
             'int'  => 'integer',
