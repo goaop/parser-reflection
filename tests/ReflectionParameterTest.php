@@ -7,8 +7,6 @@ use TestParametersForRootNsClass;
 
 class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 {
-    const STUB_FILE = '/Stub/FileWithParameters.php';
-
     /**
      * @var ReflectionFile
      */
@@ -16,17 +14,15 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
-        $fileNode = ReflectionEngine::parseFile($fileName);
-
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
-        $this->parsedRefFile = $reflectionFile;
-
-        include_once $fileName;
+        $this->setUpFile(__DIR__ . '/Stub/FileWithParameters55.php');
     }
 
-    public function testGeneralInfoGetters()
+    /**
+     * @dataProvider fileProvider
+     */
+    public function testGeneralInfoGetters($fileName)
     {
+        $this->setUpFile($fileName);
         $allNameGetters = [
             'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
@@ -66,6 +62,25 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
                 }
             }
         }
+    }
+
+    /**
+     * Provides a list of files for analysis
+     *
+     * @return array
+     */
+    public function fileProvider()
+    {
+        $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
+
+        if (PHP_VERSION_ID >= 50600) {
+            $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithParameters56.php'];
+        }
+        if (PHP_VERSION_ID >= 70000) {
+            $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithParameters70.php'];
+        }
+
+        return $files;
     }
 
     public function testGetClassMethod()
@@ -244,6 +259,7 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         if (PHP_VERSION_ID < 70000) {
             $this->markTestSkipped('Test available only for PHP7.0 and newer');
         }
+        $this->setUpFile(__DIR__ . '/Stub/FileWithParameters70.php');
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
@@ -274,5 +290,21 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
                 }
             }
         }
+    }
+
+    /**
+     * Setups file for parsing
+     *
+     * @param string $fileName File name to use
+     */
+    private function setUpFile($fileName)
+    {
+        $fileName = stream_resolve_include_path($fileName);
+        $fileNode = ReflectionEngine::parseFile($fileName);
+
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        $this->parsedRefFile = $reflectionFile;
+
+        include_once $fileName;
     }
 }

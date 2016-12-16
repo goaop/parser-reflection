@@ -15,3 +15,7 @@ use Go\ParserReflection\ReflectionEngine;
  * This file is used for automatic configuration of Go\ParserReflection\ReflectionEngine class
  */
 ReflectionEngine::init(new ComposerLocator());
+// Polifyll for PHP<7.0
+if (!class_exists(ReflectionType::class, false)) {
+    class ReflectionType {}
+}

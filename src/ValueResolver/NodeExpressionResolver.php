@@ -297,6 +297,11 @@ class NodeExpressionResolver
         return $this->resolve($node->left) * $this->resolve($node->right);
     }
 
+    protected function resolveExprBinaryOpPow(Expr\BinaryOp\Pow $node)
+    {
+        return pow($this->resolve($node->left), $this->resolve($node->right));
+    }
+
     protected function resolveExprBinaryOpDiv(Expr\BinaryOp\Div $node)
     {
         return $this->resolve($node->left) / $this->resolve($node->right);

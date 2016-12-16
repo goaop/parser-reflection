@@ -69,4 +69,27 @@ class ReflectionType extends BaseReflectionType
     {
         return $this->type;
     }
+
+    /**
+     * PHP reflection has it's own rules, so 'int' type will be displayed as 'integer', etc...
+     *
+     * @see https://3v4l.org/nZFiT
+     *
+     * @param ReflectionType $type Type to display
+     *
+     * @return string
+     */
+    public static function convertToDisplayType(\ReflectionType $type)
+    {
+        static $typeMap = [
+            'int'  => 'integer',
+            'bool' => 'boolean'
+        ];
+        $displayType = $type->type;
+        if (isset($typeMap[$displayType])) {
+            $displayType = $typeMap[$displayType];
+        }
+
+        return ltrim($displayType, '\\');
+    }
 }
