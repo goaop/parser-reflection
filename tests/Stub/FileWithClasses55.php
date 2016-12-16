@@ -196,10 +196,14 @@ class ClassWithTraitAndConflict
 }
 */
 
+/*
+ * Logic of prototype methods for interface and traits was changed since 7.0.6
+ * @see https://github.com/goaop/parser-reflection/issues/56
 class ClassWithTraitAndInterface implements InterfaceWithMethod
 {
     use SimpleTrait;
 }
+*/
 
 class NoCloneable
 {
