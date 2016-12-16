@@ -94,7 +94,7 @@ abstract class AbstractClassWithMethods extends BaseClass
         return 10;
     }
 
-    private function testParam($a, $b = null, $d = self::class) {}
+    private function testParam($a, $b = null, $d = self::TEST) {}
 }
 
 class ClassWithProperties
