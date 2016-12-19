@@ -74,6 +74,9 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
         if (PHP_VERSION_ID >= 70000) {
             $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithClasses70.php'];
         }
+        if (PHP_VERSION_ID >= 70100) {
+            $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
+        }
 
         return $files;
     }

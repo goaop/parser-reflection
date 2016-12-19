@@ -90,6 +90,12 @@ class ReflectionType extends BaseReflectionType
             $displayType = $typeMap[$displayType];
         }
 
-        return ltrim($displayType, '\\');
+        $displayType = ltrim($displayType, '\\');
+
+        if ($type->allowsNull()) {
+            $displayType .= ' or NULL';
+        }
+
+        return $displayType;
     }
 }

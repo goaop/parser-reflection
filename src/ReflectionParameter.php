@@ -13,6 +13,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Name;
+use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
 use ReflectionParameter as BaseReflectionParameter;
 
@@ -139,11 +140,10 @@ class ReflectionParameter extends BaseReflectionParameter
         }
 
         return sprintf(
-            'Parameter #%d [ %s %s%s%s%s$%s%s ]',
+            'Parameter #%d [ %s %s%s%s$%s%s ]',
             $this->parameterIndex,
             $isOptional ? '<optional>' : '<required>',
             $parameterType ? ReflectionType::convertToDisplayType($parameterType) . ' ' : '',
-            $isNullableParam ? 'or NULL ' : '',
             $this->isVariadic() ? '...' : '',
             $this->isPassedByReference() ? '&' : '',
             $this->getName(),
@@ -156,6 +156,11 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function allowsNull()
     {
+        // Enable 7.1 nullable types support
+        if ($this->parameterNode->type instanceof NullableType) {
+            return true;
+        }
+
         $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
         if ($hasDefaultNull) {
             return true;
@@ -267,8 +272,12 @@ class ReflectionParameter extends BaseReflectionParameter
     public function getType()
     {
         $isBuiltin     = false;
-        $allowsNull    = $this->allowsNull();
         $parameterType = $this->parameterNode->type;
+        if ($parameterType instanceof NullableType) {
+            $parameterType = $parameterType->type;
+        }
+
+        $allowsNull = $this->allowsNull();
         if (is_object($parameterType)) {
             $parameterType = $parameterType->toString();
         } elseif (is_string($parameterType)) {
