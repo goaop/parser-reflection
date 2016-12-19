@@ -158,7 +158,7 @@ class ReflectionParameter extends BaseReflectionParameter
     {
         // Enable 7.1 nullable types support
         if ($this->parameterNode->type instanceof NullableType) {
-           return true;
+            return true;
         }
 
         $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
