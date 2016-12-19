@@ -18,6 +18,7 @@ use Go\ParserReflection\ReflectionParameter;
 use Go\ParserReflection\ReflectionType;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeTraverser;
@@ -182,6 +183,11 @@ trait ReflectionFunctionLikeTrait
     {
         $isBuiltin  = false;
         $returnType = $this->functionLikeNode->getReturnType();
+        $isNullable = $returnType instanceof NullableType;
+
+        if ($isNullable) {
+            $returnType = $returnType->type;
+        }
         if (is_object($returnType)) {
             $returnType = $returnType->toString();
         } elseif (is_string($returnType)) {
@@ -190,7 +196,7 @@ trait ReflectionFunctionLikeTrait
             return null;
         }
 
-        return new ReflectionType($returnType, false, $isBuiltin);
+        return new ReflectionType($returnType, $isNullable, $isBuiltin);
     }
 
     /**
