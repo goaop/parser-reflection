@@ -2,6 +2,7 @@
 /**
  * This is test file with global namespace
  */
+declare(strict_types=1);
 
 /**
  * @internal

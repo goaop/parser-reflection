@@ -10,8 +10,8 @@
 
 namespace Go\ParserReflection\NodeVisitor;
 
-use PhpParser\Node;
 use PhpParser\Node\Name\FullyQualified;
+use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeVisitorAbstract;
 
@@ -35,9 +35,19 @@ class RootNamespaceNormalizer extends NodeVisitorAbstract
             }
         }
 
-        // if we don't have a namespaces at all, this is global namespace, wrap everything in it
-        $globalNamespaceNode = new Namespace_(new FullyQualified(''), $nodes);
+        // if we don't have a namespaces at all, this is global namespace, wrap everything in it, except declares
+        $lastDeclareOffset = 0;
+        foreach ($nodes as $lastDeclareOffset => $node) {
+            if (!$node instanceof Declare_) {
+                // $declareOffset now stores the position of first non-declare node statement
+                break;
+            }
+        }
+        // Wrap all statements into the namespace block
+        $globalNamespaceNode = new Namespace_(new FullyQualified(''), array_slice($nodes, $lastDeclareOffset));
+        // Replace top-level nodes with namespaced node
+        array_splice($nodes, $lastDeclareOffset, count($nodes), [$globalNamespaceNode]);
 
-        return [$globalNamespaceNode];
+        return $nodes;
     }
 }

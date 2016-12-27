@@ -110,6 +110,27 @@ class ReflectionFile
     }
 
     /**
+     * Checks if the current file is in strict mode
+     *
+     * @return bool
+     */
+    public function isStrictMode()
+    {
+        // declare statement for the strict_types can be only top-level node
+        $topLevelNode = reset($this->topLevelNodes);
+        if (!$topLevelNode instanceof Node\Stmt\Declare_) {
+            return false;
+        }
+
+        $declareStatement = reset($topLevelNode->declares);
+        $isStrictTypeKey  = $declareStatement->key === 'strict_types';
+        $isScalarValue    = $declareStatement->value instanceof Node\Scalar\LNumber;
+        $isStrictMode     = $isStrictTypeKey && $isScalarValue && $declareStatement->value->value === 1;
+
+        return $isStrictMode;
+    }
+
+    /**
      * Searches for file namespaces in the given AST
      *
      * @return array|ReflectionFileNamespace[]

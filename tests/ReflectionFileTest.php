@@ -58,4 +58,30 @@ class ReflectionFileTest extends \PHPUnit_Framework_TestCase
         $reflectionFileNamespace = $reflectionFile->getFileNamespace('');
         $this->assertInstanceOf(ReflectionFileNamespace::class, $reflectionFileNamespace);
     }
+
+    /**
+     * Tests if strict mode detected correctly
+     *
+     * @param string $fileName Filename to analyse
+     * @param bool $shouldBeStrict
+     *
+     * @dataProvider fileNameProvider
+     */
+    public function testIsStrictType($fileName, $shouldBeStrict)
+    {
+        $fileName       = stream_resolve_include_path(__DIR__ . $fileName);
+        $reflectionFile = new ReflectionFile($fileName);
+
+        $this->assertSame($shouldBeStrict, $reflectionFile->isStrictMode());
+    }
+
+    public function fileNameProvider()
+    {
+        return [
+            '/Stub/FileWithClasses56.php'       => ['/Stub/FileWithClasses56.php', false],
+            '/Stub/FileWithClasses70.php'       => ['/Stub/FileWithClasses70.php', false],
+            '/Stub/FileWithClasses71.php'       => ['/Stub/FileWithClasses71.php', true],
+            '/Stub/FileWithGlobalNamespace.php' => ['/Stub/FileWithGlobalNamespace.php', true],
+        ];
+    }
 }
