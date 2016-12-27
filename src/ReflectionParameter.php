@@ -122,7 +122,6 @@ class ReflectionParameter extends BaseReflectionParameter
     public function __toString()
     {
         $parameterType   = $this->getType();
-        $isNullableParam = !empty($parameterType) && $this->allowsNull();
         $isOptional      = $this->isOptional();
         $hasDefaultValue = $this->isDefaultValueAvailable();
         $defaultValue    = '';

@@ -13,7 +13,6 @@ namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
-use Go\ParserReflection\ReflectionFileNamespace;
 use Go\ParserReflection\ReflectionParameter;
 use Go\ParserReflection\ReflectionType;
 use PhpParser\Node\Expr\Closure;
