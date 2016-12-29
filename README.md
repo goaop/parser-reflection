@@ -29,37 +29,24 @@ Usage
 
 ### Initialization
 
-Prior to first use library can be optionally initialized.
-
-Following example uses the Composer autoloader from the project, where library is used, as a dependency:
-
-```php
-$locator = new \Go\ParserReflection\Locator\ComposerLocator();
-\Go\ParserReflection\ReflectionEngine::init($locator);
-```
-
-Following example uses Composer's autoloader located at a given path:
-
-```php
-$composerLoader = require_once '/path/to/vendor/autoload.php';
-$composerLoader->unregister();
-
-$locator = new \Go\ParserReflection\Locator\ComposerLocator($composerLoader);
-\Go\ParserReflection\ReflectionEngine::init($locator);
-```
+Prior to the first use library can be optionally initialized. If you use Composer for installing packages and loading classes, 
+then you shouldn't worry about initialization, library will be initialized automatically.
 
 If project uses a custom autoloader then you should follow the next steps:
 
-1. Create a class, that implements `\Go\ParserReflection\LocatorInterface`
+1. Create a new class that implements `\Go\ParserReflection\LocatorInterface`
 2. Create an instance of that class and pass it to the `ReflectionEngine::init()` method for initial configuration
 
-### Actual Usage
+### Reflecting concrete classes/methods/properties without loading them
 
 Just use `Go\ParserReflection` package reflection classes like traditional ones:
 
 ```php
 $parsedClass = new \Go\ParserReflection\ReflectionClass(SomeClass::class);
 var_dump($parsedClass->getMethods());
+
+$parsedMethod = new \Go\ParserReflection\ReflectionMethod(SomeClass::class, 'someMethod');
+echo (string)$parsedMethod;
 ```
 
 Or you can use an additional classes [`ReflectionFile`][0] and [`ReflectionFileNamespace`][1] to analyse a raw PHP files:
@@ -67,8 +54,23 @@ Or you can use an additional classes [`ReflectionFile`][0] and [`ReflectionFileN
 ```php
 $parsedFile     = new \Go\ParserReflection\ReflectionFile('SomeClass.php');
 $fileNameSpaces = $parsedFile->getFileNamespaces();
-var_dump($fileNameSpaces);
-var_dump($fileNameSpaces[0]->getClass(SomeClass::class)->getMethods());
+// We can iterate over namespaces in the file
+foreach ($fileNameSpaces as $namespace) {
+    $classes = $namespace->getClasses();
+    // Iterate over the classes in the namespace
+    foreach ($classes as $class) {
+        echo "Found class: ", $class->getName(), PHP_EOL;
+        // Now let's show all methods in the class
+        foreach ($class->getMethods() as $method) {
+            echo "Found class method: ", $class->getName(), '::', $method->getName(), PHP_EOL;
+        }
+        
+        // ...all properties in the class
+        foreach ($class->getProperties() as $property) {
+            echo "Found class property: ", $class->getName(), '->', $property->getName(), PHP_EOL;
+        }
+    }
+}
 ```
 
 How it works?
