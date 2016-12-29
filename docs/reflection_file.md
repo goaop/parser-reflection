@@ -14,6 +14,7 @@ class ReflectionFile
     public function getFileNamespaces() {}
     public function getName() {}
     public function hasFileNamespace($namespaceName) {}
+    public function isStrictMode() {}
 }
 ```
 
@@ -40,5 +41,7 @@ Methods
 
   Checks if requested namespace is present in the file or not. Returns `true` if present.
   
-  
+- `ReflectionFile::isStrictMode()`
+
+  Checks if current file has enabled strict mode via `declare(strict_types=1)` for PHP>=7.0
 [0]: reflection_file_namespace.md
