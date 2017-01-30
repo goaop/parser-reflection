@@ -239,7 +239,7 @@ class ReflectionEngine
                 continue;
             }
             $topLevelNodeName = $topLevelNode->name ? $topLevelNode->name->toString() : '';
-            if ($topLevelNodeName === $namespaceName) {
+            if ($topLevelNodeName === $namespaceName || "\\{$topLevelNodeName}" === $namespaceName) {
                 return $topLevelNode;
             }
         }
