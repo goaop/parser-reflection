@@ -1,6 +1,8 @@
 <?php
 namespace Go\ParserReflection;
 
+use Stub\Issue44\Locator;
+
 class ReflectionFileTest extends \PHPUnit_Framework_TestCase
 {
     const STUB_FILE        = '/Stub/FileWithNamespaces.php';
@@ -83,5 +85,22 @@ class ReflectionFileTest extends \PHPUnit_Framework_TestCase
             '/Stub/FileWithClasses71.php'       => ['/Stub/FileWithClasses71.php', true],
             '/Stub/FileWithGlobalNamespace.php' => ['/Stub/FileWithGlobalNamespace.php', true],
         ];
+    }
+
+    public function testGetInterfaceNamesWithExtends()
+    {
+        $fileName = __DIR__ . '/Stub/Issue44/ClassWithoutNamespace.php';
+
+        require_once __DIR__ . '/Stub/Issue44/Locator.php';
+        ReflectionEngine::init(new Locator());
+
+        $reflectedFile = new ReflectionFile($fileName);
+        $namespaces = $reflectedFile->getFileNamespaces();
+        $namespace = array_pop($namespaces);
+        $classes = $namespace->getClasses();
+        $class = array_pop($classes);
+
+        $interfaceNames = $class->getInterfaceNames();
+        $this->assertEquals([], $interfaceNames);
     }
 }
