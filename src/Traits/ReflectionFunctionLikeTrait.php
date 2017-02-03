@@ -154,7 +154,7 @@ trait ReflectionFunctionLikeTrait
         if (!isset($this->parameters)) {
             $parameters = [];
 
-            foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
+            foreach ($this->functionLikeNode->params as $parameterIndex => $parameterNode) {
                 $reflectionParameter = new ReflectionParameter(
                     $this->getName(),
                     $parameterNode->name,
