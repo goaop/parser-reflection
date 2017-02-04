@@ -10,24 +10,16 @@
 
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Instrument\PathResolver;
-use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
-use PhpParser\Lexer;
-use PhpParser\Node;
-use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Namespace_;
-use PhpParser\Node\Stmt\Property;
-use PhpParser\NodeTraverser;
-use PhpParser\NodeVisitor\NameResolver;
-use PhpParser\Parser;
-use PhpParser\ParserFactory;
-
 /**
- * AST-based reflection engine, powered by PHP-Parser
+ * Static AST-based reflection engine, powered by PHP-Parser
  */
 class ReflectionEngine
 {
+    /**
+     * @var null|ReflectionParser
+     */
+    protected static $reflectionParser = null;
+
     /**
      * @var null|LocatorInterface
      */
@@ -57,21 +49,14 @@ class ReflectionEngine
 
     public static function init(LocatorInterface $locator)
     {
-        $refParser   = new \ReflectionClass(Parser::class);
-        $isNewParser = $refParser->isInterface();
-        if (!$isNewParser) {
-            self::$parser = new Parser(new Lexer(['usedAttributes' => [
-                'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-            ]]));
-        } else {
-            self::$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        }
-
-        self::$traverser = $traverser = new NodeTraverser();
-        $traverser->addVisitor(new NameResolver());
-        $traverser->addVisitor(new RootNamespaceNormalizer());
-
         self::$locator = $locator;
+        self::$reflectionParser = new ReflectionParser($locator);
+        self::$reflectionParser->initStaticEngine(
+            self::$parsedFiles,
+            self::$maximumCachedFiles,
+            self::$parser,
+            self::$traverser
+        );
     }
 
     /**
@@ -83,10 +68,7 @@ class ReflectionEngine
      */
     public static function setMaximumCachedFiles($newLimit)
     {
-        self::$maximumCachedFiles = $newLimit;
-        if (count(self::$parsedFiles) > $newLimit) {
-            self::$parsedFiles = array_slice(self::$parsedFiles, 0, $newLimit);
-        }
+        self::$reflectionParser->setMaximumCachedFiles($newLimit);
     }
 
     /**
@@ -98,21 +80,7 @@ class ReflectionEngine
      */
     public static function locateClassFile($fullClassName)
     {
-        if (class_exists($fullClassName, false)
-            || interface_exists($fullClassName, false)
-            || trait_exists($fullClassName, false)
-        ) {
-            $refClass      = new \ReflectionClass($fullClassName);
-            $classFileName = $refClass->getFileName();
-        } else {
-            $classFileName = self::$locator->locateClass($fullClassName);
-        }
-
-        if (!$classFileName) {
-            throw new \InvalidArgumentException("Class $fullClassName was not found by locator");
-        }
-
-        return $classFileName;
+        return self::$reflectionParser->locateClassFile($fullClassName);
     }
 
     /**
@@ -124,24 +92,7 @@ class ReflectionEngine
      */
     public static function parseClass($fullClassName)
     {
-        $classFileName  = self::locateClassFile($fullClassName);
-        $namespaceParts = explode('\\', $fullClassName);
-        $className      = array_pop($namespaceParts);
-        $namespaceName  = join('\\', $namespaceParts);
-
-        // we have a namespace node somewhere
-        $namespace      = self::parseFileNamespace($classFileName, $namespaceName);
-        $namespaceNodes = $namespace->stmts;
-
-        foreach ($namespaceNodes as $namespaceLevelNode) {
-            if ($namespaceLevelNode instanceof ClassLike && $namespaceLevelNode->name == $className) {
-                $namespaceLevelNode->setAttribute('fileName', $classFileName);
-
-                return $namespaceLevelNode;
-            }
-        }
-
-        throw new \InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
+        return self::$reflectionParser->parseClass($fullClassName);
     }
 
     /**
@@ -154,16 +105,7 @@ class ReflectionEngine
      */
     public static function parseClassMethod($fullClassName, $methodName)
     {
-        $class      = self::parseClass($fullClassName);
-        $classNodes = $class->stmts;
-
-        foreach ($classNodes as $classLevelNode) {
-            if ($classLevelNode instanceof ClassMethod && $classLevelNode->name == $methodName) {
-                return $classLevelNode;
-            }
-        }
-
-        throw new \InvalidArgumentException("Method $methodName was not found in the $fullClassName");
+        return self::$reflectionParser->parseClassMethod($fullClassName, $methodName);
     }
 
     /**
@@ -176,20 +118,7 @@ class ReflectionEngine
      */
     public static function parseClassProperty($fullClassName, $propertyName)
     {
-        $class      = self::parseClass($fullClassName);
-        $classNodes = $class->stmts;
-
-        foreach ($classNodes as $classLevelNode) {
-            if ($classLevelNode instanceof Property) {
-                foreach ($classLevelNode->props as $classProperty) {
-                    if ($classProperty->name == $propertyName) {
-                        return [$classLevelNode, $classProperty];
-                    }
-                }
-            }
-        }
-
-        throw new \InvalidArgumentException("Property $propertyName was not found in the $fullClassName");
+        return self::$reflectionParser->parseClassProperty($fullClassName, $propertyName);
     }
 
     /**
@@ -202,24 +131,7 @@ class ReflectionEngine
      */
     public static function parseFile($fileName, $fileContent = null)
     {
-        $fileName = PathResolver::realpath($fileName);
-        if (isset(self::$parsedFiles[$fileName])) {
-            return self::$parsedFiles[$fileName];
-        }
-
-        if (isset(self::$maximumCachedFiles) && (count(self::$parsedFiles) === self::$maximumCachedFiles)) {
-            array_shift(self::$parsedFiles);
-        }
-
-        if (!isset($fileContent)) {
-            $fileContent = file_get_contents($fileName);
-        }
-        $treeNode = self::$parser->parse($fileContent);
-        $treeNode = self::$traverser->traverse($treeNode);
-
-        self::$parsedFiles[$fileName] = $treeNode;
-
-        return $treeNode;
+        return self::$reflectionParser->parseFile($fileName, $fileContent = null);
     }
 
     /**
@@ -233,19 +145,7 @@ class ReflectionEngine
      */
     public static function parseFileNamespace($fileName, $namespaceName)
     {
-        $topLevelNodes = self::parseFile($fileName);
-        // namespaces can be only top-level nodes, so we can scan them directly
-        foreach ($topLevelNodes as $topLevelNode) {
-            if (!$topLevelNode instanceof Namespace_) {
-                continue;
-            }
-            $topLevelNodeName = $topLevelNode->name ? $topLevelNode->name->toString() : '';
-            if (ltrim($topLevelNodeName, '\\') === trim($namespaceName, '\\')) {
-                return $topLevelNode;
-            }
-        }
-
-        throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
+        return self::$reflectionParser->parseFileNamespace($fileName, $namespaceName);
     }
 
 }
