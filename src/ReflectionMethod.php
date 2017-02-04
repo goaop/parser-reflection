@@ -44,17 +44,20 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param string $methodName Name of the method
      * @param ClassMethod $classMethodNode AST-node for method
      * @param ReflectionClass $declaringClass Optional declaring class
+     * @param ReflectionParser $reflectionParser AST parser
      */
     public function __construct(
         $className,
         $methodName,
         ClassMethod $classMethodNode = null,
-        ReflectionClass $declaringClass = null
+        ReflectionClass $declaringClass = null,
+        ReflectionParser $reflectionParser = null
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = $className;
         $this->declaringClass   = $declaringClass;
-        $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
+        $this->reflectionParser = $reflectionParser ?: ReflectionEngine::getReflectionParser();
+        $this->functionLikeNode = $classMethodNode ?: $this->reflectionParser->parseClassMethod($className, $methodName);
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
@@ -281,10 +284,11 @@ class ReflectionMethod extends BaseReflectionMethod
      *
      * @param ClassLike $classLikeNode Class-like node
      * @param ReflectionClass $reflectionClass Reflection of the class
+     * @param ReflectionParser $reflectionParser AST parser
      *
      * @return array|ReflectionMethod[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass)
+    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass, ReflectionParser $reflectionParser)
     {
         $methods = [];
 
@@ -297,7 +301,8 @@ class ReflectionMethod extends BaseReflectionMethod
                     $reflectionClass->name,
                     $methodName,
                     $classLevelNode,
-                    $reflectionClass
+                    $reflectionClass,
+                    $reflectionParser
                 );
             }
         }

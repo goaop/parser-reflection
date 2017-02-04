@@ -67,6 +67,11 @@ class ReflectionParameter extends BaseReflectionParameter
     private $parameterNode;
 
     /**
+     * @var ReflectionParser
+     */
+    private $reflectionParser;
+
+    /**
      * Initializes a reflection for the property
      *
      * @param string|array $unusedFunctionName Name of the function/method
@@ -74,13 +79,15 @@ class ReflectionParameter extends BaseReflectionParameter
      * @param Param $parameterNode Parameter definition node
      * @param int $parameterIndex Index of parameter
      * @param \ReflectionFunctionAbstract $declaringFunction
+     * @param ReflectionParser $reflectionParser AST parser
      */
     public function __construct(
         $unusedFunctionName,
         $parameterName,
         Param $parameterNode = null,
         $parameterIndex = 0,
-        \ReflectionFunctionAbstract $declaringFunction = null
+        \ReflectionFunctionAbstract $declaringFunction = null,
+        ReflectionParser $reflectionParser = null
     ) {
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
@@ -88,6 +95,7 @@ class ReflectionParameter extends BaseReflectionParameter
         $this->parameterNode     = $parameterNode;
         $this->parameterIndex    = $parameterIndex;
         $this->declaringFunction = $declaringFunction;
+        $this->reflectionParser           = $reflectionParser ?: ReflectionEngine::getReflectionParser();
 
         if ($this->isDefaultValueAvailable()) {
             if ($declaringFunction instanceof \ReflectionMethod) {
@@ -96,7 +104,7 @@ class ReflectionParameter extends BaseReflectionParameter
                 $context = $declaringFunction;
             };
 
-            $expressionSolver = new NodeExpressionResolver($context);
+            $expressionSolver = new NodeExpressionResolver($context, $this->reflectionParser);
             $expressionSolver->process($this->parameterNode->default);
             $this->defaultValue             = $expressionSolver->getValue();
             $this->isDefaultValueConstant   = $expressionSolver->isConstant();

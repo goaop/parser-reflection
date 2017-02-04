@@ -10,6 +10,8 @@
 
 namespace Go\ParserReflection\NodeVisitor;
 
+use Go\ParserReflection\ReflectionEngine;
+use Go\ParserReflection\ReflectionParser;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
@@ -27,6 +29,11 @@ class StaticVariablesCollector extends NodeVisitorAbstract
      */
     private $context;
 
+    /**
+     * @var ReflectionParser
+     */
+    private $reflectionParser;
+
     private $staticVariables = [];
 
     /**
@@ -34,9 +41,10 @@ class StaticVariablesCollector extends NodeVisitorAbstract
      *
      * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      */
-    public function __construct($context)
+    public function __construct($context, ReflectionParser $reflectionParser = null)
     {
         $this->context = $context;
+        $this->reflectionParser = $reflectionParser ?: ReflectionEngine::getReflectionParser();
     }
 
     /**
@@ -50,7 +58,7 @@ class StaticVariablesCollector extends NodeVisitorAbstract
         }
 
         if ($node instanceof Node\Stmt\Static_) {
-            $expressionSolver = new NodeExpressionResolver($this->context);
+            $expressionSolver = new NodeExpressionResolver($this->context, $this->reflectionParser);
             $staticVariables  = $node->vars;
             foreach ($staticVariables as $staticVariable) {
                 $expr = $staticVariable->default;

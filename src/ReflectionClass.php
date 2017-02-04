@@ -30,8 +30,9 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @param string|object $argument Class name or instance of object
      * @param ClassLike $classLikeNode AST node for class
+     * @param ReflectionParser $reflectionParser AST parser
      */
-    public function __construct($argument, ClassLike $classLikeNode = null)
+    public function __construct($argument, ClassLike $classLikeNode = null, ReflectionParser $reflectionParser = null)
     {
         $fullClassName       = is_object($argument) ? get_class($argument) : $argument;
         $namespaceParts      = explode('\\', $fullClassName);
@@ -40,14 +41,16 @@ class ReflectionClass extends InternalReflectionClass
         unset($this->name);
 
         $this->namespaceName = join('\\', $namespaceParts);
+        $this->reflectionParser = $reflectionParser ?: ReflectionEngine::getReflectionParser();
 
-        $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
+        $this->classLikeNode = $classLikeNode ?: $this->reflectionParser->parseClass($fullClassName);
     }
 
     /**
      * Parses interfaces from the concrete class node
      *
      * @param ClassLike $classLikeNode Class-like node
+     * @param ReflectionParser $reflectionParser AST parser
      *
      * @return array|\ReflectionClass[] List of reflections of interfaces
      */
@@ -65,7 +68,7 @@ class ReflectionClass extends InternalReflectionClass
                     $implementName  = $implementNode->toString();
                     $interface      = interface_exists($implementName, false)
                         ? new parent($implementName)
-                        : new static($implementName);
+                        : new static($implementName, null, $this->reflectionParser);
                     $interfaces[$implementName] = $interface;
                 }
             }
@@ -79,6 +82,7 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @param ClassLike $classLikeNode Class-like node
      * @param array     $traitAdaptations List of method adaptations
+     * @param ReflectionParser $reflectionParser AST parser
      *
      * @return array|\ReflectionClass[] List of reflections of traits
      */
@@ -94,7 +98,7 @@ class ReflectionClass extends InternalReflectionClass
                             $traitName          = $classTraitName->toString();
                             $trait              = trait_exists($traitName, false)
                                 ? new parent($traitName)
-                                : new static($traitName);
+                                : new static($traitName, null, $this->reflectionParser);
                             $traits[$traitName] = $trait;
                         }
                     }

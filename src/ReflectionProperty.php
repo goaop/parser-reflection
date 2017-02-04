@@ -47,22 +47,30 @@ class ReflectionProperty extends BaseReflectionProperty
     private $className;
 
     /**
+     * @var ReflectionParser
+     */
+    private $reflectionParser;
+
+    /**
      * Initializes a reflection for the property
      *
      * @param string $className Name of the class with properties
      * @param string $propertyName Name of the property to reflect
      * @param Property $propertyType Property type definition node
      * @param PropertyProperty $propertyNode Concrete property definition (value, name)
+     * @param ReflectionParser $reflectionParser AST parser
      */
     public function __construct(
         $className,
         $propertyName,
         Property $propertyType = null,
-        PropertyProperty $propertyNode = null
+        PropertyProperty $propertyNode = null,
+        ReflectionParser $reflectionParser = null
     ) {
         $this->className    = $className;
+        $this->reflectionParser = $reflectionParser ?: ReflectionEngine::getReflectionParser();
         if (!$propertyType || !$propertyNode) {
-            list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
+            list ($propertyType, $propertyNode) = $this->reflectionParser->parseClassProperty($className, $propertyName);
         }
 
         $this->propertyTypeNode = $propertyType;
@@ -152,7 +160,7 @@ class ReflectionProperty extends BaseReflectionProperty
     public function getValue($object = null)
     {
         if (!isset($object)) {
-            $solver = new NodeExpressionResolver($this->getDeclaringClass());
+            $solver = new NodeExpressionResolver($this->getDeclaringClass(), $this->reflectionParser);
             if (!isset($this->propertyNode->default)) {
                 return null;
             }
@@ -233,10 +241,11 @@ class ReflectionProperty extends BaseReflectionProperty
      *
      * @param ClassLike $classLikeNode Class-like node
      * @param string    $fullClassName FQN of the class
+     * @param ReflectionParser $reflectionParser AST parser
      *
      * @return array|ReflectionProperty[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, $fullClassName)
+    public static function collectFromClassNode(ClassLike $classLikeNode, $fullClassName, ReflectionParser $reflectionParser)
     {
         $properties = [];
 
@@ -248,7 +257,8 @@ class ReflectionProperty extends BaseReflectionProperty
                         $fullClassName,
                         $propertyName,
                         $classLevelNode,
-                        $classPropertyNode
+                        $classPropertyNode,
+                        $reflectionParser
                     );
                 }
             }

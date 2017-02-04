@@ -43,16 +43,23 @@ class ReflectionFile
     private $topLevelNodes;
 
     /**
+     * @var ReflectionParser
+     */
+    private $reflectionParser;
+
+    /**
      * ReflectionFile constructor.
      *
      * @param string $fileName Name of the file to reflect
      * @param null|array|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
+     * @param ReflectionParser $reflectionParser AST parser
      */
-    public function __construct($fileName, $topLevelNodes = null)
+    public function __construct($fileName, $topLevelNodes = null, ReflectionParser $reflectionParser = null)
     {
         $fileName            = PathResolver::realpath($fileName);
         $this->fileName      = $fileName;
-        $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
+        $this->reflectionParser = $reflectionParser ?: ReflectionEngine::getReflectionParser();
+        $this->topLevelNodes = $topLevelNodes ?: $this->reflectionParser->parseFile($fileName);
     }
 
     /**
@@ -147,7 +154,8 @@ class ReflectionFile
                 $namespaces[$namespaceName] = new ReflectionFileNamespace(
                     $this->fileName,
                     $namespaceName,
-                    $topLevelNode
+                    $topLevelNode,
+                    $this->reflectionParser
                 );
             }
         }

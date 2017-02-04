@@ -60,6 +60,14 @@ class ReflectionEngine
     }
 
     /**
+     * @return ReflectionParser
+     */
+    public static function getReflectionParser()
+    {
+        return self::$reflectionParser;
+    }
+
+    /**
      * Limits number of files, that can be cached at any given moment
      *
      * @param integer $newLimit New limit
