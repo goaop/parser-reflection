@@ -54,7 +54,7 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @return array|\ReflectionClass[] List of reflections of interfaces
      */
-    public static function collectInterfacesFromClassNode(ClassLike $classLikeNode)
+    public static function collectInterfacesFromClassNode(ClassLike $classLikeNode, ReflectionParser $reflectionParser)
     {
         $interfaces = [];
 
@@ -66,9 +66,7 @@ class ReflectionClass extends InternalReflectionClass
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
                     $implementName  = $implementNode->toString();
-                    $interface      = interface_exists($implementName, false)
-                        ? new parent($implementName)
-                        : new static($implementName, null, $this->reflectionParser);
+                    $interface      = $reflectionParser->getClassReflection($implementName);
                     $interfaces[$implementName] = $interface;
                 }
             }
@@ -86,7 +84,7 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @return array|\ReflectionClass[] List of reflections of traits
      */
-    public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations)
+    public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations, ReflectionParser $reflectionParser)
     {
         $traits = [];
 
@@ -96,9 +94,7 @@ class ReflectionClass extends InternalReflectionClass
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
                             $traitName          = $classTraitName->toString();
-                            $trait              = trait_exists($traitName, false)
-                                ? new parent($traitName)
-                                : new static($traitName, null, $this->reflectionParser);
+                            $trait              = $reflectionParser->getClassReflection($traitName);
                             $traits[$traitName] = $trait;
                         }
                     }

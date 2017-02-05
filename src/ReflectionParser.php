@@ -89,6 +89,24 @@ class ReflectionParser
     }
 
     /**
+     * Return class reflection object
+     *
+     * @param string $fullName Full name of the class
+     *
+     * @return void
+     */
+    public function getClassReflection($fullName)
+    {
+        if (class_exists($fullName, false)
+            || interface_exists($fullName, false)
+            || trait_exists($fullName, false)
+        ) {
+            return new \ReflectionClass($fullName);
+        }
+        return new ReflectionClass($fullName, null, $this);
+    }
+
+    /**
      * Locates a file name for class
      *
      * @param string $fullClassName Full name of the class

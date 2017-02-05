@@ -136,7 +136,9 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getDeclaringClass()
     {
-        return isset($this->declaringClass) ? $this->declaringClass : new ReflectionClass($this->className);
+        return isset($this->declaringClass)
+            ? $this->declaringClass
+            : $this->reflectionParser->getClassReflection($this->className);
     }
 
     /**
