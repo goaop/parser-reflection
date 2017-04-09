@@ -758,9 +758,16 @@ trait ReflectionClassLikeTrait
 
         if (!$this->classLikeNode instanceof Class_) {
             return false;
-        } else {
-            $extends = $this->classLikeNode->extends;
-            if ($extends && $extends->toString() == $class) {
+        }
+
+        $extends = $this->classLikeNode->extends;
+        if ($extends && $extends->toString() == $class) {
+            return true;
+        }
+
+        $implementedInterfaces = $this->classLikeNode->implements;
+        foreach ($implementedInterfaces as $implementedInterface) {
+            if ($implementedInterface->toString() == $class) {
                 return true;
             }
         }

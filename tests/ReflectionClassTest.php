@@ -2,11 +2,13 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
+use Go\ParserReflection\Stub\ClassWithInterface;
 use Go\ParserReflection\Stub\ClassWithMethodsAndProperties;
 use Go\ParserReflection\Stub\ClassWithScalarConstants;
 use Go\ParserReflection\Stub\FinalClass;
 use Go\ParserReflection\Stub\ImplicitAbstractClass;
 use Go\ParserReflection\Stub\SimpleAbstractInheritance;
+use Go\ParserReflection\Stub\SimpleInterface;
 
 class ReflectionClassTest extends AbstractTestCase
 {
@@ -145,6 +147,18 @@ class ReflectionClassTest extends AbstractTestCase
 
             $this->assertCount(count($originalProperties), $parsedProperties);
         }
+    }
+
+    /**
+     * Test isSubclassOf() method parity
+     */
+    public function testIsSubclassOf()
+    {
+        $parsedClass   = $this->parsedRefFileNamespace->getClass(ClassWithInterface::class);
+        $actualValue   = $parsedClass->isSubclassOf(SimpleInterface::class);
+        $originalClass = new \ReflectionClass(ClassWithInterface::class);
+        $expectedValue = $originalClass->isSubclassOf(SimpleInterface::class);
+        $this->assertSame($expectedValue, $actualValue, "Class should also check interfaces for isSubclassOf");
     }
 
     public function testNewInstanceMethod()
