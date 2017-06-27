@@ -843,15 +843,22 @@ trait ReflectionClassLikeTrait
      * Creates a new class instance from given arguments.
      *
      * @link http://php.net/manual/en/reflectionclass.newinstance.php
+     *
+     * Signature was hacked to support both 5.6, 7.1.x and 7.2.0 versions
+     * @see https://3v4l.org/hW9O9
+     * @see https://3v4l.org/sWT3j
+     * @see https://3v4l.org/eeVf8
+     *
+     * @param mixed $arg First argument
      * @param mixed $args Accepts a variable number of arguments which are passed to the class constructor
      *
      * @return object
      */
-    public function newInstance($args = null)
+    public function newInstance($arg=null, ...$args)
     {
-        $this->initializeInternalReflection();
+        $args = array_slice(array_merge([$arg], $args), 0, \func_num_args());
 
-        return call_user_func_array('parent::newInstance', func_get_args());
+        return parent::newInstance(...$args);
     }
 
     /**
