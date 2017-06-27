@@ -854,7 +854,7 @@ trait ReflectionClassLikeTrait
      *
      * @return object
      */
-    public function newInstance($arg=null, ...$args)
+    public function newInstance($arg = null, ...$args)
     {
         $args = array_slice(array_merge([$arg], $args), 0, \func_num_args());
         $this->initializeInternalReflection();
