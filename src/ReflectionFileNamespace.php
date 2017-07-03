@@ -83,6 +83,9 @@ class ReflectionFileNamespace
      */
     public function __construct($fileName, $namespaceName, Namespace_ $namespaceNode = null)
     {
+        if (!is_string($fileName)) {
+            throw new \InvalidArgumentException(sprintf('$fileName must be a string, but a %s was passed', gettype($fileName)));
+        }
         $fileName = PathResolver::realpath($fileName);
         if (!$namespaceNode) {
             $namespaceNode = ReflectionEngine::parseFileNamespace($fileName, $namespaceName);

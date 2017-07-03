@@ -11,6 +11,7 @@
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionClass;
+use ReflectionClass as BaseReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
@@ -442,7 +443,8 @@ trait ReflectionClassLikeTrait
             $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
             if ($extendsNode instanceof FullyQualified) {
                 $extendsName = $extendsNode->toString();
-                $parentClass = class_exists($extendsName, false) ? new parent($extendsName) : new static($extendsName);
+                $parentClass = class_exists($extendsName, false) ? new BaseReflectionClass($extendsName) : new ReflectionClass($extendsName);
+
             }
             $this->parentClass = $parentClass;
         }
@@ -698,8 +700,16 @@ trait ReflectionClassLikeTrait
         }
 
         $className = $this->getName();
-
-        return $className === get_class($object) || is_subclass_of($object, $className);
+        $objClass = get_class($object);
+        if ($className === $objClass) {
+            return true;
+        }
+        $objClassRef = new BaseReflectionClass($objClass);
+        if ($objClassRef->isSubclassOf($className)) {
+            return true;
+        }
+        $thisIsInterface = $this->isInterface();
+        return $thisIsInterface && $objClassRef->implementsInterface($className);
     }
 
     /**

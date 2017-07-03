@@ -23,7 +23,15 @@ use PhpParser\NodeVisitorAbstract;
 class RootNamespaceNormalizer extends NodeVisitorAbstract
 {
     /**
-     * {@inheritdoc}
+     * Called once before traversal.
+     *
+     * Return value semantics:
+     *  * null:      $nodes stays as-is
+     *  * otherwise: $nodes is set to the return value
+     *
+     * @param Node[] $nodes Array of nodes
+     *
+     * @return null|Node[] Array of nodes
      */
     public function beforeTraverse(array $nodes)
     {

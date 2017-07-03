@@ -85,14 +85,14 @@ class ReflectionType extends BaseReflectionType
             'int'  => 'integer',
             'bool' => 'boolean'
         ];
-        $displayType = $type->type;
+        $displayType = (string)$type;
         if (isset($typeMap[$displayType])) {
             $displayType = $typeMap[$displayType];
         }
 
         $displayType = ltrim($displayType, '\\');
 
-        if ($type->allowsNull()) {
+        if (method_exists($type, 'allowsNull') && $type->allowsNull()) {
             $displayType .= ' or NULL';
         }
 
