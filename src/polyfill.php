@@ -13,10 +13,11 @@
  * versions of PHP, (i.e. PHP < 7).
  */
 if (!class_exists(ReflectionType::class, false)) {
-    class ReflectionType {
+    class ReflectionType
+    {
         public function allowsNull()
         {
-            return TRUE;
+            return true;
         }
     }
 }

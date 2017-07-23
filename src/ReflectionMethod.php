@@ -81,7 +81,7 @@ class ReflectionMethod extends BaseReflectionMethod
     public function __toString()
     {
         $hasReturnType    = $this->hasReturnType();
-        $returnType       = $hasReturnType ? $this->getReturnType() : NULL;
+        $returnType       = $hasReturnType ? $this->getReturnType() : null;
         $paramsNeeded     = $hasReturnType || $this->getNumberOfParameters() > 0;
         $paramFormat      = $paramsNeeded ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $returnFormat     = $hasReturnType ? "\n  - Return [ %s ]" : '';

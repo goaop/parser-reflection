@@ -258,8 +258,7 @@ class NodeExpressionResolver
         $classToReflect = $node->class;
         if ($classToReflect instanceof Expr) {
             $refClass = $this->resolve($classToReflect);
-        }
-        else {
+        } else {
             $refClass = $this->fetchReflectionClass($node->class);
         }
         $constantName = $node->name;
