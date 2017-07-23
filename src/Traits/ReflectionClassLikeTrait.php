@@ -444,7 +444,6 @@ trait ReflectionClassLikeTrait
             if ($extendsNode instanceof FullyQualified) {
                 $extendsName = $extendsNode->toString();
                 $parentClass = class_exists($extendsName, false) ? new BaseReflectionClass($extendsName) : new ReflectionClass($extendsName);
-
             }
             $this->parentClass = $parentClass;
         }
