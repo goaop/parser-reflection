@@ -112,8 +112,7 @@ class NodeExpressionResolver
         try {
             ++$this->nodeLevel;
 
-            $nodeType   = $node->getType();
-            $methodName = 'resolve' . str_replace('_', '', $nodeType);
+            $methodName = $this->getDispatchMethodFor($node);
             if (method_exists($this, $methodName)) {
                 $value = $this->$methodName($node);
             }
@@ -142,7 +141,7 @@ class NodeExpressionResolver
     protected function resolveScalarMagicConstMethod()
     {
         if ($this->context instanceof \ReflectionMethod) {
-            $fullName = $this->context->class . '::' . $this->context->getShortName();
+            $fullName = $this->context->getDeclaringClass()->name . '::' . $this->context->getShortName();
 
             return $fullName;
         }
@@ -231,7 +230,6 @@ class NodeExpressionResolver
             if (method_exists($this->context, 'getFileName')) {
                 $fileName      = $this->context->getFileName();
                 $namespaceName = $this->resolveScalarMagicConstNamespace();
-                /** @var ReflectionFileNamespace $fileNamespace */
                 $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
                 if ($fileNamespace->hasConstant($constantName)) {
                     $constantValue = $fileNamespace->getConstant($constantName);
@@ -256,11 +254,21 @@ class NodeExpressionResolver
     protected function resolveExprClassConstFetch(Expr\ClassConstFetch $node)
     {
         $classToReflect = $node->class;
-        if ($classToReflect instanceof Expr) {
-            $refClass = $this->resolve($classToReflect);
-        } else {
-            $refClass = $this->fetchReflectionClass($node->class);
+        if (!($classToReflect instanceof Node\Name)) {
+            $classToReflect = $this->resolve($classToReflect) ?: $classToReflect;
+            if (!is_string($classToReflect)) {
+                $reason = 'Unable';
+                if ($classToReflect instanceof Expr) {
+                    $methodName = $this->getDispatchMethodFor($classToReflect);
+                    $reason = "Method " . __CLASS__ . "::{$methodName}() not found trying";
+                }
+                throw new ReflectionException("$reason to resolve class constant.");
+            }
+            // Strings evaluated as class names are always treated as fully
+            // qualified.
+            $classToReflect = new Node\Name\FullyQualified(ltrim($classToReflect, '\\'));
         }
+        $refClass = $this->fetchReflectionClass($classToReflect);
         $constantName = $node->name;
 
         // special handling of ::class constants
@@ -269,7 +277,7 @@ class NodeExpressionResolver
         }
 
         $this->isConstant = true;
-        $this->constantName = (string)$node->class . '::' . $constantName;
+        $this->constantName = (string)$classToReflect . '::' . $constantName;
 
         return $refClass->getConstant($constantName);
     }
@@ -432,6 +440,12 @@ class NodeExpressionResolver
     protected function resolveExprBinaryOpLogicalXor(Expr\BinaryOp\LogicalXor $node)
     {
         return $this->resolve($node->left) xor $this->resolve($node->right);
+    }
+
+    private function getDispatchMethodFor(Node $node)
+    {
+        $nodeType = $node->getType();
+        return 'resolve' . str_replace('_', '', $nodeType);
     }
 
     /**

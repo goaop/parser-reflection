@@ -13,11 +13,22 @@
  * versions of PHP, (i.e. PHP < 7).
  */
 if (!class_exists(ReflectionType::class, false)) {
+    /* Dummy polyfill class */
     class ReflectionType
     {
         public function allowsNull()
         {
             return true;
+        }
+
+        public function isBuiltin()
+        {
+            return false;
+        }
+
+        public function __toString()
+        {
+            return '';
         }
     }
 }

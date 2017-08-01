@@ -443,7 +443,7 @@ trait ReflectionClassLikeTrait
             $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
             if ($extendsNode instanceof FullyQualified) {
                 $extendsName = $extendsNode->toString();
-                $parentClass = class_exists($extendsName, false) ? new BaseReflectionClass($extendsName) : new ReflectionClass($extendsName);
+                $parentClass = $this->createReflectionForClass($extendsName);
             }
             $this->parentClass = $parentClass;
         }
@@ -699,16 +699,7 @@ trait ReflectionClassLikeTrait
         }
 
         $className = $this->getName();
-        $objClass = get_class($object);
-        if ($className === $objClass) {
-            return true;
-        }
-        $objClassRef = new BaseReflectionClass($objClass);
-        if ($objClassRef->isSubclassOf($className)) {
-            return true;
-        }
-        $thisIsInterface = $this->isInterface();
-        return $thisIsInterface && $objClassRef->implementsInterface($className);
+        return $className === get_class($object) || is_subclass_of($object, $className);
     }
 
     /**
@@ -963,4 +954,6 @@ trait ReflectionClassLikeTrait
             }
         }
     }
+
+    abstract protected function createReflectionForClass($className);
 }

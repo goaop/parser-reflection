@@ -92,7 +92,7 @@ class ReflectionType extends BaseReflectionType
 
         $displayType = ltrim($displayType, '\\');
 
-        if (method_exists($type, 'allowsNull') && $type->allowsNull()) {
+        if ($type->allowsNull()) {
             $displayType .= ' or NULL';
         }
 
