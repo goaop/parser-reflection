@@ -11,7 +11,6 @@
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionClass;
-use ReflectionClass as BaseReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
@@ -323,6 +322,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     * @param string $name
      */
     public function getMethod($name)
     {
@@ -593,6 +593,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     * @param string $name
      */
     public function hasMethod($name)
     {
@@ -623,6 +624,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     * @param string $interfaceName
      */
     public function implementsInterface($interfaceName)
     {
@@ -955,5 +957,14 @@ trait ReflectionClassLikeTrait
         }
     }
 
+    /**
+     * Create a ReflectionClass for a given class name.
+     *
+     * @param string $className
+     *     The name of the class to create a reflection for.
+     *
+     * @return ReflectionClass
+     *     The apropriate reflection object.
+     */
     abstract protected function createReflectionForClass($className);
 }
