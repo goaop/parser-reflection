@@ -108,9 +108,13 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
-            join(' ', \Reflection::getModifierNames(
-                $this->getModifiers() &
-                (self::IS_PUBLIC | self::IS_PROTECTED | self::IS_PRIVATE))),
+            join(
+                ' ',
+                \Reflection::getModifierNames(
+                    $this->getModifiers() &
+                        (self::IS_PUBLIC | self::IS_PROTECTED | self::IS_PRIVATE)
+                )
+            ),
             $this->getName(),
             $this->getFileName(),
             $this->getStartLine(),
