@@ -18,12 +18,11 @@ class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
      *
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
+     *
+     * @requires PHP 7.0.0
      */
     public function testTypeConvertToDisplayTypeWithNativeType()
     {
-        if (PHP_VERSION_ID < 70000) {
-            $this->markTestIncomplete('PHP >= 7.0 implements ReflectionType');
-        }
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
         $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
@@ -42,12 +41,11 @@ class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
      *
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
+     *
+     * @requires PHP 7.1.0
      */
     public function testTypeConvertToDisplayTypeWithNullableNativeType()
     {
-        if (PHP_VERSION_ID < 70100) {
-            $this->markTestIncomplete('PHP >= 7.1 implements Nullable types');
-        }
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithNullableScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
         $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
@@ -55,6 +53,30 @@ class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
         $this->assertCount(2, $nativeParamRefArr);
         $this->assertEquals(\ReflectionParameter::class, get_class($nativeParamRefArr[0]));
         $nativeTypeRef = $nativeParamRefArr[0]->getType();
+        $this->assertEquals('string', (string)$nativeTypeRef);
+        $this->assertNotContains('\\', get_class($nativeTypeRef));
+        $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
+        $this->assertEquals('string or NULL', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
+    }
+
+    /**
+     * Testing convertToDisplayType() with native \ReflectionType
+     *
+     * We're already testing it with Go\ParserReflection\ReflectionType
+     * elsewhere.
+     *
+     * @requires PHP 7.0.0
+     */
+    public function testTypeConvertToDisplayTypeImplicitlyNullable()
+    {
+        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
+        $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringDefaultToNull');
+        $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
+        $nativeParamRefArr = $nativeMethodRef->getParameters();
+        $this->assertCount(1, $nativeParamRefArr);
+        $this->assertEquals(\ReflectionParameter::class, get_class($nativeParamRefArr[0]));
+        $nativeTypeRef = $nativeParamRefArr[0]->getType();
+        $this->assertTrue($nativeTypeRef->allowsNull());
         $this->assertEquals('string', (string)$nativeTypeRef);
         $this->assertNotContains('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);

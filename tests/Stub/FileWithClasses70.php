@@ -22,6 +22,7 @@ class ClassWithScalarTypeHints
     public function acceptsBool(bool $value) {}
     public function acceptsVariadicInteger(int ...$values) {}
     public function acceptsDefaultString(string $class = ReflectionMethod::class, string $name = P::class) {}
+    public function acceptsStringDefaultToNull(string $someName = null) {}
 }
 
 class ClassWithReturnTypeHints

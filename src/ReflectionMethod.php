@@ -121,9 +121,7 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->getEndLine(),
             count($methodParameters),
             $paramString,
-            (   $returnType ?
-                ReflectionType::convertToDisplayType($returnType) :
-                'UNUSED: Prevents convertToDisplayType() being called.')
+            ($returnType ? ReflectionType::convertToDisplayType($returnType) : '')
         );
     }
 
