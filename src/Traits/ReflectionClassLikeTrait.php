@@ -322,6 +322,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     * @param string $name
      */
     public function getMethod($name)
     {
@@ -442,7 +443,7 @@ trait ReflectionClassLikeTrait
             $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
             if ($extendsNode instanceof FullyQualified) {
                 $extendsName = $extendsNode->toString();
-                $parentClass = class_exists($extendsName, false) ? new parent($extendsName) : new static($extendsName);
+                $parentClass = $this->createReflectionForClass($extendsName);
             }
             $this->parentClass = $parentClass;
         }
@@ -592,6 +593,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     * @param string $name
      */
     public function hasMethod($name)
     {
@@ -622,6 +624,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     * @param string $interfaceName
      */
     public function implementsInterface($interfaceName)
     {
@@ -698,7 +701,6 @@ trait ReflectionClassLikeTrait
         }
 
         $className = $this->getName();
-
         return $className === get_class($object) || is_subclass_of($object, $className);
     }
 
@@ -954,4 +956,15 @@ trait ReflectionClassLikeTrait
             }
         }
     }
+
+    /**
+     * Create a ReflectionClass for a given class name.
+     *
+     * @param string $className
+     *     The name of the class to create a reflection for.
+     *
+     * @return ReflectionClass
+     *     The apropriate reflection object.
+     */
+    abstract protected function createReflectionForClass($className);
 }

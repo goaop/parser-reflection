@@ -50,6 +50,14 @@ class ReflectionFile
      */
     public function __construct($fileName, $topLevelNodes = null)
     {
+        if (!is_string($fileName)) {
+            throw new \InvalidArgumentException(
+                sprintf(
+                    '$fileName must be a string, but a %s was passed',
+                    gettype($fileName)
+                )
+            );
+        }
         $fileName            = PathResolver::realpath($fileName);
         $this->fileName      = $fileName;
         $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);

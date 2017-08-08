@@ -125,4 +125,18 @@ class ReflectionClass extends InternalReflectionClass
     {
         parent::__construct($this->getName());
     }
+
+    /**
+     * Create a ReflectionClass for a given class name.
+     *
+     * @param string $className
+     *     The name of the class to create a reflection for.
+     *
+     * @return ReflectionClass
+     *     The apropriate reflection object.
+     */
+    protected function createReflectionForClass($className)
+    {
+        return class_exists($className, false) ? new parent($className) : new static($className);
+    }
 }

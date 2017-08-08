@@ -80,7 +80,9 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function __toString()
     {
-        $hasReturnType    = $this->hasReturnType();
+        // Internally $this->getReturnType() !== null is the same as $this->hasReturnType()
+        $returnType       = $this->getReturnType();
+        $hasReturnType    = $returnType !== null;
         $paramsNeeded     = $hasReturnType || $this->getNumberOfParameters() > 0;
         $paramFormat      = $paramsNeeded ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $returnFormat     = $hasReturnType ? "\n  - Return [ %s ]" : '';
@@ -107,14 +109,19 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
-            join(' ', \Reflection::getModifierNames($this->getModifiers() & 1792)),
+            join(
+                ' ',
+                \Reflection::getModifierNames(
+                    $this->getModifiers() & (self::IS_PUBLIC | self::IS_PROTECTED | self::IS_PRIVATE)
+                )
+            ),
             $this->getName(),
             $this->getFileName(),
             $this->getStartLine(),
             $this->getEndLine(),
             count($methodParameters),
             $paramString,
-            $hasReturnType ? ReflectionType::convertToDisplayType($this->getReturnType()) : ''
+            $returnType ? ReflectionType::convertToDisplayType($returnType) : ''
         );
     }
 
