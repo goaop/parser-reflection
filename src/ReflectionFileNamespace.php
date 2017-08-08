@@ -180,7 +180,7 @@ class ReflectionFileNamespace
         $comments   = $this->namespaceNode->getAttribute('comments');
 
         if ($comments) {
-            $docComment = (string) $comments[0];
+            $docComment = (string)$comments[0];
         }
 
         return $docComment;
