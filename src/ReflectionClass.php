@@ -137,6 +137,15 @@ class ReflectionClass extends InternalReflectionClass
      */
     protected function createReflectionForClass($className)
     {
-        return class_exists($className, false) ? new parent($className) : new static($className);
+        if (class_exists($className, false)) {
+            $parentClass = new parent($className);
+            if ($parentClass->isUserDefined()) {
+                $parentClass = new static($className);
+            }
+        } else {
+            $parentClass = new static($className);
+        }
+        
+        return $parentClass;
     }
 }
