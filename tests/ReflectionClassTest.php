@@ -8,7 +8,7 @@ use Go\ParserReflection\Stub\FinalClass;
 use Go\ParserReflection\Stub\ImplicitAbstractClass;
 use Go\ParserReflection\Stub\SimpleAbstractInheritance;
 
-class ReflectionClassTest extends AbstractTestCase
+class ReflectionClassTest extends AbstractClassTestCaseBase
 {
     /**
      * Name of the class to compare
@@ -21,26 +21,31 @@ class ReflectionClassTest extends AbstractTestCase
      * Tests getModifier() method
      * NB: value is masked because there are many internal constants that aren't exported in the userland
      *
-     * @dataProvider getFilesToAnalyze
+     * @dataProvider getClassesToAnalyze
      *
      * @param string $fileName File name to test
      */
-    public function testGetModifiers($fileName)
+    public function testGetModifiers($class, $fileName)
     {
         $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
             + \ReflectionClass::IS_FINAL
             + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
 
-        $this->setUpFile($fileName);
-        $parsedClasses = $this->parsedRefFileNamespace->getClasses();
-        foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
-            $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
-            $originalModifiers = $originalRefClass->getModifiers() & $mask;
-
-            $this->assertEquals($originalModifiers, $parsedModifiers);
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        } else {
+            $this->lastFileSetUp          = null;
+            $this->parsedRefFileNamespace = null;
+            $this->parsedRefClass         = null;
+            $parsedRefClass               = new ReflectionClass($class);
         }
+        $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+        $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
+        $originalModifiers = $originalRefClass->getModifiers() & $mask;
+
+        $this->assertEquals($originalModifiers, $parsedModifiers);
     }
 
     /**
@@ -48,9 +53,8 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @dataProvider caseProvider
      *
-     * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param ReflectionClass $parsedClass Parsed class
+     * @param string          $getterName  Name of the reflection method to test
      */
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
@@ -61,10 +65,10 @@ class ReflectionClassTest extends AbstractTestCase
 
         $expectedValue = $refClass->$getterName();
         $actualValue   = $parsedClass->$getterName();
-        $this->assertSame(
+        $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            "{$getterName}() for class {$className} should be equal"
+            get_class($parsedClass) . "->$getterName() for method $className should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
         );
     }
 
@@ -78,25 +82,23 @@ class ReflectionClassTest extends AbstractTestCase
         $allNameGetters = $this->getGettersToCheck();
 
         $testCases = [];
-        $files     = $this->getFilesToAnalyze();
-        foreach ($files as $fileList) {
-            foreach ($fileList as $fileName) {
-                $fileName = stream_resolve_include_path($fileName);
-                $fileNode = ReflectionEngine::parseFile($fileName);
-
-                $reflectionFile = new ReflectionFile($fileName, $fileNode);
-                include_once $fileName;
-                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
-                    foreach ($fileNamespace->getClasses() as $parsedClass) {
-                        $caseName = $parsedClass->getName();
-                        foreach ($allNameGetters as $getterName) {
-                            $testCases[$caseName . ', ' . $getterName] = [
-                                $parsedClass,
-                                $getterName
-                            ];
-                        }
-                    }
-                }
+        $classes   = $this->getClassesToAnalyze();
+        foreach ($classes as $testCaseDesc => $classFilePair) {
+            if ($classFilePair['fileName']) {
+                $fileNode       = ReflectionEngine::parseFile($classFilePair['fileName']);
+                $reflectionFile = new ReflectionFile($classFilePair['fileName'], $fileNode);
+                $namespace      = $this->getNamespaceFromName($classFilePair['class']);
+                $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
+                $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
+                include_once $classFilePair['fileName'];
+            } else {
+                $parsedClass    = new ReflectionClass($classFilePair['class']);
+            }
+            foreach ($allNameGetters as $getterName) {
+                $testCases[$testCaseDesc . ', ' . $getterName] = [
+                    $parsedClass,
+                    $getterName
+                ];
             }
         }
 
@@ -106,45 +108,54 @@ class ReflectionClassTest extends AbstractTestCase
     /**
      * Tests getMethods() returns correct number of methods for the class
      *
-     * @dataProvider getFilesToAnalyze
+     * @dataProvider getClassesToAnalyze
      *
      * @param string $fileName File name to test
      */
-    public function testGetMethodCount($fileName)
+    public function testGetMethodCount($class, $fileName)
     {
-        $this->setUpFile($fileName);
-        $parsedClasses = $this->parsedRefFileNamespace->getClasses();
-
-        foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
-            $parsedMethods     = $parsedRefClass->getMethods();
-            $originalMethods   = $originalRefClass->getMethods();
-            if ($parsedRefClass->getTraitAliases()) {
-                $this->markTestIncomplete("Adoptation methods for traits are not supported yet");
-            }
-            $this->assertCount(count($originalMethods), $parsedMethods);
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        } else {
+            $this->lastFileSetUp          = null;
+            $this->parsedRefFileNamespace = null;
+            $this->parsedRefClass         = null;
+            $parsedRefClass               = new ReflectionClass($class);
         }
+
+        $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+        $parsedMethods     = $parsedRefClass->getMethods();
+        $originalMethods   = $originalRefClass->getMethods();
+        if ($parsedRefClass->getTraitAliases()) {
+            $this->markTestIncomplete("Adoptation methods for traits are not supported yet");
+        }
+        $this->assertCount(count($originalMethods), $parsedMethods);
     }
 
     /**
      * Tests getProperties() returns correct number of properties for the class
      *
-     * @dataProvider getFilesToAnalyze
+     * @dataProvider getClassesToAnalyze
      *
      * @param string $fileName File name to test
      */
-    public function testGetProperties($fileName)
+    public function testGetProperties($class, $fileName)
     {
-        $this->setUpFile($fileName);
-        $parsedClasses = $this->parsedRefFileNamespace->getClasses();
-
-        foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
-            $parsedProperties   = $parsedRefClass->getProperties();
-            $originalProperties = $originalRefClass->getProperties();
-
-            $this->assertCount(count($originalProperties), $parsedProperties);
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        } else {
+            $this->lastFileSetUp          = null;
+            $this->parsedRefFileNamespace = null;
+            $this->parsedRefClass         = null;
+            $parsedRefClass               = new ReflectionClass($class);
         }
+        $originalRefClass   = new \ReflectionClass($parsedRefClass->getName());
+        $parsedProperties   = $parsedRefClass->getProperties();
+        $originalProperties = $originalRefClass->getProperties();
+
+        $this->assertCount(count($originalProperties), $parsedProperties);
     }
 
     public function testNewInstanceMethod()

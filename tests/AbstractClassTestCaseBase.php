@@ -11,8 +11,13 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\AbstractClassWithMethods;
 
-abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
+abstract class AbstractClassTestCaseBase extends TestCaseBase
 {
+    /**
+     * @var string
+     */
+    protected $lastFileSetUp;
+
     /**
      * @var ReflectionFileNamespace
      */
@@ -82,6 +87,40 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Provides a list of classes for analysis in the form [Class, FileName]
+     *
+     * @return array
+     */
+    public function getClassesToAnalyze()
+    {
+        // Random selection of built in classes.
+        $builtInClasses = ['stdClass', 'DateTime', 'Exception', 'Directory', 'Closure', 'ReflectionFunction'];
+        $classes = [];
+        foreach ($builtInClasses as $className) {
+            $classes[$className] = ['class' => $className, 'fileName'  => null];
+        }
+        $files = $this->getFilesToAnalyze();
+        foreach ($files as $filenameArgList) {
+            $argKeys = array_keys($filenameArgList);
+            $fileName = $filenameArgList[$argKeys[0]];
+            $resolvedFileName = stream_resolve_include_path($fileName);
+            $fileNode = ReflectionEngine::parseFile($resolvedFileName);
+
+            $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
+            foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+                foreach ($fileNamespace->getClasses() as $parsedClass) {
+                    $classes[$argKeys[0] . ': ' . $parsedClass->getName()] = [
+                        'class'    => $parsedClass->getName(),
+                        'fileName' => $resolvedFileName
+                    ];
+                }
+            }
+        }
+
+        return $classes;
+    }
+
+    /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
      *
      * @return array
@@ -96,15 +135,18 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
     protected function setUpFile($fileName)
     {
         $fileName = stream_resolve_include_path($fileName);
-        $fileNode = ReflectionEngine::parseFile($fileName);
+        if ($this->lastFileSetUp !== $fileName) {
+            $fileNode = ReflectionEngine::parseFile($fileName);
 
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+            $reflectionFile = new ReflectionFile($fileName, $fileNode);
 
-        $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
-        $this->parsedRefFileNamespace = $parsedFileNamespace;
-        $this->parsedRefClass         = $parsedFileNamespace->getClass(static::$defaultClassToLoad);
+            $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+            $this->parsedRefFileNamespace = $parsedFileNamespace;
+            $this->parsedRefClass         = $parsedFileNamespace->getClass(static::$defaultClassToLoad);
 
-        include_once $fileName;
+            include_once $fileName;
+            $this->lastFileSetUp = $fileName;
+        }
     }
 
     protected function setUp()

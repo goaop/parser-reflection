@@ -1,7 +1,7 @@
 <?php
 namespace Go\ParserReflection;
 
-class ReflectionMethodTest extends AbstractTestCase
+class ReflectionMethodTest extends AbstractClassTestCaseBase
 {
     protected static $reflectionClassToTest = \ReflectionMethod::class;
 
@@ -82,10 +82,10 @@ class ReflectionMethodTest extends AbstractTestCase
 
         $expectedValue = $refMethod->$getterName();
         $actualValue   = $parsedMethod->$getterName();
-        $this->assertSame(
+        $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            "$getterName() for method $className->$methodName() should be equal"
+            get_class($parsedMethod) . "->$getterName() for method $className->$methodName() should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
         );
     }
 
@@ -99,28 +99,27 @@ class ReflectionMethodTest extends AbstractTestCase
         $allNameGetters = $this->getGettersToCheck();
 
         $testCases = [];
-        $files     = $this->getFilesToAnalyze();
-        foreach ($files as $fileList) {
-            foreach ($fileList as $fileName) {
-                $fileName = stream_resolve_include_path($fileName);
-                $fileNode = ReflectionEngine::parseFile($fileName);
-
-                $reflectionFile = new ReflectionFile($fileName, $fileNode);
-                include_once $fileName;
-                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
-                    foreach ($fileNamespace->getClasses() as $parsedClass) {
-                        $refClass = new \ReflectionClass($parsedClass->getName());
-                        foreach ($refClass->getMethods() as $classMethod) {
-                            $caseName = $parsedClass->getName() . '->' . $classMethod->getName() . '()';
-                            foreach ($allNameGetters as $getterName) {
-                                $testCases[$caseName . ', ' . $getterName] = [
-                                    $parsedClass,
-                                    $classMethod,
-                                    $getterName
-                                ];
-                            }
-                        }
-                    }
+        $classes   = $this->getClassesToAnalyze();
+        foreach ($classes as $testCaseDesc => $classFilePair) {
+            if ($classFilePair['fileName']) {
+                $fileNode       = ReflectionEngine::parseFile($classFilePair['fileName']);
+                $reflectionFile = new ReflectionFile($classFilePair['fileName'], $fileNode);
+                $namespace      = $this->getNamespaceFromName($classFilePair['class']);
+                $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
+                $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
+                include_once $classFilePair['fileName'];
+            } else {
+                $parsedClass    = new ReflectionClass($classFilePair['class']);
+            }
+            $refClass = new \ReflectionClass($parsedClass->getName());
+            foreach ($refClass->getMethods() as $classMethod) {
+                $caseName = $testCaseDesc . '->' . $classMethod->getName() . '()';
+                foreach ($allNameGetters as $getterName) {
+                    $testCases[$caseName . ', ' . $getterName] = [
+                        $parsedClass,
+                        $classMethod,
+                        $getterName
+                    ];
                 }
             }
         }

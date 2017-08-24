@@ -5,8 +5,13 @@ use Go\ParserReflection\Stub\Foo;
 use Go\ParserReflection\Stub\SubFoo;
 use TestParametersForRootNsClass;
 
-class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
+class ReflectionParameterTest extends TestCaseBase
 {
+    /**
+     * @var string
+     */
+    protected $lastFileSetUp;
+
     /**
      * @var ReflectionFile
      */
@@ -18,11 +23,10 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @dataProvider fileProvider
+     * @dataProvider functionProvider
      */
-    public function testGeneralInfoGetters($fileName)
+    public function testGeneralInfoGetters($funcName, $fileName)
     {
-        $this->setUpFile($fileName);
         $allNameGetters = [
             'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
@@ -38,28 +42,35 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
             $allNameGetters[] = 'hasType';
         }
 
-        foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
-            foreach ($fileNamespace->getFunctions() as $refFunction) {
-                $functionName = $refFunction->getName();
-                foreach ($refFunction->getParameters() as $refParameter) {
-                    $parameterName        = $refParameter->getName();
-                    $originalRefParameter = new \ReflectionParameter($functionName, $parameterName);
-                    foreach ($allNameGetters as $getterName) {
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $fileNamespace = $this->parsedRefFile->getFileNamespace(
+                $this->getNamespaceFromName($funcName));
+            $refFunction   = $fileNamespace->getFunction(
+                $this->getShortNameFromName($funcName));
+        } else {
+            $this->lastFileSetUp = null;
+            $this->parsedRefFile = null;
+            $refFunction = new ReflectionFunction($funcName);
+        }
+        $functionName  = $refFunction->getName();
+        foreach ($refFunction->getParameters() as $refParameter) {
+            $parameterName        = $refParameter->getName();
+            $originalRefParameter = new \ReflectionParameter($functionName, $parameterName);
+            foreach ($allNameGetters as $getterName) {
 
-                        // skip some methods if there is no default value
-                        $isDefaultValueAvailable = $originalRefParameter->isDefaultValueAvailable();
-                        if (isset($onlyWithDefaultValues[$getterName]) && !$isDefaultValueAvailable) {
-                            continue;
-                        }
-                        $expectedValue = $originalRefParameter->$getterName();
-                        $actualValue   = $refParameter->$getterName();
-                        $this->assertSame(
-                            $expectedValue,
-                            $actualValue,
-                            "{$getterName}() for parameter {$functionName}:{$parameterName} should be equal"
-                        );
-                    }
+                // skip some methods if there is no default value
+                $isDefaultValueAvailable = $originalRefParameter->isDefaultValueAvailable();
+                if (isset($onlyWithDefaultValues[$getterName]) && !$isDefaultValueAvailable) {
+                    continue;
                 }
+                $expectedValue = $originalRefParameter->$getterName();
+                $actualValue   = $refParameter->$getterName();
+                $this->assertSame(
+                    $expectedValue,
+                    $actualValue,
+                    "{$getterName}() for parameter {$functionName}:{$parameterName} should be equal"
+                );
             }
         }
     }
@@ -81,6 +92,40 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         }
 
         return $files;
+    }
+
+    /**
+     * Provides a list of functions for analysis in the form [Function, FileName]
+     *
+     * @return array
+     */
+    public function functionProvider()
+    {
+        // Random selection of built in functions.
+        $builtInFunctions = ['preg_match', 'date', 'create_function'];
+        $functions = [];
+        foreach ($builtInFunctions as $functionsName) {
+            $functions[$functionsName] = ['function' => $functionsName, 'fileName'  => null];
+        }
+        $files = $this->fileProvider();
+        foreach ($files as $filenameArgList) {
+            $argKeys = array_keys($filenameArgList);
+            $fileName = $filenameArgList[$argKeys[0]];
+            $resolvedFileName = stream_resolve_include_path($fileName);
+            $fileNode = ReflectionEngine::parseFile($resolvedFileName);
+
+            $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
+            foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+                foreach ($fileNamespace->getFunctions() as $parsedFunction) {
+                    $functions[$argKeys[0] . ': ' . $parsedFunction->getName()] = [
+                        'function' => $parsedFunction->getName(),
+                        'fileName' => $resolvedFileName
+                    ];
+                }
+            }
+        }
+
+        return $functions;
     }
 
     public function testGetClassMethod()
@@ -300,11 +345,14 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
     private function setUpFile($fileName)
     {
         $fileName = stream_resolve_include_path($fileName);
-        $fileNode = ReflectionEngine::parseFile($fileName);
+        if ($this->lastFileSetUp !== $fileName) {
+            $fileNode = ReflectionEngine::parseFile($fileName);
 
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
-        $this->parsedRefFile = $reflectionFile;
+            $reflectionFile = new ReflectionFile($fileName, $fileNode);
+            $this->parsedRefFile = $reflectionFile;
 
-        include_once $fileName;
+            include_once $fileName;
+            $this->lastFileSetUp = $fileName;
+        }
     }
 }

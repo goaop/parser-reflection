@@ -15,11 +15,12 @@ use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
+use ReflectionClass as BaseReflectionClass;
 
 /**
  * AST-based reflection for the method in a class
  */
-class ReflectionMethod extends BaseReflectionMethod
+class ReflectionMethod extends BaseReflectionMethod implements IReflection
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -38,6 +39,13 @@ class ReflectionMethod extends BaseReflectionMethod
     private $declaringClass;
 
     /**
+     * Name of method
+     *
+     * @var string
+     */
+    private $methodName;
+
+    /**
      * Initializes reflection instance for the method node
      *
      * @param string $className Name of the class
@@ -53,8 +61,22 @@ class ReflectionMethod extends BaseReflectionMethod
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = $className;
+        $this->methodName       = $methodName;
         $this->declaringClass   = $declaringClass;
-        $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
+        $this->functionLikeNode = $classMethodNode;
+        if (!$this->functionLikeNode) {
+            $isUserDefined = true;
+            if ($this->wasIncluded()) {
+                $nativeRef = new BaseReflectionClass($this->className);
+                $isUserDefined = $nativeRef->isUserDefined();
+            }
+            if ($isUserDefined) {
+                $this->functionLikeNode = ReflectionEngine::parseClassMethod($className, $methodName);
+            }
+        }
+        if ($this->functionLikeNode) {
+            $this->methodName = $this->getClassMethodNode()->name;
+        }
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
@@ -76,7 +98,7 @@ class ReflectionMethod extends BaseReflectionMethod
     public function ___debugInfo()
     {
         return [
-            'name'  => $this->getClassMethodNode()->name,
+            'name'  => $this->methodName,
             'class' => $this->className
         ];
     }
@@ -90,6 +112,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function __toString()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::__toString();
+        }
         // Internally $this->getReturnType() !== null is the same as $this->hasReturnType()
         $returnType       = $this->getReturnType();
         $hasReturnType    = $returnType !== null;
@@ -224,6 +250,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isAbstract()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isAbstract();
+        }
         return $this->getDeclaringClass()->isInterface() || $this->getClassMethodNode()->isAbstract();
     }
 
@@ -232,6 +262,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isConstructor()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isConstructor();
+        }
         return $this->getClassMethodNode()->name == '__construct';
     }
 
@@ -240,6 +274,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isDestructor()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isDestructor();
+        }
         return $this->getClassMethodNode()->name == '__destruct';
     }
 
@@ -248,6 +286,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isFinal()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isFinal();
+        }
         return $this->getClassMethodNode()->isFinal();
     }
 
@@ -256,6 +298,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isPrivate()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isPrivate();
+        }
         return $this->getClassMethodNode()->isPrivate();
     }
 
@@ -264,6 +310,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isProtected()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isProtected();
+        }
         return $this->getClassMethodNode()->isProtected();
     }
 
@@ -272,6 +322,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isPublic()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isPublic();
+        }
         return $this->getClassMethodNode()->isPublic();
     }
 
@@ -280,6 +334,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isStatic()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isStatic();
+        }
         return $this->getClassMethodNode()->isStatic();
     }
 
@@ -329,7 +387,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     protected function __initialize()
     {
-        parent::__construct($this->className, $this->getName());
+        parent::__construct($this->className, $this->methodName);
     }
 
     /**
@@ -340,5 +398,19 @@ class ReflectionMethod extends BaseReflectionMethod
     private function getClassMethodNode()
     {
         return $this->functionLikeNode;
+    }
+
+    /**
+     * Has class been loaded by PHP.
+     *
+     * @return bool
+     *     If class file was included.
+     */
+    public function wasIncluded()
+    {
+        return
+            interface_exists($this->className, false) ||
+            trait_exists($this->className, false) ||
+            class_exists($this->className, false);
     }
 }
