@@ -957,6 +957,17 @@ trait ReflectionClassLikeTrait
         }
     }
 
+    public function wasIncluded()
+    {
+        if ($this->isInterface()) {
+            return interface_exists($this->getName(), false);
+        } elseif ($this->isTrait()) {
+            return trait_exists($this->getName(), false);
+        } else {
+            return class_exists($this->getName(), false);
+        }
+    }
+
     /**
      * Create a ReflectionClass for a given class name.
      *

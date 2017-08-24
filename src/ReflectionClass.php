@@ -21,7 +21,7 @@ use ReflectionClass as InternalReflectionClass;
 /**
  * AST-based reflection class
  */
-class ReflectionClass extends InternalReflectionClass
+class ReflectionClass extends InternalReflectionClass implements IReflector
 {
     use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -41,7 +41,17 @@ class ReflectionClass extends InternalReflectionClass
 
         $this->namespaceName = join('\\', $namespaceParts);
 
-        $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
+        $this->classLikeNode = $classLikeNode;
+        if (!$this->classLikeNode) {
+            $isUserDefined = true;
+            if ($this->wasIncluded()) {
+                $internalRef = new InternalReflectionClass($fullClassName);
+                $isUserDefined = $internalRef->isUserDefined();
+            }
+            if ($isUserDefined) {
+                $this->classLikeNode = ReflectionEngine::parseClass($fullClassName);
+            }
+        }
     }
 
     /**
