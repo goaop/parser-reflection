@@ -45,8 +45,8 @@ class ReflectionClass extends InternalReflectionClass implements IReflector
         if (!$this->classLikeNode) {
             $isUserDefined = true;
             if ($this->wasIncluded()) {
-                $internalRef = new InternalReflectionClass($fullClassName);
-                $isUserDefined = $internalRef->isUserDefined();
+                $this->initializeInternalReflection();
+                $isUserDefined = parent::isUserDefined();
             }
             if ($isUserDefined) {
                 $this->classLikeNode = ReflectionEngine::parseClass($fullClassName);
@@ -72,11 +72,8 @@ class ReflectionClass extends InternalReflectionClass implements IReflector
         if ($implementsList) {
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
-                    $implementName  = $implementNode->toString();
-                    $interface      = interface_exists($implementName, false)
-                        ? new parent($implementName)
-                        : new static($implementName);
-                    $interfaces[$implementName] = $interface;
+                    $implementName              = $implementNode->toString();
+                    $interfaces[$implementName] = new static($implementName);
                 }
             }
         }
@@ -102,10 +99,7 @@ class ReflectionClass extends InternalReflectionClass implements IReflector
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
                             $traitName          = $classTraitName->toString();
-                            $trait              = trait_exists($traitName, false)
-                                ? new parent($traitName)
-                                : new static($traitName);
-                            $traits[$traitName] = $trait;
+                            $traits[$traitName] = new static($traitName);
                         }
                     }
                     $traitAdaptations = $classLevelNode->adaptations;
@@ -134,19 +128,5 @@ class ReflectionClass extends InternalReflectionClass implements IReflector
     protected function __initialize()
     {
         parent::__construct($this->getName());
-    }
-
-    /**
-     * Create a ReflectionClass for a given class name.
-     *
-     * @param string $className
-     *     The name of the class to create a reflection for.
-     *
-     * @return ReflectionClass
-     *     The apropriate reflection object.
-     */
-    protected function createReflectionForClass($className)
-    {
-        return class_exists($className, false) ? new parent($className) : new static($className);
     }
 }

@@ -53,7 +53,7 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureScopeClass');
+        return parent::getClosureScopeClass();
     }
 
     /**
@@ -63,11 +63,15 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureThis');
+        return parent::getClosureThis();
     }
 
     public function getDocComment()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getDocComment();
+        }
         $docComment = $this->functionLikeNode->getDocComment();
 
         return $docComment ? $docComment->getText() : false;
@@ -75,21 +79,43 @@ trait ReflectionFunctionLikeTrait
 
     public function getEndLine()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getEndLine();
+        }
         return $this->functionLikeNode->getAttribute('endLine');
     }
 
     public function getExtension()
     {
-        return null;
+        $extName = $this->getExtensionName();
+        if (!$extName) {
+            return null;
+        }
+        // The purpose of Go\ParserReflection\ReflectionExtension is
+        // to behave exactly like \ReflectionExtension, but return
+        // Go\ParserReflection\ReflectionFunction and
+        // Go\ParserReflection\ReflectionClass where apropriate.
+        return new ReflectionExtension($extName);
     }
 
     public function getExtensionName()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getExtensionName();
+        }
         return false;
     }
 
     public function getFileName()
     {
+        if (!$this->functionLikeNode) {
+            // If we got here, we're probably a built-in method/function, and
+            // filename is probably false.
+            $this->initializeInternalReflection();
+            return parent::getFileName();
+        }
         return $this->functionLikeNode->getAttribute('fileName');
     }
 
@@ -98,6 +124,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getName()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getName();
+        }
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
             $functionName = $this->functionLikeNode->name;
 
@@ -124,6 +154,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getNumberOfParameters()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getNumberOfParameters();
+        }
         return count($this->functionLikeNode->getParams());
     }
 
@@ -154,15 +188,20 @@ trait ReflectionFunctionLikeTrait
         if (!isset($this->parameters)) {
             $parameters = [];
 
-            foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
-                $reflectionParameter = new ReflectionParameter(
-                    $this->getName(),
-                    $parameterNode->name,
-                    $parameterNode,
-                    $parameterIndex,
-                    $this
-                );
-                $parameters[] = $reflectionParameter;
+            if ($this->functionLikeNode) {
+                foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
+                    $reflectionParameter = new ReflectionParameter(
+                        $this->getName(),
+                        $parameterNode->name,
+                        $parameterNode,
+                        $parameterIndex,
+                        $this
+                    );
+                    $parameters[] = $reflectionParameter;
+                }
+            } else {
+                $this->initializeInternalReflection();
+                $nativeParamRefs = parent::getParameters();
             }
 
             $this->parameters = $parameters;
