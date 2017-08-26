@@ -16,12 +16,12 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\TraitUse;
-use ReflectionClass as InternalReflectionClass;
+use ReflectionClass as BaseReflectionClass;
 
 /**
  * AST-based reflection class
  */
-class ReflectionClass extends InternalReflectionClass implements IReflector
+class ReflectionClass extends BaseReflectionClass implements IReflector
 {
     use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 

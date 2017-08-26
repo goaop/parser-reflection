@@ -21,7 +21,7 @@ use ReflectionProperty as BaseReflectionProperty;
 /**
  * AST-based reflection for class property
  */
-class ReflectionProperty extends BaseReflectionProperty
+class ReflectionProperty extends BaseReflectionProperty implements IReflector
 {
     use InitializationTrait, InternalPropertiesEmulationTrait;
 
@@ -265,5 +265,16 @@ class ReflectionProperty extends BaseReflectionProperty
     protected function __initialize()
     {
         parent::__construct($this->className, $this->getName());
+    }
+
+    /**
+     * Has class been loaded by PHP.
+     *
+     * @return bool
+     *     If class file was included.
+     */
+    public function wasIncluded()
+    {
+        return $this->getDeclaringClass()->wasIncluded();
     }
 }

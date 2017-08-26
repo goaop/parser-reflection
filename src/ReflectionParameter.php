@@ -20,7 +20,7 @@ use ReflectionParameter as BaseReflectionParameter;
 /**
  * AST-based reflection for method/function parameter
  */
-class ReflectionParameter extends BaseReflectionParameter
+class ReflectionParameter extends BaseReflectionParameter implements IReflector
 {
     use InternalPropertiesEmulationTrait;
 
@@ -376,5 +376,19 @@ class ReflectionParameter extends BaseReflectionParameter
         }
 
         return true;
+    }
+
+    /**
+     * Has class been loaded by PHP.
+     *
+     * @return bool
+     *     If class file was included.
+     */
+    public function wasIncluded()
+    {
+        $hintedClass = $this->getClass();
+        return
+            $this->getDeclaringFunction()->wasIncluded() &&
+            (!$hintedClass || $hintedClass->wasIncluded());
     }
 }

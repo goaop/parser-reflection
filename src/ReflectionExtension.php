@@ -10,12 +10,12 @@
 
 namespace Go\ParserReflection;
 
-use ReflectionExtension as InternalReflectionExtension;
+use ReflectionExtension as BaseReflectionExtension;
 
 /**
  * Returns AST-based reflections from extensions.
  */
-class ReflectionExtension extends InternalReflectionExtension implements IReflector
+class ReflectionExtension extends BaseReflectionExtension implements IReflector
 {
     /**
      * Has extension been loaded by PHP.

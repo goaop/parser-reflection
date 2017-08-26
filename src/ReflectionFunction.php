@@ -18,7 +18,7 @@ use ReflectionFunction as BaseReflectionFunction;
 /**
  * AST-based reflection for function
  */
-class ReflectionFunction extends BaseReflectionFunction
+class ReflectionFunction extends BaseReflectionFunction implements IReflector
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -91,6 +91,10 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     public function isDisabled()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isDisabled();
+        }
         return false;
     }
 
@@ -127,5 +131,16 @@ class ReflectionFunction extends BaseReflectionFunction
     protected function __initialize()
     {
         parent::__construct($this->getName());
+    }
+
+    /**
+     * Has class been loaded by PHP.
+     *
+     * @return bool
+     *     If class file was included.
+     */
+    public function wasIncluded()
+    {
+        return function_exists($this->getName());
     }
 }

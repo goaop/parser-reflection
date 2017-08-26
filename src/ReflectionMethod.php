@@ -19,7 +19,7 @@ use ReflectionMethod as BaseReflectionMethod;
 /**
  * AST-based reflection for the method in a class
  */
-class ReflectionMethod extends BaseReflectionMethod
+class ReflectionMethod extends BaseReflectionMethod implements IReflector
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -330,5 +330,16 @@ class ReflectionMethod extends BaseReflectionMethod
     private function getClassMethodNode()
     {
         return $this->functionLikeNode;
+    }
+
+    /**
+     * Has class been loaded by PHP.
+     *
+     * @return bool
+     *     If class file was included.
+     */
+    public function wasIncluded()
+    {
+        return $this->getDeclaringClass()->wasIncluded();
     }
 }
