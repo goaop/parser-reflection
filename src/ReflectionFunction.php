@@ -18,7 +18,7 @@ use ReflectionFunction as BaseReflectionFunction;
 /**
  * AST-based reflection for function
  */
-class ReflectionFunction extends BaseReflectionFunction implements IReflector
+class ReflectionFunction extends BaseReflectionFunction implements IReflection
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 

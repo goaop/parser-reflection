@@ -15,7 +15,7 @@ use ReflectionType as BaseReflectionType;
 /**
  * ReflectionType implementation
  */
-class ReflectionType extends BaseReflectionType implements IReflector
+class ReflectionType extends BaseReflectionType implements IReflection
 {
     /**
      * If type allows null or not

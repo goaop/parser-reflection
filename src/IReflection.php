@@ -9,7 +9,7 @@
  */
 namespace Go\ParserReflection;
 
-interface IReflector
+interface IReflection
 {
     public function wasIncluded();
 }

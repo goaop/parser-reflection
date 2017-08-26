@@ -79,24 +79,21 @@ class ReflectionClassTest extends AbstractTestCase
 
         $testCases = [];
         $files     = $this->getFilesToAnalyze();
-        foreach ($files as $fileList) {
-            foreach ($fileList as $fileName) {
-                $fileName = stream_resolve_include_path($fileName);
-                $fileNode = ReflectionEngine::parseFile($fileName);
-
-                $reflectionFile = new ReflectionFile($fileName, $fileNode);
-                include_once $fileName;
-                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
-                    foreach ($fileNamespace->getClasses() as $parsedClass) {
-                        $caseName = $parsedClass->getName();
-                        foreach ($allNameGetters as $getterName) {
-                            $testCases[$caseName . ', ' . $getterName] = [
-                                $parsedClass,
-                                $getterName
-                            ];
-                        }
-                    }
-                }
+        $classes   = $this->getClassesToAnalyze();
+        foreach ($classes as $classArgList) {
+            $fileNode       = ReflectionEngine::parseFile($classArgList['file']);
+            $reflectionFile = new ReflectionFile($classArgList['file'], $fileNode);
+            $classNameParts = explode('\\', $classArgList['class']);
+            array_pop($classNameParts);
+            $namespace      = implode('\\', $classNameParts);
+            $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
+            $parsedClass    = $fileNamespace->getClass($classArgList['class']);
+            include_once $classArgList['file'];
+            foreach ($allNameGetters as $getterName) {
+                $testCases[$classArgList['class'] . ', ' . $getterName] = [
+                    $parsedClass,
+                    $getterName
+                ];
             }
         }
 

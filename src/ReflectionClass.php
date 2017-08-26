@@ -21,7 +21,7 @@ use ReflectionClass as BaseReflectionClass;
 /**
  * AST-based reflection class
  */
-class ReflectionClass extends BaseReflectionClass implements IReflector
+class ReflectionClass extends BaseReflectionClass implements IReflection
 {
     use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 

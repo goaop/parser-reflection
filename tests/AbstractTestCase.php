@@ -82,6 +82,35 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Provides full test-case list in the form [ParsedClass, ReflectionMethod, getter name to check]
+     *
+     * @return array
+     */
+    public function getClassesToAnalyze()
+    {
+        $classes = [];
+        $files   = $this->getFilesToAnalyze();
+        foreach ($files as $filenameArgList) {
+            foreach ($filenameArgList as $fileName) {
+                $fileName = stream_resolve_include_path($fileName);
+                $fileNode = ReflectionEngine::parseFile($fileName);
+
+                $reflectionFile = new ReflectionFile($fileName, $fileNode);
+                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+                    foreach ($fileNamespace->getClasses() as $parsedClass) {
+                        $classes[$parsedClass->getName()] = [
+                            'class' => $parsedClass->getName(),
+                            'file'  => $fileName
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $classes;
+    }
+
+    /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
      *
      * @return array

@@ -21,7 +21,7 @@ use ReflectionProperty as BaseReflectionProperty;
 /**
  * AST-based reflection for class property
  */
-class ReflectionProperty extends BaseReflectionProperty implements IReflector
+class ReflectionProperty extends BaseReflectionProperty implements IReflection
 {
     use InitializationTrait, InternalPropertiesEmulationTrait;
 

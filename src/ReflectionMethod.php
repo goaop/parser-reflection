@@ -19,7 +19,7 @@ use ReflectionMethod as BaseReflectionMethod;
 /**
  * AST-based reflection for the method in a class
  */
-class ReflectionMethod extends BaseReflectionMethod implements IReflector
+class ReflectionMethod extends BaseReflectionMethod implements IReflection
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 

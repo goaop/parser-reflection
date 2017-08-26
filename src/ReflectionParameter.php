@@ -20,7 +20,7 @@ use ReflectionParameter as BaseReflectionParameter;
 /**
  * AST-based reflection for method/function parameter
  */
-class ReflectionParameter extends BaseReflectionParameter implements IReflector
+class ReflectionParameter extends BaseReflectionParameter implements IReflection
 {
     use InternalPropertiesEmulationTrait;
 

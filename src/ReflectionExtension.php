@@ -15,7 +15,7 @@ use ReflectionExtension as BaseReflectionExtension;
 /**
  * Returns AST-based reflections from extensions.
  */
-class ReflectionExtension extends BaseReflectionExtension implements IReflector
+class ReflectionExtension extends BaseReflectionExtension implements IReflection
 {
     /**
      * Has extension been loaded by PHP.
