@@ -111,6 +111,18 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Extracts namespace from class, function or constant name.
+     *
+     * @return string
+     */
+    protected function getNamespaceFromName($name)
+    {
+        $nameParts = explode('\\', $name);
+        array_pop($nameParts);
+        return implode('\\', $nameParts);
+    }
+
+    /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
      *
      * @return array

@@ -57,28 +57,23 @@ class ReflectionPropertyTest extends AbstractTestCase
         $allNameGetters = $this->getGettersToCheck();
 
         $testCases = [];
-        $files     = $this->getFilesToAnalyze();
-        foreach ($files as $fileList) {
-            foreach ($fileList as $fileName) {
-                $fileName = stream_resolve_include_path($fileName);
-                $fileNode = ReflectionEngine::parseFile($fileName);
-
-                $reflectionFile = new ReflectionFile($fileName, $fileNode);
-                include_once $fileName;
-                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
-                    foreach ($fileNamespace->getClasses() as $parsedClass) {
-                        $refClass = new \ReflectionClass($parsedClass->getName());
-                        foreach ($refClass->getProperties() as $classProperty) {
-                            $caseName = $parsedClass->getName() . '->' . $classProperty->getName();
-                            foreach ($allNameGetters as $getterName) {
-                                $testCases[$caseName . ', ' . $getterName] = [
-                                    $parsedClass,
-                                    $classProperty,
-                                    $getterName
-                                ];
-                            }
-                        }
-                    }
+        $classes   = $this->getClassesToAnalyze();
+        foreach ($classes as $classFilePair) {
+            $fileNode       = ReflectionEngine::parseFile($classFilePair['file']);
+            $reflectionFile = new ReflectionFile($classFilePair['file'], $fileNode);
+            $namespace      = $this->getNamespaceFromName($classFilePair['class']);
+            $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
+            $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
+            include_once $classFilePair['file'];
+            $refClass = new \ReflectionClass($parsedClass->getName());
+            foreach ($refClass->getProperties() as $classProperty) {
+                $caseName = $parsedClass->getName() . '->' . $classProperty->getName();
+                foreach ($allNameGetters as $getterName) {
+                    $testCases[$caseName . ', ' . $getterName] = [
+                        $parsedClass,
+                        $classProperty,
+                        $getterName
+                    ];
                 }
             }
         }
