@@ -101,12 +101,16 @@ class ReflectionMethodTest extends AbstractTestCase
         $testCases = [];
         $classes   = $this->getClassesToAnalyze();
         foreach ($classes as $classFilePair) {
-            $fileNode       = ReflectionEngine::parseFile($classFilePair['file']);
-            $reflectionFile = new ReflectionFile($classFilePair['file'], $fileNode);
-            $namespace      = $this->getNamespaceFromName($classFilePair['class']);
-            $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
-            $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-            include_once $classFilePair['file'];
+            if ($classFilePair['file']) {
+                $fileNode       = ReflectionEngine::parseFile($classFilePair['file']);
+                $reflectionFile = new ReflectionFile($classFilePair['file'], $fileNode);
+                $namespace      = $this->getNamespaceFromName($classFilePair['class']);
+                $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
+                $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
+                include_once $classFilePair['file'];
+            } else {
+                $parsedClass    = new ReflectionClass($classFilePair['class']);
+            }
             $refClass = new \ReflectionClass($parsedClass->getName());
             foreach ($refClass->getMethods() as $classMethod) {
                 $caseName = $parsedClass->getName() . '->' . $classMethod->getName() . '()';

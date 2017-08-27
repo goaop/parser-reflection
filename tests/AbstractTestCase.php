@@ -88,7 +88,12 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
      */
     public function getClassesToAnalyze()
     {
+        // Random selection of built in classes.
+        $builtInClasses = ['stdClass', 'DateTime', 'Exception', 'Directory', 'Closure', 'Generator'];
         $classes = [];
+        foreach ($builtInClasses as $className) {
+            $classes[$className] = ['class' => $className, 'file'  => null];
+        }
         $files   = $this->getFilesToAnalyze();
         foreach ($files as $filenameArgList) {
             foreach ($filenameArgList as $fileName) {

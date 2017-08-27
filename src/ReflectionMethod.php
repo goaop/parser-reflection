@@ -38,6 +38,13 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
     private $declaringClass;
 
     /**
+     * Name of method
+     *
+     * @var string
+     */
+    private $methodName;
+
+    /**
      * Initializes reflection instance for the method node
      *
      * @param string $className Name of the class
@@ -53,8 +60,22 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = $className;
+        $this->methodName       = $methodName;
         $this->declaringClass   = $declaringClass;
-        $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
+        $this->functionLikeNode = $classMethodNode;
+        if (!$this->functionLikeNode) {
+            $isUserDefined = true;
+            if ($this->wasIncluded()) {
+                $this->initializeInternalReflection();
+                $isUserDefined = parent::isUserDefined();
+            }
+            if ($isUserDefined) {
+                $this->functionLikeNode = ReflectionEngine::parseClassMethod($className, $methodName);
+            }
+        }
+        if ($this->functionLikeNode) {
+            $this->methodName = $this->getClassMethodNode()->name;
+        }
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
@@ -66,7 +87,7 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
     public function ___debugInfo()
     {
         return [
-            'name'  => $this->getClassMethodNode()->name,
+            'name'  => $this->methodName,
             'class' => $this->className
         ];
     }
@@ -319,7 +340,7 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     protected function __initialize()
     {
-        parent::__construct($this->className, $this->getName());
+        parent::__construct($this->className, $this->methodName);
     }
 
     /**

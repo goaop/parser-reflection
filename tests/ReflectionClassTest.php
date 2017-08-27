@@ -32,8 +32,14 @@ class ReflectionClassTest extends AbstractTestCase
             + \ReflectionClass::IS_FINAL
             + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
 
-        $this->setUpFile($fileName);
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        } else {
+            $this->parsedRefFileNamespace = null;
+            $this->parsedRefClass         = null;
+            $parsedRefClass               = new ReflectionClass($class);
+        }
         $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
         $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
         $originalModifiers = $originalRefClass->getModifiers() & $mask;
@@ -78,12 +84,16 @@ class ReflectionClassTest extends AbstractTestCase
         $testCases = [];
         $classes   = $this->getClassesToAnalyze();
         foreach ($classes as $classFilePair) {
-            $fileNode       = ReflectionEngine::parseFile($classFilePair['file']);
-            $reflectionFile = new ReflectionFile($classFilePair['file'], $fileNode);
-            $namespace      = $this->getNamespaceFromName($classFilePair['class']);
-            $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
-            $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-            include_once $classFilePair['file'];
+            if ($classFilePair['file']) {
+                $fileNode       = ReflectionEngine::parseFile($classFilePair['file']);
+                $reflectionFile = new ReflectionFile($classFilePair['file'], $fileNode);
+                $namespace      = $this->getNamespaceFromName($classFilePair['class']);
+                $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
+                $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
+                include_once $classFilePair['file'];
+            } else {
+                $parsedClass    = new ReflectionClass($classFilePair['class']);
+            }
             foreach ($allNameGetters as $getterName) {
                 $testCases[$classFilePair['class'] . ', ' . $getterName] = [
                     $parsedClass,
@@ -104,8 +114,14 @@ class ReflectionClassTest extends AbstractTestCase
      */
     public function testGetMethodCount($class, $fileName)
     {
-        $this->setUpFile($fileName);
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        } else {
+            $this->parsedRefFileNamespace = null;
+            $this->parsedRefClass         = null;
+            $parsedRefClass               = new ReflectionClass($class);
+        }
 
         $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
         $parsedMethods     = $parsedRefClass->getMethods();
@@ -125,9 +141,15 @@ class ReflectionClassTest extends AbstractTestCase
      */
     public function testGetProperties($class, $fileName)
     {
-        $this->setUpFile($fileName);
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
-        $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+        if ($fileName) {
+            $this->setUpFile($fileName);
+            $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
+        } else {
+            $this->parsedRefFileNamespace = null;
+            $this->parsedRefClass         = null;
+            $parsedRefClass               = new ReflectionClass($class);
+        }
+        $originalRefClass   = new \ReflectionClass($parsedRefClass->getName());
         $parsedProperties   = $parsedRefClass->getProperties();
         $originalProperties = $originalRefClass->getProperties();
 
