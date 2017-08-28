@@ -209,10 +209,15 @@ trait ReflectionClassLikeTrait
     public function getConstants()
     {
         if (!isset($this->constants)) {
-            $this->constants = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
-                $result += $instance->getConstants();
-            });
-            $this->collectSelfConstants();
+            if ($this->classLikeNode) {
+                $this->constants = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance) {
+                    $result += $instance->getConstants();
+                });
+                $this->collectSelfConstants();
+            } else {
+                $this->initializeInternalReflection();
+                $this->constants = parent::getConstants();
+            }
         }
 
         return $this->constants;
@@ -500,6 +505,9 @@ trait ReflectionClassLikeTrait
             } else {
                 $this->initializeInternalReflection();
                 $nativeRefParentClass = parent::getParentClass();
+                if (!$nativeRefParentClass) {
+                    return false;
+                }
                 $this->parentClass = new static($nativeRefParentClass->getName());
             }
         }

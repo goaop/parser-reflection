@@ -17,6 +17,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use ReflectionProperty as BaseReflectionProperty;
+use ReflectionClass as BaseReflectionClass;
 
 /**
  * AST-based reflection for class property
@@ -47,6 +48,13 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
     private $className;
 
     /**
+     * Name of the property
+     *
+     * @var string
+     */
+    private $propertyName;
+
+    /**
      * Initializes a reflection for the property
      *
      * @param string $className Name of the class with properties
@@ -61,12 +69,27 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
         PropertyProperty $propertyNode = null
     ) {
         $this->className    = $className;
+        $this->propertyName = $propertyName;
         if (!$propertyType || !$propertyNode) {
-            list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
+            $isUserDefined = true;
+            // If either node is non-null, it must be user-defined.
+            if (!($propertyType || $propertyNode) && $this->wasIncluded()) {
+                $nativeRef = new BaseReflectionClass($this->className);
+                $isUserDefined = $nativeRef->isUserDefined();
+            }
+            if ($isUserDefined) {
+                list ($propertyType, $propertyNode) =
+                    ReflectionEngine::parseClassProperty($className, $propertyName);
+                if (!isset($propertyNode)) {
+                    $this->propertyName = NULL;
+                }
+                $this->propertyTypeNode = $propertyType;
+                $this->propertyNode     = $propertyNode;
+            }
         }
-
-        $this->propertyTypeNode = $propertyType;
-        $this->propertyNode     = $propertyNode;
+        if ($this->propertyNode) {
+            $this->propertyName = $this->propertyNode->name;
+        }
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
@@ -78,7 +101,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
     public function ___debugInfo()
     {
         return array(
-            'name'  => isset($this->propertyNode) ? $this->propertyNode->name : 'unknown',
+            'name'  => isset($this->propertyName) ? $this->propertyName : 'unknown',
             'class' => $this->className
         );
     }
@@ -111,6 +134,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function getDocComment()
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::getDocComment();
+        }
         $docBlock = $this->propertyTypeNode->getDocComment();
 
         return $docBlock ? $docBlock->getText() : false;
@@ -143,7 +170,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function getName()
     {
-        return $this->propertyNode->name;
+        return $this->propertyName;
     }
 
     /**
@@ -151,6 +178,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function getValue($object = null)
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::getValue($object);
+        }
         if (!isset($object)) {
             $solver = new NodeExpressionResolver($this->getDeclaringClass());
             if (!isset($this->propertyNode->default)) {
@@ -171,6 +202,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isDefault()
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::isDefault();
+        }
         // TRUE if the property was declared at compile-time
 
         return true;
@@ -181,6 +216,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isPrivate()
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::isPrivate();
+        }
         return $this->propertyTypeNode->isPrivate();
     }
 
@@ -189,6 +228,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isProtected()
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::isProtected();
+        }
         return $this->propertyTypeNode->isProtected();
     }
 
@@ -197,6 +240,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isPublic()
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::isPublic();
+        }
         return $this->propertyTypeNode->isPublic();
     }
 
@@ -205,6 +252,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isStatic()
     {
+        if (!$this->propertyTypeNode && !$this->propertyNode) {
+            $this->initializeInternalReflection();
+            return parent::isStatic();
+        }
         return $this->propertyTypeNode->isStatic();
     }
 
@@ -275,6 +326,9 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function wasIncluded()
     {
-        return $this->getDeclaringClass()->wasIncluded();
+        return
+            interface_exists($this->className, false) ||
+            trait_exists(    $this->className, false) ||
+            class_exists(    $this->className, false);
     }
 }

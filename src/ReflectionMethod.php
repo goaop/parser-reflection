@@ -15,6 +15,7 @@ use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use ReflectionMethod as BaseReflectionMethod;
+use ReflectionClass as BaseReflectionClass;
 
 /**
  * AST-based reflection for the method in a class
@@ -66,8 +67,8 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
         if (!$this->functionLikeNode) {
             $isUserDefined = true;
             if ($this->wasIncluded()) {
-                $this->initializeInternalReflection();
-                $isUserDefined = parent::isUserDefined();
+                $nativeRef = new BaseReflectionClass($this->className);
+                $isUserDefined = $nativeRef->isUserDefined();
             }
             if ($isUserDefined) {
                 $this->functionLikeNode = ReflectionEngine::parseClassMethod($className, $methodName);
@@ -235,6 +236,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isAbstract()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isAbstract();
+        }
         return $this->getDeclaringClass()->isInterface() || $this->getClassMethodNode()->isAbstract();
     }
 
@@ -243,6 +248,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isConstructor()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isConstructor();
+        }
         return $this->getClassMethodNode()->name == '__construct';
     }
 
@@ -251,6 +260,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isDestructor()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isDestructor();
+        }
         return $this->getClassMethodNode()->name == '__destruct';
     }
 
@@ -259,6 +272,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isFinal()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isFinal();
+        }
         return $this->getClassMethodNode()->isFinal();
     }
 
@@ -267,6 +284,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isPrivate()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isPrivate();
+        }
         return $this->getClassMethodNode()->isPrivate();
     }
 
@@ -275,6 +296,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isProtected()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isProtected();
+        }
         return $this->getClassMethodNode()->isProtected();
     }
 
@@ -283,6 +308,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isPublic()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isPublic();
+        }
         return $this->getClassMethodNode()->isPublic();
     }
 
@@ -291,6 +320,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function isStatic()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isStatic();
+        }
         return $this->getClassMethodNode()->isStatic();
     }
 
@@ -361,6 +394,9 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function wasIncluded()
     {
-        return $this->getDeclaringClass()->wasIncluded();
+        return
+            interface_exists($this->className, false) ||
+            trait_exists(    $this->className, false) ||
+            class_exists(    $this->className, false);
     }
 }

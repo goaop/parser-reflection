@@ -45,8 +45,8 @@ class ReflectionClass extends BaseReflectionClass implements IReflection
         if (!$this->classLikeNode) {
             $isUserDefined = true;
             if ($this->wasIncluded()) {
-                $this->initializeInternalReflection();
-                $isUserDefined = parent::isUserDefined();
+                $nativeRef = new BaseReflectionClass($fullClassName);
+                $isUserDefined = $nativeRef->isUserDefined();
             }
             if ($isUserDefined) {
                 $this->classLikeNode = ReflectionEngine::parseClass($fullClassName);

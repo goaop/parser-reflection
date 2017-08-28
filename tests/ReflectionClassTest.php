@@ -27,6 +27,7 @@ class ReflectionClassTest extends AbstractTestCase
      */
     public function testGetModifiers($class, $fileName)
     {
+        error_log(sprintf('running test ReflectionClassTest::testGetModifiers(%s, %s)', var_export($class, true), var_export($fileName, true)));
         $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
             + \ReflectionClass::IS_FINAL
@@ -40,11 +41,16 @@ class ReflectionClassTest extends AbstractTestCase
             $this->parsedRefClass         = null;
             $parsedRefClass               = new ReflectionClass($class);
         }
+        error_log('File load complete');
         $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+        error_log('constructed.');
         $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
+        error_log('getter called.');
         $originalModifiers = $originalRefClass->getModifiers() & $mask;
+        error_log('original getter called.');
 
         $this->assertEquals($originalModifiers, $parsedModifiers);
+        error_log('test passed.');
     }
 
     /**
@@ -65,10 +71,10 @@ class ReflectionClassTest extends AbstractTestCase
 
         $expectedValue = $refClass->$getterName();
         $actualValue   = $parsedClass->$getterName();
-        $this->assertSame(
+        $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            "{$getterName}() for class {$className} should be equal"
+            get_class($parsedMethod) . "->$getterName() for method $className->$methodName() should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
         );
     }
 
