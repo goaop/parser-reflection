@@ -68,8 +68,8 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
         Property $propertyType = null,
         PropertyProperty $propertyNode = null
     ) {
-        $this->className    = $className;
-        $this->propertyName = $propertyName;
+        $this->className        = $className;
+        $this->propertyName     = $propertyName;
         if (!$propertyType || !$propertyNode) {
             $propertyType = null;
             $propertyNode = null;
@@ -88,10 +88,10 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
                 if (!isset($propertyNode)) {
                     $this->propertyName = NULL;
                 }
-                $this->propertyTypeNode = $propertyType;
-                $this->propertyNode     = $propertyNode;
             }
         }
+        $this->propertyTypeNode = $propertyType;
+        $this->propertyNode     = $propertyNode;
         if ($this->propertyNode) {
             $this->propertyName = $this->propertyNode->name;
         }
@@ -185,7 +185,6 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
     {
         if (!$this->propertyNode) {
             $this->initializeInternalReflection();
-            error_log('getValue: '. var_export(['$this->propertyNode' => $this->propertyNode], true));
             return parent::getValue($object);
         }
         if (!isset($object)) {
