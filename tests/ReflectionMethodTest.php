@@ -82,10 +82,10 @@ class ReflectionMethodTest extends AbstractTestCase
 
         $expectedValue = $refMethod->$getterName();
         $actualValue   = $parsedMethod->$getterName();
-        $this->assertSame(
+        $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            "$getterName() for method $className->$methodName() should be equal"
+            get_class($parsedMethod) . "->$getterName() for method $className->$methodName() should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
         );
     }
 

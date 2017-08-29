@@ -14,6 +14,7 @@ namespace Go\ParserReflection\Traits;
 use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
 use Go\ParserReflection\ReflectionParameter;
+use Go\ParserReflection\ReflectionExtension;
 use ReflectionParameter as BaseReflectionParameter;
 use Go\ParserReflection\ReflectionType;
 use PhpParser\Node\Expr\Closure;
@@ -185,56 +186,6 @@ trait ReflectionFunctionLikeTrait
         return $requiredParameters;
     }
 
-    private function getRefParamConstArgs(BaseReflectionParameter $orig)
-    {
-        $builder = new ParamNodeBuilder($orig->getName());
-        if ($orig->isDefaultValueAvailable()) {
-            if ($orig->isDefaultValueConstant()) {
-                $constNameParts = explode('::', $orig->getDefaultValueConstantName(), 2);
-                if (count($constNameParts) > 1) {
-                    $classNameNode = new FullyQualifiedName($constNameParts[0]);
-                    $default = new ClassConstFetch($classNameNode, $constNameParts[1]);
-                } else {
-                    $constNameNode = new FullyQualifiedName($constNameParts[0]);
-                    $default = new ConstFetch($constNameNode);
-                }
-            } else {
-                $default = $orig->getDefaultValue();
-            }
-            $builder->setDefault($default);
-        }
-        if ($orig->isPassedByReference()) {
-            $builder->makeByRef();
-        }
-        if (method_exists($orig, 'isVariadic') && $orig->isVariadic()) {
-            $builder->makeVariadic();
-        }
-        if (method_exists($orig, 'hasType') && $orig->hasType()) {
-            $typeRef = $orig->getType();
-            $stringType = ltrim((string)$typeRef, '?'); // ltrim() is precautionary.
-            if (PHP_VERSION_ID >= 70100 && $typeRef->allowsNull()) {
-                $stringType = '?' . $stringType;
-            }
-            $builder->setTypeHint($stringType);
-        } else {
-            $hintedClass = $orig->getClass();
-            if ($hintedClass) {
-                $builder->setTypeHint($hintedClass->getName());
-            } else if ($orig->isArray()) {
-                $builder->setTypeHint('array');
-            } else if ($orig->isCallable()) {
-                $builder->setTypeHint('callable');
-            }
-        }
-        return [
-            $this->getName(),     // Calling function name:   Unused.
-            $orig->getName(),     // Parameter variable name: Unused.
-            $builder->getNode(),  // Synthetic parse node.
-            $orig->getPosition(), // Parameter index.
-            $this                 // Function or method being described.
-        ];
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -258,7 +209,7 @@ trait ReflectionFunctionLikeTrait
                 $this->initializeInternalReflection();
                 $nativeParamRefs = parent::getParameters();
                 foreach ($nativeParamRefs as $parameterIndex => $parameterNode) {
-                    $parameters[$parameterIndex] = $this->getRefParamConstArgs($parameterNode);
+                    $parameters[$parameterIndex] = $this->getRefParam($parameterNode);
                 }
             }
 
@@ -489,5 +440,59 @@ trait ReflectionFunctionLikeTrait
             return parent::returnsReference();
         }
         return $this->functionLikeNode->returnsByRef();
+    }
+
+    private function getRefParam(BaseReflectionParameter $orig)
+    {
+        $builder = new ParamNodeBuilder($orig->getName());
+        if ($orig->isDefaultValueAvailable() || $orig->isOptional()) {
+            if ($orig->isDefaultValueAvailable()) {
+                if ($orig->isDefaultValueConstant()) {
+                    $constNameParts = explode('::', $orig->getDefaultValueConstantName(), 2);
+                    if (count($constNameParts) > 1) {
+                        $classNameNode = new FullyQualifiedName($constNameParts[0]);
+                        $default = new ClassConstFetch($classNameNode, $constNameParts[1]);
+                    } else {
+                        $constNameNode = new FullyQualifiedName($constNameParts[0]);
+                        $default = new ConstFetch($constNameNode);
+                    }
+                } else {
+                    $default = $orig->getDefaultValue();
+                }
+            } else {
+                $default = new ConstFetch(new FullyQualifiedName('null'));
+            }
+            $builder->setDefault($default);
+        }
+        if ($orig->isPassedByReference()) {
+            $builder->makeByRef();
+        }
+        if (method_exists($orig, 'isVariadic') && $orig->isVariadic()) {
+            $builder->makeVariadic();
+        }
+        if (method_exists($orig, 'hasType') && $orig->hasType()) {
+            $typeRef = $orig->getType();
+            $stringType = ltrim((string)$typeRef, '?'); // ltrim() is precautionary.
+            if (PHP_VERSION_ID >= 70100 && $typeRef->allowsNull()) {
+                $stringType = '?' . $stringType;
+            }
+            $builder->setTypeHint($stringType);
+        } else {
+            $hintedClass = $orig->getClass();
+            if ($hintedClass) {
+                $builder->setTypeHint($hintedClass->getName());
+            } else if ($orig->isArray()) {
+                $builder->setTypeHint('array');
+            } else if ($orig->isCallable()) {
+                $builder->setTypeHint('callable');
+            }
+        }
+        return new ReflectionParameter(
+            $this->getName(),     // Calling function name:   Unused.
+            $orig->getName(),     // Parameter variable name: Unused.
+            $builder->getNode(),  // Synthetic parse node.
+            $orig->getPosition(), // Parameter index.
+            $this                 // Function or method being described.
+        );
     }
 }

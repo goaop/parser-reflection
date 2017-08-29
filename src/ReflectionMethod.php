@@ -102,6 +102,10 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
      */
     public function __toString()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::__toString();
+        }
         // Internally $this->getReturnType() !== null is the same as $this->hasReturnType()
         $returnType       = $this->getReturnType();
         $hasReturnType    = $returnType !== null;

@@ -71,20 +71,18 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
         $this->className        = $className;
         $this->propertyName     = $propertyName;
         if (!$propertyType || !$propertyNode) {
-            $propertyType = null;
-            $propertyNode = null;
-            $isUserDefined = true;
+            $oneNodeProvided = $propertyType || $propertyNode;
+            $propertyType    = null;
+            $propertyNode    = null;
+            $isUserDefined   = true;
             // If either node is non-null, it must be user-defined.
-            if (!($propertyType || $propertyNode) && $this->wasIncluded()) {
+            if (!$oneNodeProvided && $this->wasIncluded()) {
                 $nativeRef = new BaseReflectionClass($this->className);
                 $isUserDefined = $nativeRef->isUserDefined();
             }
             if ($isUserDefined) {
                 list ($propertyType, $propertyNode) =
                     ReflectionEngine::parseClassProperty($className, $propertyName);
-                if (!($classLevelNode instanceof Property) || !is_object($classProperty)) {
-                    throw new \Exception('Internal error: both $classLevelNode and $classProperty should be populated: ' . var_export(['$classLevelNode' => $classLevelNode, '$classProperty' => $classProperty], true));
-                }
                 if (!isset($propertyNode)) {
                     $this->propertyName = NULL;
                 }
