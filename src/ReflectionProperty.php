@@ -71,6 +71,8 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
         $this->className    = $className;
         $this->propertyName = $propertyName;
         if (!$propertyType || !$propertyNode) {
+            $propertyType = null;
+            $propertyNode = null;
             $isUserDefined = true;
             // If either node is non-null, it must be user-defined.
             if (!($propertyType || $propertyNode) && $this->wasIncluded()) {
@@ -80,6 +82,9 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
             if ($isUserDefined) {
                 list ($propertyType, $propertyNode) =
                     ReflectionEngine::parseClassProperty($className, $propertyName);
+                if (!($classLevelNode instanceof Property) || !is_object($classProperty)) {
+                    throw new \Exception('Internal error: both $classLevelNode and $classProperty should be populated: ' . var_export(['$classLevelNode' => $classLevelNode, '$classProperty' => $classProperty], true));
+                }
                 if (!isset($propertyNode)) {
                     $this->propertyName = NULL;
                 }
@@ -134,7 +139,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function getDocComment()
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
             return parent::getDocComment();
         }
@@ -178,8 +183,9 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function getValue($object = null)
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
+            error_log('getValue: '. var_export(['$this->propertyNode' => $this->propertyNode], true));
             return parent::getValue($object);
         }
         if (!isset($object)) {
@@ -202,7 +208,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isDefault()
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
             return parent::isDefault();
         }
@@ -216,7 +222,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isPrivate()
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
             return parent::isPrivate();
         }
@@ -228,7 +234,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isProtected()
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
             return parent::isProtected();
         }
@@ -240,7 +246,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isPublic()
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
             return parent::isPublic();
         }
@@ -252,7 +258,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
      */
     public function isStatic()
     {
-        if (!$this->propertyTypeNode && !$this->propertyNode) {
+        if (!$this->propertyNode) {
             $this->initializeInternalReflection();
             return parent::isStatic();
         }

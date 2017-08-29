@@ -98,23 +98,7 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
         foreach ($files as $filenameArgList) {
             $argKeys = array_keys($filenameArgList);
             $fileName = $filenameArgList[$argKeys[0]];
-            if (!$fileName) {
-                $this->fail("Filename " . $this->getStringificationOf($fileName) . " should be a valid filename.\n" . var_export([
-                    '$files' => $files,
-                    '$filenameArgList' => $filenameArgList,
-                    '$argKeys' => $argKeys,
-                    '$fileName' => $fileName,
-                ], true));
-            }
             $resolvedFileName = stream_resolve_include_path($fileName);
-            if (!$resolvedFileName) {
-                $this->fail("Filename " . $this->getStringificationOf($fileName) . " should be a valid filename but resolved to " . $this->getStringificationOf($resolvedFileName) . ".\n" . var_export([
-                    '$files' => $files,
-                    '$filenameArgList' => $filenameArgList,
-                    '$argKeys' => $argKeys,
-                    '$fileName' => $fileName,
-                ], true));
-            }
             $fileNode = ReflectionEngine::parseFile($resolvedFileName);
 
             $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
@@ -127,7 +111,6 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
                 }
             }
         }
-        error_log('getClassesToAnalyze() returns ' . var_export($classes, true));
 
         return $classes;
     }

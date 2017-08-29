@@ -246,6 +246,11 @@ trait ReflectionClassLikeTrait
      */
     public function getDefaultProperties()
     {
+        if (!$this->classLikeNode) {
+            // This handles differences in access control permissions.
+            $this->initializeInternalReflection();
+            return parent::getDefaultProperties();
+        }
         $defaultValues = [];
         $properties    = $this->getProperties();
         $staticOrder   = [true, false];
