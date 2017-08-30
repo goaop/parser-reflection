@@ -82,7 +82,7 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Provides full test-case list in the form [ParsedClass, ReflectionMethod, getter name to check]
+     * Provides a list of classes for analysis in the form [Class, FileName]
      *
      * @return array
      */
@@ -92,7 +92,7 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
         $builtInClasses = ['stdClass', 'DateTime', 'Exception', 'Directory', 'Closure', 'ReflectionFunction'];
         $classes = [];
         foreach ($builtInClasses as $className) {
-            $classes[$className] = ['class' => $className, 'file'  => null];
+            $classes[$className] = ['class' => $className, 'fileName'  => null];
         }
         $files = $this->getFilesToAnalyze();
         foreach ($files as $filenameArgList) {
@@ -104,9 +104,9 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
             $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
             foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
                 foreach ($fileNamespace->getClasses() as $parsedClass) {
-                    $classes[$parsedClass->getName()] = [
-                        'class' => $parsedClass->getName(),
-                        'file'  => $resolvedFileName
+                    $classes[$argKeys[0] . ': ' . $parsedClass->getName()] = [
+                        'class'    => $parsedClass->getName(),
+                        'fileName' => $resolvedFileName
                     ];
                 }
             }

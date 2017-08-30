@@ -83,6 +83,40 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         return $files;
     }
 
+    /**
+     * Provides a list of functions for analysis in the form [Function, FileName]
+     *
+     * @return array
+     */
+    public function getFunctionsToAnalyze()
+    {
+        // Random selection of built in functions.
+        $builtInFunctions = ['preg_match', 'date', 'create_function'];
+        $functions = [];
+        foreach ($builtInFunctions as $functionsName) {
+            $functions[$functionsName] = ['function' => $functionsName, 'fileName'  => null];
+        }
+        $files = $this->getFilesToAnalyze();
+        foreach ($files as $filenameArgList) {
+            $argKeys = array_keys($filenameArgList);
+            $fileName = $filenameArgList[$argKeys[0]];
+            $resolvedFileName = stream_resolve_include_path($fileName);
+            $fileNode = ReflectionEngine::parseFile($resolvedFileName);
+
+            $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
+            foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+                foreach ($fileNamespace->getFunctions() as $parsedFunction) {
+                    $functions[$argKeys[0] . ': ' . $parsedFunction->getName()] = [
+                        'function' => $parsedFunction->getName(),
+                        'fileName' => $resolvedFileName
+                    ];
+                }
+            }
+        }
+
+        return $functions;
+    }
+
     public function testGetClassMethod()
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');

@@ -58,20 +58,20 @@ class ReflectionPropertyTest extends AbstractTestCase
 
         $testCases = [];
         $classes   = $this->getClassesToAnalyze();
-        foreach ($classes as $classFilePair) {
-            if ($classFilePair['file']) {
-                $fileNode       = ReflectionEngine::parseFile($classFilePair['file']);
-                $reflectionFile = new ReflectionFile($classFilePair['file'], $fileNode);
+        foreach ($classes as $testCaseDesc => $classFilePair) {
+            if ($classFilePair['fileName']) {
+                $fileNode       = ReflectionEngine::parseFile($classFilePair['fileName']);
+                $reflectionFile = new ReflectionFile($classFilePair['fileName'], $fileNode);
                 $namespace      = $this->getNamespaceFromName($classFilePair['class']);
                 $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
                 $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-                include_once $classFilePair['file'];
+                include_once $classFilePair['fileName'];
             } else {
                 $parsedClass    = new ReflectionClass($classFilePair['class']);
             }
             $refClass = new \ReflectionClass($parsedClass->getName());
             foreach ($refClass->getProperties() as $classProperty) {
-                $caseName = $parsedClass->getName() . '->' . $classProperty->getName();
+                $caseName = $testCaseDesc . '->' . $classProperty->getName();
                 foreach ($allNameGetters as $getterName) {
                     $testCases[$caseName . ', ' . $getterName] = [
                         $parsedClass,
