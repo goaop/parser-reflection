@@ -1,7 +1,7 @@
 <?php
 namespace Go\ParserReflection;
 
-class ReflectionMethodTest extends AbstractTestCase
+class ReflectionMethodTest extends AbstractClassTestCaseBase
 {
     protected static $reflectionClassToTest = \ReflectionMethod::class;
 

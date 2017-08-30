@@ -8,7 +8,7 @@ use Go\ParserReflection\Stub\FinalClass;
 use Go\ParserReflection\Stub\ImplicitAbstractClass;
 use Go\ParserReflection\Stub\SimpleAbstractInheritance;
 
-class ReflectionClassTest extends AbstractTestCase
+class ReflectionClassTest extends AbstractClassTestCaseBase
 {
     /**
      * Name of the class to compare
@@ -36,6 +36,7 @@ class ReflectionClassTest extends AbstractTestCase
             $this->setUpFile($fileName);
             $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
         } else {
+            $this->lastFileSetUp          = null;
             $this->parsedRefFileNamespace = null;
             $this->parsedRefClass         = null;
             $parsedRefClass               = new ReflectionClass($class);
@@ -118,6 +119,7 @@ class ReflectionClassTest extends AbstractTestCase
             $this->setUpFile($fileName);
             $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
         } else {
+            $this->lastFileSetUp          = null;
             $this->parsedRefFileNamespace = null;
             $this->parsedRefClass         = null;
             $parsedRefClass               = new ReflectionClass($class);
@@ -145,6 +147,7 @@ class ReflectionClassTest extends AbstractTestCase
             $this->setUpFile($fileName);
             $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
         } else {
+            $this->lastFileSetUp          = null;
             $this->parsedRefFileNamespace = null;
             $this->parsedRefClass         = null;
             $parsedRefClass               = new ReflectionClass($class);
