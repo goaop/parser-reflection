@@ -24,6 +24,17 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
         return implode('\\', $nameParts);
     }
 
+    /**
+     * Extracts short name from class, function or constant name.
+     *
+     * @return string
+     */
+    protected function getShortNameFromName($name)
+    {
+        $nameParts = explode('\\', $name);
+        return array_pop($nameParts);
+    }
+
     protected function getStringificationOf($value, $maxLen = 128)
     {
         $strlen = function_exists('mb_strlen') ? 'mb_strlen' : 'strlen';

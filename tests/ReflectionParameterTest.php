@@ -46,7 +46,8 @@ class ReflectionParameterTest extends TestCaseBase
             $this->setUpFile($fileName);
             $fileNamespace = $this->parsedRefFile->getFileNamespace(
                 $this->getNamespaceFromName($funcName));
-            $refFunction   = $fileNamespace->getFunction($funcName);
+            $refFunction   = $fileNamespace->getFunction(
+                $this->getShortNameFromName($funcName));
         } else {
             $this->lastFileSetUp = null;
             $this->parsedRefFile = null;

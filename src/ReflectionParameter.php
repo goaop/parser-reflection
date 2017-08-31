@@ -89,7 +89,7 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
         $this->parameterIndex    = $parameterIndex;
         $this->declaringFunction = $declaringFunction;
 
-        if ($this->isDefaultValueAvailable()) {
+        if ($this->isDefaultValueSet()) {
             if ($declaringFunction instanceof \ReflectionMethod) {
                 $context = $declaringFunction->getDeclaringClass();
             } else {
@@ -155,6 +155,11 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
      */
     public function allowsNull()
     {
+        // Allow builtin types to override
+        if ($this->parameterNode->getAttribute('prohibit_null', false)) {
+            return false;
+        }
+
         // Enable 7.1 nullable types support
         if ($this->parameterNode->type instanceof NullableType) {
             return true;
@@ -319,7 +324,9 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
      */
     public function isDefaultValueAvailable()
     {
-        return isset($this->parameterNode->default);
+        return
+            isset($this->parameterNode->default) &&
+            !($this->parameterNode->default->getAttribute('implied', false));
     }
 
     /**
@@ -335,7 +342,7 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
      */
     public function isOptional()
     {
-        return $this->isVariadic() || ($this->isDefaultValueAvailable() && $this->haveSiblingsDefalutValues());
+        return $this->isVariadic() || ($this->isDefaultValueSet() && $this->haveSiblingsDefalutValues());
     }
 
     /**
@@ -355,6 +362,23 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
     }
 
     /**
+     * Returns if default value set (or implied).
+     *
+     * Identical to isDefaultValueAvailable(), except it
+     * includes IMPLIED default values which:
+     *     + Only exist in builtin functions and methods.
+     *     + Only affect the optionality of a prameter, not
+     *         if a SUPPLIED parameter can have the default
+     *         value.
+     *
+     * @return bool
+     */
+    protected function isDefaultValueSet()
+    {
+        return isset($this->parameterNode->default);
+    }
+
+    /**
      * Returns if all following parameters have a default value definition.
      *
      * @return bool
@@ -370,7 +394,7 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
         /** @var \ReflectionParameter[] $remainingParameters */
         $remainingParameters = array_slice($function->getParameters(), $this->parameterIndex + 1);
         foreach ($remainingParameters as $reflectionParameter) {
-            if (!$reflectionParameter->isDefaultValueAvailable()) {
+            if (!$reflectionParameter->isDefaultValueSet()) {
                 return false;
             }
         }

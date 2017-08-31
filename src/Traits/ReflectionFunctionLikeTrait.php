@@ -22,6 +22,7 @@ use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Name\FullyQualified as FullyQualifiedName;
+use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
@@ -444,6 +445,7 @@ trait ReflectionFunctionLikeTrait
 
     private function getRefParam(BaseReflectionParameter $orig)
     {
+        $nullableImplied = false;
         $builder = new ParamNodeBuilder($orig->getName());
         if ($orig->isDefaultValueAvailable() || $orig->isOptional()) {
             if ($orig->isDefaultValueAvailable()) {
@@ -458,9 +460,17 @@ trait ReflectionFunctionLikeTrait
                     }
                 } else {
                     $default = $orig->getDefaultValue();
+                    if (is_null($default) || is_bool($default)) {
+                        $constantName = var_export($default, true);
+                        $default = new ConstFetch(new Name($constantName));
+                    }
+                }
+                if (is_null($orig->getDefaultValue())) {
+                    $nullableImplied = true;
                 }
             } else {
-                $default = new ConstFetch(new FullyQualifiedName('null'));
+                $default = new ConstFetch(new Name('null'), ['implied' => true]);
+                $nullableImplied = true;
             }
             $builder->setDefault($default);
         }
@@ -475,6 +485,7 @@ trait ReflectionFunctionLikeTrait
             $stringType = ltrim((string)$typeRef, '?'); // ltrim() is precautionary.
             if (PHP_VERSION_ID >= 70100 && $typeRef->allowsNull()) {
                 $stringType = '?' . $stringType;
+                $nullableImplied = true;
             }
             $builder->setTypeHint($stringType);
         } else {
@@ -485,12 +496,18 @@ trait ReflectionFunctionLikeTrait
                 $builder->setTypeHint('array');
             } else if ($orig->isCallable()) {
                 $builder->setTypeHint('callable');
+            } else {
+                $nullableImplied = true;
             }
+        }
+        $fakeParamNode = $builder->getNode();
+        if (!$orig->allowsNull() && $nullableImplied) {
+            $fakeParamNode->setAttribute('prohibit_null', true);
         }
         return new ReflectionParameter(
             $this->getName(),     // Calling function name:   Unused.
             $orig->getName(),     // Parameter variable name: Unused.
-            $builder->getNode(),  // Synthetic parse node.
+            $fakeParamNode,       // Synthetic parse node.
             $orig->getPosition(), // Parameter index.
             $this                 // Function or method being described.
         );

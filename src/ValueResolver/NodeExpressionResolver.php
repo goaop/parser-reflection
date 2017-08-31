@@ -229,12 +229,14 @@ class NodeExpressionResolver
         if (!$isFQNConstant) {
             if (method_exists($this->context, 'getFileName')) {
                 $fileName      = $this->context->getFileName();
-                $namespaceName = $this->resolveScalarMagicConstNamespace();
-                $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
-                if ($fileNamespace->hasConstant($constantName)) {
-                    $constantValue = $fileNamespace->getConstant($constantName);
-                    $constantName  = $fileNamespace->getName() . '\\' . $constantName;
-                    $isResolved    = true;
+                if ($fileName !== false) {
+                    $namespaceName = $this->resolveScalarMagicConstNamespace();
+                    $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
+                    if ($fileNamespace->hasConstant($constantName)) {
+                        $constantValue = $fileNamespace->getConstant($constantName);
+                        $constantName  = $fileNamespace->getName() . '\\' . $constantName;
+                        $isResolved    = true;
+                    }
                 }
             }
         }
