@@ -73,6 +73,26 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
+     * Returns an AST-node for property
+     *
+     * @return PropertyProperty
+     */
+    public function getNode()
+    {
+        return $this->propertyNode;
+    }
+
+    /**
+     * Returns an AST-node for property type
+     *
+     * @return Property
+     */
+    public function getTypeNode()
+    {
+        return $this->propertyTypeNode;
+    }
+
+    /**
      * Emulating original behaviour of reflection
      */
     public function ___debugInfo()

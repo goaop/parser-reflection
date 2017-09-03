@@ -105,6 +105,16 @@ class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
+     * Returns an AST-node for parameter
+     *
+     * @return Param
+     */
+    public function getNode()
+    {
+        return $this->parameterNode;
+    }
+
+    /**
      * Emulating original behaviour of reflection
      */
     public function ___debugInfo()

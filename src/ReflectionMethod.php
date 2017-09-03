@@ -61,6 +61,16 @@ class ReflectionMethod extends BaseReflectionMethod
     }
 
     /**
+     * Returns an AST-node for method
+     *
+     * @return ClassMethod
+     */
+    public function getNode()
+    {
+        return $this->functionLikeNode;
+    }
+
+    /**
      * Emulating original behaviour of reflection
      */
     public function ___debugInfo()
