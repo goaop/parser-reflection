@@ -104,6 +104,16 @@ class ReflectionFile
     }
 
     /**
+     * Returns an AST-nodes for file
+     *
+     * @return Node[]
+     */
+    public function getNodes()
+    {
+        return $this->topLevelNodes;
+    }
+
+    /**
      * Returns the presence of namespace in the file
      *
      * @param string $namespaceName Namespace to check
