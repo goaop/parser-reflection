@@ -89,7 +89,7 @@ class ReflectionExtensionTest extends TestCaseBase
      *
      * @return array
      */
-    protected function getExtensionsToAnalyze()
+    protected function getExtensionInfo()
     {
         $extensionInfos = [
             'date' => [
@@ -129,9 +129,42 @@ class ReflectionExtensionTest extends TestCaseBase
                     'timezone_offset_get', 'timezone_open',
                     'timezone_transitions_get', 'timezone_version_get'
                 ],
+            ],
+            'json' => [
+                'name' => 'json',
+                'classes' => [
+                    // None of these classes were added after PHP 5.5.
+                    'JsonSerializable',
+                ],
+                'constants' => [
+                    // None of these constants were added after PHP 5.5.
+                    'JSON_ERROR_NONE', 'JSON_ERROR_DEPTH', 'JSON_ERROR_STATE_MISMATCH',
+                    'JSON_ERROR_CTRL_CHAR', 'JSON_ERROR_SYNTAX', 'JSON_ERROR_UTF8',
+                    'JSON_ERROR_RECURSION', 'JSON_ERROR_INF_OR_NAN',
+                    'JSON_ERROR_UNSUPPORTED_TYPE', 'JSON_PARTIAL_OUTPUT_ON_ERROR',
+                    'JSON_BIGINT_AS_STRING', 'JSON_OBJECT_AS_ARRAY', 'JSON_HEX_TAG',
+                    'JSON_HEX_AMP', 'JSON_HEX_APOS', 'JSON_HEX_QUOT', 'JSON_FORCE_OBJECT',
+                    'JSON_NUMERIC_CHECK', 'JSON_PRETTY_PRINT', 'JSON_UNESCAPED_SLASHES',
+                    'JSON_UNESCAPED_UNICODE', 'JSON_PARTIAL_OUTPUT_ON_ERROR'
+                ],
+                'functions' => [
+                    // None of these functions were added after PHP 5.5.
+                    'json_decode', 'json_encode', 'json_last_error_msg', 'json_last_error'
+                ],
             ]
         ];
+        // These constants were added later
+        if (PHP_VERSION_ID >= 50606) {
+            $extensionInfos['json']['constants'][] = 'JSON_PRESERVE_ZERO_FRACTION';
+        }
+        if (PHP_VERSION_ID >= 70000) {
+            $extensionInfos['json']['constants'][] = 'JSON_ERROR_INVALID_PROPERTY_NAME';
+            $extensionInfos['json']['constants'][] = 'JSON_ERROR_UTF16';
+        }
+        if (PHP_VERSION_ID >= 70100) {
+            $extensionInfos['json']['constants'][] = 'JSON_UNESCAPED_LINE_TERMINATORS';
+        }
 
-        return $allNameGetters;
+        return $extensionInfos;
     }
 }
