@@ -111,7 +111,7 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
                 $stringifiedPartsByLength[$strlen($shortest)][] = "{$type}_{$idx} shortest";
             });
             foreach (array_keys($value) as $elementIndex => $key) {
-                $val = $value[$keyString];
+                $val = $value[$key];
                 if ($includeIndices) {
                     $processPart($elementIndex, 'key', $key);
                 }
