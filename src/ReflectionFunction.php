@@ -73,6 +73,16 @@ class ReflectionFunction extends BaseReflectionFunction implements IReflection
     }
 
     /**
+     * Returns an AST-node for function
+     *
+     * @return Function_
+     */
+    public function getNode()
+    {
+        return $this->functionLikeNode;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getClosure()

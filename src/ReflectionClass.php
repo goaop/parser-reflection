@@ -121,6 +121,16 @@ class ReflectionClass extends BaseReflectionClass implements IReflection
     }
 
     /**
+     * Returns an AST-node for class
+     *
+     * @return ClassLike
+     */
+    public function getNode()
+    {
+        return $this->classLikeNode;
+    }
+
+    /**
      * Implementation of internal reflection initialization
      *
      * @return void

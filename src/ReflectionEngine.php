@@ -216,7 +216,7 @@ class ReflectionEngine
     public static function parseFile($fileName, $fileContent = null)
     {
         $fileName = PathResolver::realpath($fileName);
-        if (isset(self::$parsedFiles[$fileName])) {
+        if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
             return self::$parsedFiles[$fileName];
         }
 
