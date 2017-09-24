@@ -259,7 +259,7 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
             $this->assertEquals(
                 $expectedClassName,
                 get_class($actual),
-                $appendMessage('$actual is a Go\\ParserReflection class instance'));
+                $appendMessage('$actual should be a Go\\ParserReflection class instance'));
             $this->assertEquals(
                 $actualNativeClassName,
                 get_parent_class(get_class($actual)),
@@ -270,19 +270,19 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
                 $this->assertEquals(
                     $expectedNativeClassName,
                     $actualNativeClassName,
-                    $appendMessage("\$actual is of $expected's class, {$expectedNativeClassName}"));
+                    $appendMessage("\$actual should be of $expected's class, {$expectedNativeClassName}"));
             }
             else {
                 $this->assertTrue(
                     is_subclass_of($actualNativeClassName, $expectedNativeClassName),
-                    $appendMessage("\$actual is an instance of a subclass of {$expectedNativeClassName}"));
+                    $appendMessage("\$actual should be an instance of a subclass of {$expectedNativeClassName}"));
             }
             $sameObjAssertion = "assertSame{$expectedNativeClassName}";
             $this->assertTrue(
                 method_exists($this, $sameObjAssertion),
                 $appendMessage(
                         "Sameness assertion " . __CLASS__ .
-                        "::{$sameObjAssertion}() for Reflector {$expectedNativeClassName} exists") .
+                        "::{$sameObjAssertion}() for Reflector {$expectedNativeClassName} should exist") .
                     "\n" . $this->getStringificationOf($expected));
             $this->$sameObjAssertion($expected, $actual, $message);
         }
@@ -292,5 +292,15 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
     {
         $this->assertSame($expected->getName(),    $actual->getName(),    $message);
         $this->assertSame($expected->getVersion(), $actual->getVersion(), $message);
+    }
+
+    private function assertSameReflectionClass($expected, $actual, $message)
+    {
+        $this->assertSame($expected->getName(), $actual->getName(), $message);
+    }
+
+    private function assertSameReflectionFunction($expected, $actual, $message)
+    {
+        $this->assertSame($expected->getName(), $actual->getName(), $message);
     }
 }

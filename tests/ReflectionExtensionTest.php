@@ -11,6 +11,42 @@ class ReflectionExtensionTest extends TestCaseBase
     protected static $reflectionClassToTest = \ReflectionExtension::class;
 
     /**
+     * Performs method-by-method comparison with original reflection
+     *
+     * @dataProvider caseProvider
+     *
+     * @param string              $extName         Name of extension being reported on.
+     * @param ReflectionExtension $parsedExtension "Parsed" extension
+     * @param string              $getterName      Name of the reflection method to test
+     */
+    public function testReflectionMethodParity(
+        $extName,
+        ReflectionExtension $parsedExtension,
+        $getterName
+    ) {
+        $nativeExtenionRef  = new \ReflectionExtension($extName);
+
+        ob_start();
+        $expectedValue  = $nativeExtenionRef->$getterName();
+        $expectedOutput = ob_get_clean();
+        ob_start();
+        $actualValue    = $parsedExtension->$getterName();
+        $actualOutput   = ob_get_clean();
+        $this->assertReflectorValueSame(
+            $expectedValue,
+            $actualValue,
+            get_class($parsedExtension) . "->$getterName() for extension $extName should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
+        );
+        $this->assertSame(
+            $expectedOutput,
+            $actualOutput,
+            get_class($parsedExtension) . "->$getterName() output for extension $extName should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
+        );
+    }
+
+
+
+    /**
      * Verifies that function reflections produce proper extension reflections.
      *
      * @dataProvider queryFunctionCaseProvider
@@ -113,31 +149,23 @@ class ReflectionExtensionTest extends TestCaseBase
     }
 
     /**
-     * Provides full test-case list in the form [ParsedClass, ReflectionMethod, getter name to check]
+     * Provides full test-case list in the form [extension name, "parsed" extension, getter name to check]
      *
      * @return array
      */
-    public function funcCaseProvider()
+    public function caseProvider()
     {
         $allNameGetters = $this->getGettersToCheck();
+        $extInfos = $this->getExtensionInfo();
 
         $testCases = [];
-        $classes   = $this->getFunctionsToAnalyze();
-        foreach ($classes as $testCaseDesc => $classFilePair) {
-            if ($classFilePair['fileName']) {
-                $fileNode       = ReflectionEngine::parseFile($classFilePair['fileName']);
-                $reflectionFile = new ReflectionFile($classFilePair['fileName'], $fileNode);
-                $namespace      = $this->getNamespaceFromName($classFilePair['class']);
-                $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
-                $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-                include_once $classFilePair['fileName'];
-            } else {
-                $parsedClass    = new ReflectionClass($classFilePair['class']);
-            }
+        foreach ($extInfos as $extName => $extInfo) {
+            $parsedExtension    = new ReflectionExtension($extName);
             foreach ($allNameGetters as $getterName) {
-                $testCases[$testCaseDesc . ', ' . $getterName] = [
-                    $parsedClass,
-                    $getterName
+                $testCases[$extName . ', ' . $getterName] = [
+                    '$extName'         => $extName,
+                    '$parsedExtension' => $parsedExtension,
+                    '$getterName'      => $getterName
                 ];
             }
         }
