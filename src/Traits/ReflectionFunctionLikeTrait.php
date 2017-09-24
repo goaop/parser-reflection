@@ -505,11 +505,11 @@ trait ReflectionFunctionLikeTrait
             $fakeParamNode->setAttribute('prohibit_null', true);
         }
         return new ReflectionParameter(
-            $this->getName(),     // Calling function name:   Unused.
-            $orig->getName(),     // Parameter variable name: Unused.
-            $fakeParamNode,       // Synthetic parse node.
+            $this->getName(), // Calling function name:   Unused.
+            $orig->getName(), // Parameter variable name: Unused.
+            $fakeParamNode, // Synthetic parse node.
             $orig->getPosition(), // Parameter index.
-            $this                 // Function or method being described.
+            $this // Function or method being described.
         );
     }
 }

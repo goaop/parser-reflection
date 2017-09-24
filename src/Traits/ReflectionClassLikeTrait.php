@@ -1090,7 +1090,7 @@ trait ReflectionClassLikeTrait
     {
         return
             interface_exists($this->getName(), false) ||
-            trait_exists(    $this->getName(), false) ||
-            class_exists(    $this->getName(), false);
+            trait_exists($this->getName(),     false) ||
+            class_exists($this->getName(),     false);
     }
 }
