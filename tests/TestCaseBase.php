@@ -124,17 +124,17 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
                 foreach ($partIdList as $partIdAndMode) {
                     list($partId, $mode) = explode(' ', $partIdAndMode, 2);
                     // Don't proces the same part twice.
-                    if (!isset($stringifiedParts["{$type}_{$idx}"]['finalString'])) {
+                    if (!isset($stringifiedParts[$partId]['finalString'])) {
                         $partCharAllowance = max(0, floor($contentCharsLeft / $partsLeft));
                         // If we have insufficient length-budget, reserve minimum lengths first.
                         if (
                             ($mode !== 'shortest') ||
-                            ($partCharAllowance  > $stringifiedParts["{$type}_{$idx}"]['minLen'])
+                            ($partCharAllowance  > $stringifiedParts[$partId]['minLen'])
                         ) {
                             $finalStr = $this->getStringificationOf(
-                                $stringifiedParts["{$type}_{$idx}"]['value'],
+                                $stringifiedParts[$partId]['value'],
                                 $partCharAllowance);
-                            $stringifiedParts["{$type}_{$idx}"]['finalString'] = $finalStr;
+                            $stringifiedParts[$partId]['finalString'] = $finalStr;
                             $contentCharsLeft -= $strlen($finalStr);
                             $partsLeft -= 1;
                         }
@@ -229,20 +229,61 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
                 $this->assertReflectorValueSame($expected[$exKey], $actual[$exKey], $message);
             }
         }
-        else if (!($expected instanceof \Reflector)) {
+        else if (
+            !($expected instanceof \Reflector) &&
+            !($expected instanceof \ReflectionException)
+        ) {
             $this->assertSame($expected, $actual, $message);
         }
         else {
-            $this->assertInternalType('object', $actual, $message);
-            $this->assertInstanceOf(get_class($expected), $actual, $message);
-            $parsedRefClassPat = '/^Go\\\\ParserReflection\\\\/';
+            $appendMessage = (function ($localMessage) use ($message) {
+                if (strlen(trim($message))) {
+                    return "{$localMessage}: {$message}";
+                }
+                return $localMessage;
+            });
+            $this->assertInternalType(
+                'object',
+                $actual,
+                $appendMessage(
+                    'We should only be here if $expected is an object. ' .
+                    'Therefore $actual should also be an object.'));
+            $parsedRefClassPat       = '/^Go\\\\ParserReflection\\\\/';
+            $expectedNativeClassName = preg_replace($parsedRefClassPat, '', get_class($expected));
+            $actualNativeClassName   = preg_replace($parsedRefClassPat, '', get_class($actual));
+            $expectedClassName       = 'Go\\ParserReflection\\' . $actualNativeClassName;
+            // Newer versions of PHP may specialize the result classes:
+            // We want to allow the newer types, as long as they are compatible
+            // with the types from older versions.
+
             $this->assertEquals(
-                preg_replace($parsedRefClassPat, '', get_class($expected)),
-                preg_replace($parsedRefClassPat, '', get_class($actual)),
-                $message);
-            $nativeClassName = preg_replace($parsedRefClassPat, '', get_class($expected));
-            $sameObjAssertion = "assertSame{$nativeClassName}";
-            $this->assertTrue(method_exists($this, $sameObjAssertion), "Sameness assertion {$sameObjAssertion}() for Reflector " . $this->getStringificationOf($expected) . " " . $message);
+                $expectedClassName,
+                get_class($actual),
+                $appendMessage('$actual is a Go\\ParserReflection class instance'));
+            $this->assertEquals(
+                $actualNativeClassName,
+                get_parent_class(get_class($actual)),
+                $appendMessage("{$expectedClassName}'s immediate parent class should be {$actualNativeClassName}"));
+            // Split out the two cases:
+            if ($expectedNativeClassName == $actualNativeClassName) {
+                // Should always be true
+                $this->assertEquals(
+                    $expectedNativeClassName,
+                    $actualNativeClassName,
+                    $appendMessage("\$actual is of $expected's class, {$expectedNativeClassName}"));
+            }
+            else {
+                $this->assertTrue(
+                    is_subclass_of($actualNativeClassName, $expectedNativeClassName),
+                    $appendMessage("\$actual is an instance of a subclass of {$expectedNativeClassName}"));
+            }
+            $sameObjAssertion = "assertSame{$expectedNativeClassName}";
+            $this->assertTrue(
+                method_exists($this, $sameObjAssertion),
+                $appendMessage(
+                        "Sameness assertion " . __CLASS__ .
+                        "::{$sameObjAssertion}() for Reflector {$expectedNativeClassName} exists") .
+                    "\n" . $this->getStringificationOf($expected));
             $this->$sameObjAssertion($expected, $actual, $message);
         }
     }

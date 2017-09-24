@@ -11,27 +11,104 @@ class ReflectionExtensionTest extends TestCaseBase
     protected static $reflectionClassToTest = \ReflectionExtension::class;
 
     /**
-     * Performs method-by-method comparison with original reflection
+     * Verifies that function reflections produce proper extension reflections.
      *
-     * @dataProvider caseProvider
+     * @dataProvider queryFunctionCaseProvider
      *
-     * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param string $extensionFunctionName Name of the function being reflected.
+     * @param string $extensionName         Name of the ReflectionExtension it should produce.
      */
-    public function testReflectionMethodParity(
-        ReflectionClass $parsedClass,
-        $getterName
+    public function testRefFuncGetExt(
+        $extensionFunctionName,
+        $extensionName
     ) {
-        $className = $parsedClass->getName();
-        $refClass  = new \ReflectionClass($className);
+        // If this wasn't based of a method argument, it would have been better in an @require.
+        if (!extension_loaded($extensionName)) {
+            $this->markTestSkipped(sprintf('Extension %s is required.', $extensionName));
+        }
+        $this->verifyProperExtensionQuery(
+            new \ReflectionFunction($extensionFunctionName),
+            new \Go\ParserReflection\ReflectionFunction($extensionFunctionName),
+            "function {$extensionFunctionName}()"
+        );
+    }
 
-        $expectedValue = $refClass->$getterName();
-        $actualValue   = $parsedClass->$getterName();
+    /**
+     * Verifies that class reflections produce proper extension reflections.
+     *
+     * @dataProvider queryClassCaseProvider
+     *
+     * @param string $extensionClassName Name of the class being reflected.
+     * @param string $extensionName      Name of the ReflectionExtension it should produce.
+     */
+    public function testRefClassGetExt(
+        $extensionClassName,
+        $extensionName
+    ) {
+        // If this wasn't based of a method argument, it would have been better in an @require.
+        if (!extension_loaded($extensionName)) {
+            $this->markTestSkipped(sprintf('Extension %s is required.', $extensionName));
+        }
+        $this->verifyProperExtensionQuery(
+            new \ReflectionClass($extensionClassName),
+            new \Go\ParserReflection\ReflectionClass($extensionClassName),
+            "class {$extensionClassName}"
+        );
+    }
+
+    /**
+     * Verifies that method reflections produce proper extension reflections.
+     *
+     * @dataProvider queryMethodCaseProvider
+     *
+     * @param string $extensionClassName Name of the class being reflected.
+     * @param string $methodName         Name of the class's method.
+     * @param string $extensionName      Name of the ReflectionExtension it should produce.
+     */
+    public function testRefMethodGetExt(
+        $extensionClassName,
+        $methodName,
+        $extensionName
+    ) {
+        // If this wasn't based of a method argument, it would have been better in an @require.
+        if (!extension_loaded($extensionName)) {
+            $this->markTestSkipped(sprintf('Extension %s is required.', $extensionName));
+        }
+        $nativeClassRef = new \ReflectionClass($extensionClassName);
+        $parsedClassRef = new \Go\ParserReflection\ReflectionClass($extensionClassName);
+        $this->verifyProperExtensionQuery(
+            $nativeClassRef->getMethod($methodName),
+            $parsedClassRef->getMethod($methodName),
+            "method {$extensionClassName}::{$methodName}()"
+        );
+    }
+
+    /**
+     * Verifies output of getExtension() methods.
+     *
+     * @param \Reflection $nativeQueryTarget Native reflector to query.
+     * @param IReflection $parsedQueryTarget Parsed reflection to compare.
+     * @param string      $targetDescription description of what's being reflected.
+     */
+    public function verifyProperExtensionQuery(
+        $nativeQueryTarget,
+        $parsedQueryTarget,
+        $targetDescription
+    ) {
+        $nativeExtensionRef   = $nativeQueryTarget->getExtension();
+        $parsedExtensionRef   = $parsedQueryTarget->getExtension();
+        $this->assertEquals(
+            static::$reflectionClassToTest,
+            get_class($nativeExtensionRef),
+            'Expected class');
+        $this->assertEquals(
+            'Go\\ParserReflection\\' . static::$reflectionClassToTest,
+            get_class($parsedExtensionRef),
+            'Expected class');
         $this->assertReflectorValueSame(
-            $expectedValue,
-            $actualValue,
-            get_class($parsedClass) . "->$getterName() for method $className->$methodName() should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
+            $nativeExtensionRef,
+            $parsedExtensionRef,
+            get_class($parsedQueryTarget) . "->getExtension() for {$targetDescription} should be equal\nexpected: " . $this->getStringificationOf($nativeExtensionRef) . "\nactual: " . $this->getStringificationOf($parsedExtensionRef)
         );
     }
 
@@ -62,6 +139,82 @@ class ReflectionExtensionTest extends TestCaseBase
                     $parsedClass,
                     $getterName
                 ];
+            }
+        }
+
+        return $testCases;
+    }
+
+    /**
+     * Provides full test-case list in the form [extensionFunctionName, extensionName]
+     *
+     * @return array
+     */
+    public function queryFunctionCaseProvider()
+    {
+        $extInfos = $this->getExtensionInfo();
+
+        $testCases = [];
+        foreach ($extInfos as $extName => $extInfo) {
+            if (array_key_exists('functions', $extInfo) && is_array($extInfo['functions'])) {
+                foreach ($extInfo['functions'] as $funcName) {
+                    $testCases[$extName . ', ' . $funcName] = [
+                        '$extensionFunctionName' => $funcName,
+                        '$extensionName'         => $extName,
+                    ];
+                }
+            }
+        }
+
+        return $testCases;
+    }
+
+    /**
+     * Provides full test-case list in the form [extensionClassName, extensionName]
+     *
+     * @return array
+     */
+    public function queryClassCaseProvider()
+    {
+        $extInfos = $this->getExtensionInfo();
+
+        $testCases = [];
+        foreach ($extInfos as $extName => $extInfo) {
+            if (array_key_exists('classes', $extInfo) && is_array($extInfo['classes'])) {
+                foreach ($extInfo['classes'] as $className) {
+                    $testCases[$extName . ', ' . $className] = [
+                        '$extensionClassName' => $className,
+                        '$extensionName'      => $extName,
+                    ];
+                }
+            }
+        }
+
+        return $testCases;
+    }
+
+    /**
+     * Provides full test-case list in the form [extensionClassName, methodName, extensionName]
+     *
+     * @return array
+     */
+    public function queryMethodCaseProvider()
+    {
+        $extInfos = $this->getExtensionInfo();
+
+        $testCases = [];
+        foreach ($extInfos as $extName => $extInfo) {
+            if (array_key_exists('classes', $extInfo) && is_array($extInfo['classes'])) {
+                foreach ($extInfo['classes'] as $className) {
+                    $classRef = new \ReflectionClass($className);
+                    foreach ($classRef->getMethods() as $methodRef) {
+                        $testCases[$extName . ', ' . $className] = [
+                            '$extensionClassName' => $className,
+                            '$methodName'         => $methodRef->getName(),
+                            '$extensionName'      => $extName,
+                        ];
+                    }
+                }
             }
         }
 

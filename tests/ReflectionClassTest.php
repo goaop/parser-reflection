@@ -53,9 +53,8 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
      *
      * @dataProvider caseProvider
      *
-     * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param ReflectionClass $parsedClass Parsed class
+     * @param string          $getterName  Name of the reflection method to test
      */
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
