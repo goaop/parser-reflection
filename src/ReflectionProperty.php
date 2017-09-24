@@ -84,7 +84,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
                 list ($propertyType, $propertyNode) =
                     ReflectionEngine::parseClassProperty($className, $propertyName);
                 if (!isset($propertyNode)) {
-                    $this->propertyName = NULL;
+                    $this->propertyName = null;
                 }
             }
         }

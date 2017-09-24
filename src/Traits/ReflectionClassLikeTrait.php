@@ -412,7 +412,9 @@ trait ReflectionClassLikeTrait
                 $this->methods = [];
                 foreach ($methodRefs as $eachMethod) {
                     $this->methods[$eachMethod->getName()] = new ReflectionMethod(
-                        $this->getName(), $eachMethod->getName());
+                        $this->getName(),
+                        $eachMethod->getName()
+                    );
                 }
             }
         }
@@ -551,7 +553,9 @@ trait ReflectionClassLikeTrait
                 $this->properties = [];
                 foreach ($propertyRefs as $eachProperty) {
                     $this->properties[$eachProperty->getName()] = new ReflectionProperty(
-                        $this->getName(), $eachProperty->getName());
+                        $this->getName(),
+                        $eachProperty->getName()
+                    );
                 }
             }
         }
