@@ -16,12 +16,12 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\TraitUse;
-use ReflectionClass as InternalReflectionClass;
+use ReflectionClass as BaseReflectionClass;
 
 /**
  * AST-based reflection class
  */
-class ReflectionClass extends InternalReflectionClass
+class ReflectionClass extends BaseReflectionClass implements IReflection
 {
     use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -41,7 +41,17 @@ class ReflectionClass extends InternalReflectionClass
 
         $this->namespaceName = join('\\', $namespaceParts);
 
-        $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
+        $this->classLikeNode = $classLikeNode;
+        if (!$this->classLikeNode) {
+            $isUserDefined = true;
+            if ($this->wasIncluded()) {
+                $nativeRef = new BaseReflectionClass($fullClassName);
+                $isUserDefined = $nativeRef->isUserDefined();
+            }
+            if ($isUserDefined) {
+                $this->classLikeNode = ReflectionEngine::parseClass($fullClassName);
+            }
+        }
     }
 
     /**
@@ -62,11 +72,8 @@ class ReflectionClass extends InternalReflectionClass
         if ($implementsList) {
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
-                    $implementName  = $implementNode->toString();
-                    $interface      = interface_exists($implementName, false)
-                        ? new parent($implementName)
-                        : new static($implementName);
-                    $interfaces[$implementName] = $interface;
+                    $implementName              = $implementNode->toString();
+                    $interfaces[$implementName] = new static($implementName);
                 }
             }
         }
@@ -92,10 +99,7 @@ class ReflectionClass extends InternalReflectionClass
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
                             $traitName          = $classTraitName->toString();
-                            $trait              = trait_exists($traitName, false)
-                                ? new parent($traitName)
-                                : new static($traitName);
-                            $traits[$traitName] = $trait;
+                            $traits[$traitName] = new static($traitName);
                         }
                     }
                     $traitAdaptations = $classLevelNode->adaptations;
@@ -134,19 +138,5 @@ class ReflectionClass extends InternalReflectionClass
     protected function __initialize()
     {
         parent::__construct($this->getName());
-    }
-
-    /**
-     * Create a ReflectionClass for a given class name.
-     *
-     * @param string $className
-     *     The name of the class to create a reflection for.
-     *
-     * @return ReflectionClass
-     *     The apropriate reflection object.
-     */
-    protected function createReflectionForClass($className)
-    {
-        return class_exists($className, false) ? new parent($className) : new static($className);
     }
 }

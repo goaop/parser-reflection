@@ -14,12 +14,19 @@ namespace Go\ParserReflection\Traits;
 use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
 use Go\ParserReflection\ReflectionParameter;
+use Go\ParserReflection\ReflectionExtension;
+use ReflectionParameter as BaseReflectionParameter;
 use Go\ParserReflection\ReflectionType;
 use PhpParser\Node\Expr\Closure;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Name\FullyQualified as FullyQualifiedName;
+use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
+use PhpParser\Builder\Param as ParamNodeBuilder;
 use PhpParser\NodeTraverser;
 
 /**
@@ -53,7 +60,7 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureScopeClass');
+        return parent::getClosureScopeClass();
     }
 
     /**
@@ -63,11 +70,15 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureThis');
+        return parent::getClosureThis();
     }
 
     public function getDocComment()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getDocComment();
+        }
         $docComment = $this->functionLikeNode->getDocComment();
 
         return $docComment ? $docComment->getText() : false;
@@ -75,21 +86,43 @@ trait ReflectionFunctionLikeTrait
 
     public function getEndLine()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getEndLine();
+        }
         return $this->functionLikeNode->getAttribute('endLine');
     }
 
     public function getExtension()
     {
-        return null;
+        $extName = $this->getExtensionName();
+        if (!$extName) {
+            return null;
+        }
+        // The purpose of Go\ParserReflection\ReflectionExtension is
+        // to behave exactly like \ReflectionExtension, but return
+        // Go\ParserReflection\ReflectionFunction and
+        // Go\ParserReflection\ReflectionClass where apropriate.
+        return new ReflectionExtension($extName);
     }
 
     public function getExtensionName()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getExtensionName();
+        }
         return false;
     }
 
     public function getFileName()
     {
+        if (!$this->functionLikeNode) {
+            // If we got here, we're probably a built-in method/function, and
+            // filename is probably false.
+            $this->initializeInternalReflection();
+            return parent::getFileName();
+        }
         return $this->functionLikeNode->getAttribute('fileName');
     }
 
@@ -98,6 +131,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getName()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getName();
+        }
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
             $functionName = $this->functionLikeNode->name;
 
@@ -124,6 +161,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getNumberOfParameters()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getNumberOfParameters();
+        }
         return count($this->functionLikeNode->getParams());
     }
 
@@ -154,15 +195,23 @@ trait ReflectionFunctionLikeTrait
         if (!isset($this->parameters)) {
             $parameters = [];
 
-            foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
-                $reflectionParameter = new ReflectionParameter(
-                    $this->getName(),
-                    $parameterNode->name,
-                    $parameterNode,
-                    $parameterIndex,
-                    $this
-                );
-                $parameters[] = $reflectionParameter;
+            if ($this->functionLikeNode) {
+                foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
+                    $reflectionParameter = new ReflectionParameter(
+                        $this->getName(),
+                        $parameterNode->name,
+                        $parameterNode,
+                        $parameterIndex,
+                        $this
+                    );
+                    $parameters[] = $reflectionParameter;
+                }
+            } else {
+                $this->initializeInternalReflection();
+                $nativeParamRefs = parent::getParameters();
+                foreach ($nativeParamRefs as $parameterIndex => $parameterNode) {
+                    $parameters[$parameterIndex] = $this->getRefParam($parameterNode);
+                }
             }
 
             $this->parameters = $parameters;
@@ -181,18 +230,32 @@ trait ReflectionFunctionLikeTrait
     public function getReturnType()
     {
         $isBuiltin  = false;
-        $returnType = $this->functionLikeNode->getReturnType();
-        $isNullable = $returnType instanceof NullableType;
+        if ($this->functionLikeNode) {
+            $returnType = $this->functionLikeNode->getReturnType();
+            $isNullable = $returnType instanceof NullableType;
 
-        if ($isNullable) {
-            $returnType = $returnType->type;
-        }
-        if (is_object($returnType)) {
-            $returnType = $returnType->toString();
-        } elseif (is_string($returnType)) {
-            $isBuiltin = true;
+            if ($isNullable) {
+                $returnType = $returnType->type;
+            }
+            if (is_object($returnType)) {
+                $returnType = $returnType->toString();
+            } elseif (is_string($returnType)) {
+                $isBuiltin = true;
+            } else {
+                return null;
+            }
         } else {
-            return null;
+            if (PHP_VERSION_ID < 70000) {
+                return null;
+            }
+            $this->initializeInternalReflection();
+            $nativeType = parent::getReturnType();
+            if (!$nativeType) {
+                return null;
+            }
+            $isNullable = $nativeType->allowsNull();
+            $isBuiltin = $nativeType->isBuiltin();
+            $returnType = (string)$nativeType;
         }
 
         return new ReflectionType($returnType, $isNullable, $isBuiltin);
@@ -203,6 +266,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getShortName()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getShortName();
+        }
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
             return $this->functionLikeNode->name;
         }
@@ -212,6 +279,10 @@ trait ReflectionFunctionLikeTrait
 
     public function getStartLine()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getStartLine();
+        }
         return $this->functionLikeNode->getAttribute('startLine');
     }
 
@@ -220,6 +291,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getStaticVariables()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::getStaticVariables();
+        }
         // In nikic/PHP-Parser < 2.0.0 the default behavior is cloning
         //     nodes when traversing them. Passing FALSE to the constructor
         //     prevents this.
@@ -248,6 +323,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function hasReturnType()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::hasReturnType();
+        }
         $returnType = $this->functionLikeNode->getReturnType();
 
         return isset($returnType);
@@ -266,6 +345,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function isClosure()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isClosure();
+        }
         return $this->functionLikeNode instanceof Closure;
     }
 
@@ -274,7 +357,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function isDeprecated()
     {
-        // userland method/function/closure can not be deprecated
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isDeprecated();
+        }
         return false;
     }
 
@@ -283,6 +369,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function isGenerator()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isGenerator();
+        }
         // In nikic/PHP-Parser < 2.0.0 the default behavior is cloning
         //     nodes when traversing them. Passing FALSE to the constructor
         //     prevents this.
@@ -307,7 +397,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function isInternal()
     {
-        // never can be an internal method
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isInternal();
+        }
         return false;
     }
 
@@ -316,6 +409,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function isUserDefined()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isUserDefined();
+        }
         // always defined by user, because we parse the source code
         return true;
     }
@@ -339,6 +436,80 @@ trait ReflectionFunctionLikeTrait
      */
     public function returnsReference()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::returnsReference();
+        }
         return $this->functionLikeNode->returnsByRef();
+    }
+
+    private function getRefParam(BaseReflectionParameter $orig)
+    {
+        $nullableImplied = false;
+        $builder = new ParamNodeBuilder($orig->getName());
+        if ($orig->isDefaultValueAvailable() || $orig->isOptional()) {
+            if ($orig->isDefaultValueAvailable()) {
+                if ($orig->isDefaultValueConstant()) {
+                    $constNameParts = explode('::', $orig->getDefaultValueConstantName(), 2);
+                    if (count($constNameParts) > 1) {
+                        $classNameNode = new FullyQualifiedName($constNameParts[0]);
+                        $default = new ClassConstFetch($classNameNode, $constNameParts[1]);
+                    } else {
+                        $constNameNode = new FullyQualifiedName($constNameParts[0]);
+                        $default = new ConstFetch($constNameNode);
+                    }
+                } else {
+                    $default = $orig->getDefaultValue();
+                    if (is_null($default) || is_bool($default)) {
+                        $constantName = var_export($default, true);
+                        $default = new ConstFetch(new Name($constantName));
+                    }
+                }
+                if (is_null($orig->getDefaultValue())) {
+                    $nullableImplied = true;
+                }
+            } else {
+                $default = new ConstFetch(new Name('null'), ['implied' => true]);
+                $nullableImplied = true;
+            }
+            $builder->setDefault($default);
+        }
+        if ($orig->isPassedByReference()) {
+            $builder->makeByRef();
+        }
+        if (method_exists($orig, 'isVariadic') && $orig->isVariadic()) {
+            $builder->makeVariadic();
+        }
+        if (method_exists($orig, 'hasType') && $orig->hasType()) {
+            $typeRef = $orig->getType();
+            $stringType = ltrim((string)$typeRef, '?'); // ltrim() is precautionary.
+            if (PHP_VERSION_ID >= 70100 && $typeRef->allowsNull()) {
+                $stringType = '?' . $stringType;
+                $nullableImplied = true;
+            }
+            $builder->setTypeHint($stringType);
+        } else {
+            $hintedClass = $orig->getClass();
+            if ($hintedClass) {
+                $builder->setTypeHint($hintedClass->getName());
+            } else if ($orig->isArray()) {
+                $builder->setTypeHint('array');
+            } else if ($orig->isCallable()) {
+                $builder->setTypeHint('callable');
+            } else {
+                $nullableImplied = true;
+            }
+        }
+        $fakeParamNode = $builder->getNode();
+        if (!$orig->allowsNull() && $nullableImplied) {
+            $fakeParamNode->setAttribute('prohibit_null', true);
+        }
+        return new ReflectionParameter(
+            $this->getName(), // Calling function name:   Unused.
+            $orig->getName(), // Parameter variable name: Unused.
+            $fakeParamNode, // Synthetic parse node.
+            $orig->getPosition(), // Parameter index.
+            $this // Function or method being described.
+        );
     }
 }

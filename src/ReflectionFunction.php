@@ -18,9 +18,16 @@ use ReflectionFunction as BaseReflectionFunction;
 /**
  * AST-based reflection for function
  */
-class ReflectionFunction extends BaseReflectionFunction
+class ReflectionFunction extends BaseReflectionFunction implements IReflection
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
+
+    /**
+     * Name of the function
+     *
+     * @var string
+     */
+    private $functionName;
 
     /**
      * Initializes reflection instance for given AST-node
@@ -28,15 +35,27 @@ class ReflectionFunction extends BaseReflectionFunction
      * @param string|\Closure $functionName The name of the function to reflect or a closure.
      * @param Function_|null  $functionNode Function node AST
      */
-    public function __construct($functionName, Function_ $functionNode)
+    public function __construct($functionName, Function_ $functionNode = null)
     {
-        $namespaceParts = explode('\\', $functionName);
+        $this->functionName = $functionName;
+        $namespaceParts     = explode('\\', $functionName);
         // Remove the last one part with function name
         array_pop($namespaceParts);
         $this->namespaceName = join('\\', $namespaceParts);
-
         $this->functionLikeNode = $functionNode;
+        if (!$this->functionLikeNode) {
+            $isUserDefined = true;
+            if ($this->wasIncluded()) {
+                $nativeRef = new BaseReflectionFunction($functionName);
+                $isUserDefined = $nativeRef->isUserDefined();
+            }
+            if ($isUserDefined) {
+                $this->functionLikeNode = ReflectionEngine::parseFunction($functionName);
+            }
+        }
+        // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
+
     }
 
     /**
@@ -101,6 +120,10 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     public function isDisabled()
     {
+        if (!$this->functionLikeNode) {
+            $this->initializeInternalReflection();
+            return parent::isDisabled();
+        }
         return false;
     }
 
@@ -136,6 +159,17 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     protected function __initialize()
     {
-        parent::__construct($this->getName());
+        parent::__construct($this->functionName);
+    }
+
+    /**
+     * Has class been loaded by PHP.
+     *
+     * @return bool
+     *     If class file was included.
+     */
+    public function wasIncluded()
+    {
+        return function_exists($this->functionName);
     }
 }
