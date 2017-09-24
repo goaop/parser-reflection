@@ -351,7 +351,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
     {
         return
             interface_exists($this->className, false) ||
-            trait_exists($this->className,     false) ||
-            class_exists($this->className,     false);
+            trait_exists($this->className, false) ||
+            class_exists($this->className, false);
     }
 }

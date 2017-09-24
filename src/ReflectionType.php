@@ -110,7 +110,7 @@ class ReflectionType extends BaseReflectionType implements IReflection
         return
             $this->isBuiltin()                   ||
             interface_exists($this->type, false) ||
-            trait_exists($this->type,     false) ||
-            class_exists($this->type,     false);
+            trait_exists($this->type, false) ||
+            class_exists($this->type, false);
     }
 }
