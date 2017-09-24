@@ -49,7 +49,7 @@ class ReflectionExtension extends BaseReflectionExtension implements IReflection
             $classRefs = parent::getClasses();
             $this->classes = [];
             foreach ($classRefs as $origKey => $eachClass) {
-                $this->classes[$origKey] = new ReflectionClass($eachClass->getName());
+                $this->classes[$origKey] = new ReflectionClass($eachClass->name);
             }
         }
 
@@ -67,7 +67,7 @@ class ReflectionExtension extends BaseReflectionExtension implements IReflection
             $funcRefs = parent::getFunctions();
             $this->functions = [];
             foreach ($funcRefs as $origKey => $eachFunc) {
-                $this->functions[$origKey] = new ReflectionFunction($eachFunc->getName());
+                $this->functions[$origKey] = new ReflectionFunction($eachFunc->name);
             }
         }
 

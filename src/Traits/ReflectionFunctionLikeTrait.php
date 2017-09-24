@@ -446,10 +446,10 @@ trait ReflectionFunctionLikeTrait
     private function getRefParam(BaseReflectionParameter $orig)
     {
         $nullableImplied = false;
-        $builder = new ParamNodeBuilder($orig->getName());
+        $builder = new ParamNodeBuilder($orig->name);
         if ($orig->isDefaultValueAvailable() || $orig->isOptional()) {
             if ($orig->isDefaultValueAvailable()) {
-                if ($orig->isDefaultValueConstant()) {
+                if (method_exists($orig, 'isDefaultValueConstant') && $orig->isDefaultValueConstant()) {
                     $constNameParts = explode('::', $orig->getDefaultValueConstantName(), 2);
                     if (count($constNameParts) > 1) {
                         $classNameNode = new FullyQualifiedName($constNameParts[0]);
@@ -491,7 +491,7 @@ trait ReflectionFunctionLikeTrait
         } else {
             $hintedClass = $orig->getClass();
             if ($hintedClass) {
-                $builder->setTypeHint($hintedClass->getName());
+                $builder->setTypeHint($hintedClass->name);
             } else if ($orig->isArray()) {
                 $builder->setTypeHint('array');
             } else if ($orig->isCallable()) {
@@ -506,7 +506,7 @@ trait ReflectionFunctionLikeTrait
         }
         return new ReflectionParameter(
             $this->getName(), // Calling function name:   Unused.
-            $orig->getName(), // Parameter variable name: Unused.
+            $orig->name, // Parameter variable name: Unused.
             $fakeParamNode, // Synthetic parse node.
             $orig->getPosition(), // Parameter index.
             $this // Function or method being described.

@@ -222,6 +222,7 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
 
     /**
      * {@inheritDoc}
+     * @return Go\ParserReflection\ReflectionClass|null The class of the method that declared the parameter, if any.
      */
     public function getDeclaringClass()
     {
@@ -234,6 +235,7 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
 
     /**
      * {@inheritDoc}
+     * @return Go\ParserReflection\ReflectionFunction the function that declared the parameter
      */
     public function getDeclaringFunction()
     {

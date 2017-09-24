@@ -25,7 +25,7 @@ class ReflectionFunction extends BaseReflectionFunction implements IReflection
     /**
      * Name of the function
      *
-     * @var string
+     * @var string|\Closure
      */
     private $functionName;
 
@@ -50,7 +50,9 @@ class ReflectionFunction extends BaseReflectionFunction implements IReflection
                 $isUserDefined = $nativeRef->isUserDefined();
             }
             if ($isUserDefined) {
-                $this->functionLikeNode = ReflectionEngine::parseFunction($functionName);
+                // This will be implemented later:
+                // $this->functionLikeNode = ReflectionEngine::parseFunction($functionName);
+                throw new \InvalidArgumentException("PhpParser\\Node for function {$functionName}() must be provided.");
             }
         }
         // Let's unset original read-only property to have a control over it via __get

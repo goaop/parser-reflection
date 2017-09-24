@@ -154,6 +154,7 @@ class ReflectionProperty extends BaseReflectionProperty implements IReflection
 
     /**
      * @inheritDoc
+     * @return string|false Property doc comment if any.
      */
     public function getDocComment()
     {
