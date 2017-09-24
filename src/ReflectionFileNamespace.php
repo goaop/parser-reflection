@@ -12,6 +12,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
@@ -260,6 +261,32 @@ class ReflectionFileNamespace
         }
 
         return $this->fileNamespaceAliases;
+    }
+
+    /**
+     * Returns an AST-node for namespace
+     *
+     * @return Namespace_
+     */
+    public function getNode()
+    {
+        return $this->namespaceNode;
+    }
+
+    /**
+     * Helper method to access last token position for namespace
+     *
+     * This method is useful because namespace can be declared with braces or without them
+     */
+    public function getLastTokenPosition()
+    {
+        $endNamespaceTokenPosition = $this->namespaceNode->getAttribute('endTokenPos');
+
+        /** @var Node $lastNamespaceNode */
+        $lastNamespaceNode         = end($this->namespaceNode->stmts);
+        $endStatementTokenPosition = $lastNamespaceNode->getAttribute('endTokenPos');
+
+        return max($endNamespaceTokenPosition, $endStatementTokenPosition);
     }
 
     /**
