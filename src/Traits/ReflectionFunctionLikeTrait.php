@@ -53,7 +53,7 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureScopeClass');
+        return parent::getClosureScopeClass();
     }
 
     /**
@@ -63,7 +63,7 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureThis');
+        return parent::getClosureThis();
     }
 
     public function getDocComment()

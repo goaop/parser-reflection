@@ -800,7 +800,7 @@ trait ReflectionClassLikeTrait
     {
         // In runtime static properties can be changed in any time
         if ($this->isInitialized()) {
-            return forward_static_call('parent::getStaticProperties');
+            return parent::getStaticProperties();
         }
 
         $properties = [];
@@ -908,7 +908,7 @@ trait ReflectionClassLikeTrait
     {
         $this->initializeInternalReflection();
 
-        forward_static_call('parent::setStaticPropertyValue', $name, $value);
+        parent::setStaticPropertyValue($name, $value);
     }
 
     private function recursiveCollect(\Closure $collector)
