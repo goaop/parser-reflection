@@ -2,6 +2,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
+use Go\ParserReflection\Stub\ClassWithMagicConstants;
 use Go\ParserReflection\Stub\ClassWithMethodsAndProperties;
 use Go\ParserReflection\Stub\ClassWithScalarConstants;
 use Go\ParserReflection\Stub\FinalClass;
@@ -176,11 +177,42 @@ class ReflectionClassTest extends AbstractTestCase
 
     public function testSetStaticPropertyValueMethod()
     {
-        $parsedRefClass = $this->parsedRefFileNamespace->getClass(ClassWithConstantsAndInheritance::class);
-        $originalRefClass = new \ReflectionClass(ClassWithConstantsAndInheritance::class);
+        $parsedRefClass1 = $this->parsedRefFileNamespace->getClass(ClassWithConstantsAndInheritance::class);
+        $originalRefClass1 = new \ReflectionClass(ClassWithConstantsAndInheritance::class);
+        $parsedRefClass2 = $this->parsedRefFileNamespace->getClass(ClassWithMagicConstants::class);
+        $originalRefClass2 = new \ReflectionClass(ClassWithMagicConstants::class);
+        $defaultProp1Value = $originalRefClass1->getStaticPropertyValue('h');
+        $defaultProp2Value = $originalRefClass2->getStaticPropertyValue('a');
+        $ex = null;
+        try {
+            $this->assertEquals(M_PI, $parsedRefClass1->getStaticPropertyValue('h'), 'Close to expected value of M_PI', 0.0001);
+            $this->assertEquals(M_PI, $originalRefClass1->getStaticPropertyValue('h'), 'Close to expected value of M_PI', 0.0001);
+            $this->assertEquals(
+                realpath(dirname(__DIR__ . parent::DEFAULT_STUB_FILENAME)),
+                realpath($parsedRefClass2->getStaticPropertyValue('a')),
+                'Expected value');
+            $this->assertEquals(
+                $originalRefClass2->getStaticPropertyValue('a'),
+                $parsedRefClass2->getStaticPropertyValue('a'),
+                'Same as native implementation');
 
-        $parsedRefClass->setStaticPropertyValue('h', 'test');
-        $this->assertSame($parsedRefClass->getStaticPropertyValue('h'), $originalRefClass->getStaticPropertyValue('h'));
+            $parsedRefClass1->setStaticPropertyValue('h', 'test');
+            $parsedRefClass2->setStaticPropertyValue('a', 'different value');
+
+            $this->assertSame('test', $parsedRefClass1->getStaticPropertyValue('h'));
+            $this->assertSame('test', $originalRefClass1->getStaticPropertyValue('h'));
+            $this->assertSame('different value', $parsedRefClass2->getStaticPropertyValue('a'));
+            $this->assertSame('different value', $originalRefClass2->getStaticPropertyValue('a'));
+        }
+        catch (\Exception $e) {
+            $ex = $e;
+        }
+        // I didn't want to write a tearDown() for one test.
+        $originalRefClass1->setStaticPropertyValue('h', $defaultProp1Value);
+        $originalRefClass2->setStaticPropertyValue('a', $defaultProp2Value);
+        if ($ex) {
+            throw $ex;
+        }
     }
 
     public function testGetMethodsFiltering()

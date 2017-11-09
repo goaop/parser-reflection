@@ -13,6 +13,8 @@ use Go\ParserReflection\Stub\AbstractClassWithMethods;
 
 abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
 {
+    const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
+
     /**
      * @var ReflectionFileNamespace
      */
@@ -109,6 +111,6 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $this->setUpFile(__DIR__ . '/Stub/FileWithClasses55.php');
+        $this->setUpFile(__DIR__ . self::DEFAULT_STUB_FILENAME);
     }
 }
