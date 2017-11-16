@@ -118,7 +118,7 @@ class ReflectionEngine
             $refClass      = new \ReflectionClass($fullClassName);
             $classFileName = $refClass->getFileName();
         } else {
-            $classFileName = self::$locator->locateClass($fullClassName);
+            $classFileName = self::$locator->locateClass(ltrim($fullClassName, '\\'));
         }
 
         if (!$classFileName) {
