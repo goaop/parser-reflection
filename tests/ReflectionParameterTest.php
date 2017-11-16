@@ -171,6 +171,49 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('DateTime::ATOM', $parameters[0]->getDefaultValueConstantName());
     }
 
+    /**
+     * @dataProvider paramGlobalNsClassConstProvider
+     *
+     * @param string $methodName
+     * @param string $expectedConstName
+     */
+    public function testParamGlobalNsClassConst($methodName, $expectedConstName)
+    {
+        $this->setUpFile(__DIR__ . '/Stub/FileWithGlobalNamespacesClasses.php');
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('');
+        $parsedClass     = $parsedNamespace->getClass(\AnotherGlobalNsClass::class);
+        $parsedFunction  = $parsedClass->getMethod($methodName);
+
+        $parameters = $parsedFunction->getParameters();
+        $this->assertSame($expectedConstName, $parameters[0]->getDefaultValueConstantName());
+    }
+
+    public function paramGlobalNsClassConstProvider()
+    {
+        return [
+            '\\GlobalNsClass::A' => [
+                'slashedGlobalNs',
+                'GlobalNsClass::A',
+            ],
+            'GlobalNsClass::A' => [
+                'globalNs',
+                'GlobalNsClass::A',
+            ],
+            '\\Go\\ParserReflection\\Stub\\ClassWithScalarConstants::A' => [
+                'slashedNs',
+                'Go\\ParserReflection\\Stub\\ClassWithScalarConstants::A',
+            ],
+            'Go\\ParserReflection\\Stub\\ClassWithScalarConstants::A' => [
+                'ns',
+                'Go\\ParserReflection\\Stub\\ClassWithScalarConstants::A',
+            ],
+            '(use)ClassWithScalarConstants::A' => [
+                'useNs',
+                'Go\\ParserReflection\\Stub\\ClassWithScalarConstants::A',
+            ],
+        ];
+    }
+
     public function testGetDeclaringClassMethodReturnsNull()
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
