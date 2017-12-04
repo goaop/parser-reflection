@@ -20,7 +20,7 @@ use ReflectionParameter as BaseReflectionParameter;
 /**
  * AST-based reflection for method/function parameter
  */
-class ReflectionParameter extends BaseReflectionParameter implements IReflection
+class ReflectionParameter extends BaseReflectionParameter implements ReflectionInterface
 {
     use InternalPropertiesEmulationTrait;
 
@@ -222,7 +222,8 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
 
     /**
      * {@inheritDoc}
-     * @return Go\ParserReflection\ReflectionClass|null The class of the method that declared the parameter, if any.
+     * @return ReflectionClass|null  The class of the method that declared the
+     *                                   parameter, if any.
      */
     public function getDeclaringClass()
     {
@@ -235,7 +236,7 @@ class ReflectionParameter extends BaseReflectionParameter implements IReflection
 
     /**
      * {@inheritDoc}
-     * @return Go\ParserReflection\ReflectionFunction the function that declared the parameter
+     * @return ReflectionFunction  The function that declared the parameter.
      */
     public function getDeclaringFunction()
     {

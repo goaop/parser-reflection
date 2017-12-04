@@ -21,7 +21,7 @@ use ReflectionClass as BaseReflectionClass;
 /**
  * AST-based reflection class
  */
-class ReflectionClass extends BaseReflectionClass implements IReflection
+class ReflectionClass extends BaseReflectionClass implements ReflectionInterface
 {
     use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -42,16 +42,28 @@ class ReflectionClass extends BaseReflectionClass implements IReflection
         $this->namespaceName = join('\\', $namespaceParts);
 
         $this->classLikeNode = $classLikeNode;
-        if (!$this->classLikeNode) {
-            $isUserDefined = true;
-            if ($this->wasIncluded()) {
-                $nativeRef = new BaseReflectionClass($fullClassName);
-                $isUserDefined = $nativeRef->isUserDefined();
-            }
-            if ($isUserDefined) {
-                $this->classLikeNode = ReflectionEngine::parseClass($fullClassName);
-            }
+        if ($this->isParsedNodeMissing()) {
+            $this->classLikeNode = ReflectionEngine::parseClass($fullClassName);
         }
+        if ($this->classLikeNode && ($this->className !== $this->classLikeNode->name)) {
+            throw new \InvalidArgumentException("PhpParser\\Node\\Stmt\\ClassLike's name does not match provided class name.");
+        }
+    }
+
+    /**
+     * Do we need to find the missing parser node?
+     */
+    private function isParsedNodeMissing()
+    {
+        if ($this->classLikeNode) {
+            return false;
+        }
+        $isUserDefined = true;
+        if ($this->wasIncluded()) {
+            $nativeRef = new BaseReflectionClass($this->getName());
+            $isUserDefined = $nativeRef->isUserDefined();
+        }
+        return $isUserDefined;
     }
 
     /**

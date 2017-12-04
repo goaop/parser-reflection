@@ -18,7 +18,7 @@ use ReflectionFunction as BaseReflectionFunction;
 /**
  * AST-based reflection for function
  */
-class ReflectionFunction extends BaseReflectionFunction implements IReflection
+class ReflectionFunction extends BaseReflectionFunction implements ReflectionInterface
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -40,24 +40,36 @@ class ReflectionFunction extends BaseReflectionFunction implements IReflection
         $this->functionName = $functionName;
         $namespaceParts     = explode('\\', $functionName);
         // Remove the last one part with function name
-        array_pop($namespaceParts);
+        $shortName = array_pop($namespaceParts);
         $this->namespaceName = join('\\', $namespaceParts);
         $this->functionLikeNode = $functionNode;
-        if (!$this->functionLikeNode) {
-            $isUserDefined = true;
-            if ($this->wasIncluded()) {
-                $nativeRef = new BaseReflectionFunction($functionName);
-                $isUserDefined = $nativeRef->isUserDefined();
-            }
-            if ($isUserDefined) {
-                // This will be implemented later:
-                // $this->functionLikeNode = ReflectionEngine::parseFunction($functionName);
-                throw new \InvalidArgumentException("PhpParser\\Node for function {$functionName}() must be provided.");
-            }
-        }
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
 
+        if ($this->isParsedNodeMissing()) {
+            // This will be implemented later:
+            // $this->functionLikeNode = ReflectionEngine::parseFunction($functionName);
+            throw new \InvalidArgumentException("PhpParser\\Node for function {$functionName}() must be provided.");
+        }
+        if ($this->functionLikeNode && ($shortName !== $this->functionLikeNode->name)) {
+            throw new \InvalidArgumentException("PhpParser\\Node\\Stmt\\Function_'s name does not match provided function name.");
+        }
+    }
+
+    /**
+     * Are we missing the parser node?
+     */
+    private function isParsedNodeMissing()
+    {
+        if ($this->functionLikeNode) {
+            return false;
+        }
+        $isUserDefined = true;
+        if ($this->wasIncluded()) {
+            $nativeRef = new BaseReflectionFunction($this->getName());
+            $isUserDefined = $nativeRef->isUserDefined();
+        }
+        return $isUserDefined;
     }
 
     /**

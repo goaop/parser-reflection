@@ -20,7 +20,7 @@ use ReflectionClass as BaseReflectionClass;
 /**
  * AST-based reflection for the method in a class
  */
-class ReflectionMethod extends BaseReflectionMethod implements IReflection
+class ReflectionMethod extends BaseReflectionMethod implements ReflectionInterface
 {
     use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
 
@@ -64,22 +64,31 @@ class ReflectionMethod extends BaseReflectionMethod implements IReflection
         $this->methodName       = $methodName;
         $this->declaringClass   = $declaringClass;
         $this->functionLikeNode = $classMethodNode;
-        if (!$this->functionLikeNode) {
-            $isUserDefined = true;
-            if ($this->wasIncluded()) {
-                $nativeRef = new BaseReflectionClass($this->className);
-                $isUserDefined = $nativeRef->isUserDefined();
-            }
-            if ($isUserDefined) {
-                $this->functionLikeNode = ReflectionEngine::parseClassMethod($className, $methodName);
-            }
+        if ($this->isParsedNodeMissing()) {
+            $this->functionLikeNode = ReflectionEngine::parseClassMethod($className, $methodName);
         }
-        if ($this->functionLikeNode) {
-            $this->methodName = $this->getClassMethodNode()->name;
-        }
-
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
+
+        if ($this->functionLikeNode && ($this->methodName !== $this->functionLikeNode->name)) {
+            throw new \InvalidArgumentException("PhpParser\\Node\\Stmt\\ClassMethod's name does not match provided method name.");
+        }
+    }
+
+    /**
+     * Are we missing the parser node?
+     */
+    private function isParsedNodeMissing()
+    {
+        if ($this->functionLikeNode) {
+            return false;
+        }
+        $isUserDefined = true;
+        if ($this->wasIncluded()) {
+            $nativeRef = new BaseReflectionClass($this->className);
+            $isUserDefined = $nativeRef->isUserDefined();
+        }
+        return $isUserDefined;
     }
 
     /**

@@ -15,7 +15,7 @@ use ReflectionExtension as BaseReflectionExtension;
 /**
  * Returns AST-based reflections from extensions.
  */
-class ReflectionExtension extends BaseReflectionExtension implements IReflection
+class ReflectionExtension extends BaseReflectionExtension implements ReflectionInterface
 {
     /**
      * @var null|ReflectionClass[] ParsedReflection wrapped classes.
@@ -41,15 +41,14 @@ class ReflectionExtension extends BaseReflectionExtension implements IReflection
     /**
      * Returns list of reflection classes
      *
-     * @return array|\ReflectionClass[]
+     * @return \ReflectionClass[]
      */
     public function getClasses()
     {
         if (!isset($this->classes)) {
-            $classRefs = parent::getClasses();
             $this->classes = [];
-            foreach ($classRefs as $origKey => $eachClass) {
-                $this->classes[$origKey] = new ReflectionClass($eachClass->name);
+            foreach (parent::getClasses() as $index => $classReflection) {
+                $this->classes[$index] = new ReflectionClass($classReflection->name);
             }
         }
 
@@ -59,15 +58,14 @@ class ReflectionExtension extends BaseReflectionExtension implements IReflection
     /**
      * Returns list of reflection functions
      *
-     * @return array|\ReflectionFunction[]
+     * @return \ReflectionFunction[]
      */
     public function getFunctions()
     {
         if (!isset($this->functions)) {
-            $funcRefs = parent::getFunctions();
             $this->functions = [];
-            foreach ($funcRefs as $origKey => $eachFunc) {
-                $this->functions[$origKey] = new ReflectionFunction($eachFunc->name);
+            foreach (parent::getFunctions() as $index => $functionReflection) {
+                $this->functions[$index] = new ReflectionFunction($functionReflection->name);
             }
         }
 

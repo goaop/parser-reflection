@@ -22,7 +22,7 @@ use ReflectionClass as BaseReflectionClass;
 /**
  * AST-based reflection for class property
  */
-class ReflectionProperty extends BaseReflectionProperty implements IReflection
+class ReflectionProperty extends BaseReflectionProperty implements ReflectionInterface
 {
     use InitializationTrait, InternalPropertiesEmulationTrait;
 
