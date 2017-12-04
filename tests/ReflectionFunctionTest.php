@@ -1,7 +1,7 @@
 <?php
 namespace Go\ParserReflection;
 
-class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
+class ReflectionFunctionTest extends TestCaseBase
 {
     const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
     const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
@@ -11,7 +11,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
      */
     protected $parsedRefFile;
 
-    protected function setUp()
+    protected function setUpParsedRefFile()
     {
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
 
@@ -21,34 +21,77 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
         include_once $fileName;
     }
 
-    public function testGeneralInfoGetters()
+    protected function setUp()
+    {
+        $this->setUpParsedRefFile();
+    }
+
+    public function getGeneralInfoGetters()
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
             'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString', 'isDisabled',
-            'returnsReference', 'getClosureScopeClass', 'getClosureThis'
+            'returnsReference', 'getClosureScopeClass', 'getClosureThis', 'hasReturnType'
         ];
 
-        if (PHP_VERSION_ID >= 70000) {
-            $allNameGetters[] = 'hasReturnType';
+        $result = [];
+        foreach ($allNameGetters as $getterName) {
+            $result[] = ['getterName' => $getterName];
         }
+        return $result;
+    }
 
+    public function getFunctionsToTest()
+    {
+        $this->setUpParsedRefFile();
+        $result = [];
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
-                $functionName        = $refFunction->getName();
-                $originalRefFunction = new \ReflectionFunction($functionName);
-                foreach ($allNameGetters as $getterName) {
-                    $expectedValue = $originalRefFunction->$getterName();
-                    $actualValue   = $refFunction->$getterName();
-                    $this->assertSame(
-                        $expectedValue,
-                        $actualValue,
-                        "{$getterName}() for function {$functionName} should be equal"
-                    );
-                }
+                $result[] = ['functionName' => $refFunction->getName()];
             }
         }
+        return $result;
+    }
+
+    public function getGeneralInfoGettersForFunctions()
+    {
+        return $this->getPermutations(
+            $this->getGeneralInfoGetters(),
+            $this->getFunctionsToTest());
+    }
+
+
+    /**
+     * Performs method-by-method comparison with original reflection
+     *
+     * @dataProvider getGeneralInfoGettersForFunctions
+     *
+     * @param string $getterName    Name of the reflection method to test.
+     * @param string $functionName  Name of the function to test $getterName with.
+     */
+    public function testGeneralInfoGetters($getterName, $functionName)
+    {
+        $unsupportedGetters = [];
+        if (PHP_VERSION_ID < 70000) {
+            $unsupportedGetters = array_merge($unsupportedGetters, ['hasReturnType']);
+        }
+        if (in_array($getterName, $unsupportedGetters)) {
+            $this->markTestSkipped("ReflectionFunction::{$getterName} not supported in " . PHP_VERSION);
+        }
+        $namespaceParts      = explode('\\', $functionName);
+        $funcShortName       = array_pop($namespaceParts);
+        $namespace           = implode('\\', $namespaceParts);
+        $fileNamespace       = $this->parsedRefFile->getFileNamespace($namespace);
+        $refFunction         = $fileNamespace->getFunction($funcShortName);
+        $originalRefFunction = new \ReflectionFunction($functionName);
+        $expectedValue       = $originalRefFunction->$getterName();
+        $actualValue         = $refFunction->$getterName();
+        $this->assertSame(
+            $expectedValue,
+            $actualValue,
+            "{$getterName}() for function {$functionName} should be equal"
+        );
     }
 
     public function testCoverAllMethods()

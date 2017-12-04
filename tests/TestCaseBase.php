@@ -11,6 +11,89 @@ namespace Go\ParserReflection;
 
 class TestCaseBase extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * Permutates groups of arrays as supplied for @dataProvider.
+     *
+     * I know this is ugly and I don't have tests for it. [WIP]
+     *
+     * @param array[]  $firstArgList   Array of arrays of first group of params to permutate.
+     * @param array[]  $secondArgList  Array of arrays of second group of params to permutate.
+     * @param ...
+     * @return array[]   Permutated result.
+     */
+    protected function getPermutations(array $firstArgList, array $secondArgList)
+    {
+        $argList = func_get_args();
+        // Argument validation:
+        $allArgsAreArraysOfNonEmptyArrays =
+            (count($argList) < 2) &&
+            array_reduce(
+                array_map(
+                    (function ($val) {
+                        return
+                            is_array($val) &&
+                            (count($val) >= 1) &&
+                            array_reduce(
+                                array_map('is_array', $val),
+                                (function ($carry, $item) {
+                                    return $carry && $item;
+                                }),
+                                true);
+                    }),
+                    $argList),
+                (function ($carry, $item) {
+                    return $carry && $item;
+                }),
+                true);
+        if ($allArgsAreArraysOfNonEmptyArrays) {
+            throw new \InvalidArgumentException(__CLASS__ . '::' . __METHOD__ . ' requires at least two arguments which all must be non-empty arrays of arrays.');
+        }
+        $argArrayIndicies = array_map('array_keys', $argList);
+        $argSizes         = array_map('count', $argList);
+        $outputCount      = array_reduce($argSizes, function ($carry, $item) { return $carry * $item; }, 1);
+        $result = [];
+        for ($i = 0; $i < $outputCount; ++$i) {
+            $remainder       = $i;
+            $resultItemParts = [];
+            $indicies        = [];
+            foreach ($argSizes as $argIndex => $partialCount) {
+                $componentIndex             = $remainder % $partialCount;
+                $remainder                  = floor($remainder / $partialCount);
+                $thisIndex                  = $argArrayIndicies[$argIndex][$componentIndex];
+                $indicies[]                 = $thisIndex;
+                $resultItemParts[$argIndex] = $argList[$argIndex][$thisIndex];
+            }
+            $resultItem    = call_user_func_array('array_merge', $resultItemParts);
+            $resultItemKey = implode(', ', $indicies);
+            if (array_key_exists($resultItemKey, $result)) {
+                $result[]               = $resultItem;
+            } else {
+                $result[$resultItemKey] = $resultItem;
+            }
+        }
+        return $result;
+    }
+
+    /**
+     * Provides an altered filename and namespace filter function.
+     *
+     * @param string   $file      File where classes are defined.
+     * @return array   [fileName, filterFunc]
+     */
+    protected function getNeverIncludedFileFilter($file)
+    {
+        $fakeSourceCode = preg_replace('/\\bStub\\b/', 'Stub\\NeverIncluded', file_get_contents($file));
+        $fakeFileName   = preg_replace('/\\bStub\\b/', 'Stub/NeverIncluded', $file);
+        // Populate cache.
+        ReflectionEngine::parseFile($fakeFileName, $fakeSourceCode);
+
+        return [
+            $fakeFileName,
+            (function ($class) {
+                return preg_replace('/\\bStub\\b/', 'Stub\\NeverIncluded', $class);
+            })
+        ];
+    }
 
     /**
      * Extracts namespace from class, function or constant name.

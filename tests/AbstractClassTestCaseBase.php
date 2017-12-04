@@ -108,10 +108,10 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
             $fileName = $filenameArgList[$argKeys[0]];
             $resolvedFileName = stream_resolve_include_path($fileName);
             $fileNode = ReflectionEngine::parseFile($resolvedFileName);
-            list($fakeFileName, $getFakeClassName) = $this->getNeverIncludedClassInfo($resolvedFileName);
+            list($fakeFileName, $classNameFilter) = $this->getNeverIncludedFileFilter($resolvedFileName);
             $realAndFake = [
                 'real' => ['file' => $resolvedFileName, 'classNameFilter' => 'strval'         ],
-                'fake' => ['file' => $fakeFileName,     'classNameFilter' => $getFakeClassName],
+                'fake' => ['file' => $fakeFileName,     'classNameFilter' => $classNameFilter],
             ];
 
             $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
@@ -130,27 +130,6 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
         }
 
         return $classes;
-    }
-
-    /**
-     * Provides a list of classes for analysis in the form [Class, FileName]
-     *
-     * @param string   $file      File where classes are defined.
-     * @return array
-     */
-    public function getNeverIncludedClassInfo($file)
-    {
-        $fakeSourceCode = preg_replace('/\\bStub\\b/', 'Stub\\NeverIncluded', file_get_contents($file));
-        $fakeFileName   = preg_replace('/\\bStub\\b/', 'Stub/NeverIncluded', $file);
-        // Populate cache.
-        ReflectionEngine::parseFile($fakeFileName, $fakeSourceCode);
-
-        return [
-            $fakeFileName,
-            (function ($class) {
-                return preg_replace('/\\bStub\\b/', 'Stub\\NeverIncluded', $class);
-            })
-        ];
     }
 
     /**

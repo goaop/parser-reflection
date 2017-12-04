@@ -72,9 +72,9 @@ class ReflectionMethodTest extends AbstractClassTestCaseBase
         \ReflectionMethod $refMethod,
         $getterName
     ) {
-        $methodName   = $refMethod->getName();
-        $className    = $parsedClass->getName();
-        $parsedMethod = $parsedClass->getMethod($methodName);
+        $methodName            = $refMethod->getName();
+        $className             = $parsedClass->getName();
+        $parsedMethod          = $parsedClass->getMethod($methodName);
         $comparisonTransformer = 'strval';
         if (preg_match('/\\bNeverIncluded\\b/', $className)) {
             $this->setUpFakeFileLocator();

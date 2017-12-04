@@ -78,8 +78,8 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
         $getterName,
         $origClass
     ) {
-        $className = $parsedClass->getName();
-        $refClass  = new \ReflectionClass($origClass);
+        $className             = $parsedClass->getName();
+        $refClass              = new \ReflectionClass($origClass);
         $comparisonTransformer = 'strval';
         if (preg_match('/\\bNeverIncluded\\b/', $className)) {
             $comparisonTransformer = (function ($inStr) {
