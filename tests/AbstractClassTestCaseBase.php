@@ -10,6 +10,7 @@
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\AbstractClassWithMethods;
+use Go\ParserReflection\Locator\CallableLocator;
 
 abstract class AbstractClassTestCaseBase extends TestCaseBase
 {
@@ -99,7 +100,7 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
         $builtInClasses = ['stdClass', 'DateTime', 'Exception', 'Directory', 'Closure', 'ReflectionFunction'];
         $classes = [];
         foreach ($builtInClasses as $className) {
-            $classes[$className] = ['class' => $className, 'fileName'  => null];
+            $classes[$className] = ['class' => $className, 'fileName'  => null, 'origClass' => $className];
         }
         $files = $this->getFilesToAnalyze();
         foreach ($files as $filenameArgList) {
@@ -107,19 +108,49 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
             $fileName = $filenameArgList[$argKeys[0]];
             $resolvedFileName = stream_resolve_include_path($fileName);
             $fileNode = ReflectionEngine::parseFile($resolvedFileName);
+            list($fakeFileName, $getFakeClassName) = $this->getNeverIncludedClassInfo($resolvedFileName);
+            $realAndFake = [
+                'real' => ['file' => $resolvedFileName, 'classNameFilter' => 'strval'         ],
+                'fake' => ['file' => $fakeFileName,     'classNameFilter' => $getFakeClassName],
+            ];
 
             $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
             foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
                 foreach ($fileNamespace->getClasses() as $parsedClass) {
-                    $classes[$argKeys[0] . ': ' . $parsedClass->getName()] = [
-                        'class'    => $parsedClass->getName(),
-                        'fileName' => $resolvedFileName
-                    ];
+                    foreach ($realAndFake as $classFaker) {
+                        $getClassName = $classFaker['classNameFilter'];
+                        $classes[$argKeys[0] . ': ' . $getClassName($parsedClass->getName())] = [
+                            'class'     => $getClassName($parsedClass->getName()),
+                            'fileName'  => $classFaker['file'],
+                            'origClass' => $parsedClass->getName(),
+                        ];
+                    }
                 }
             }
         }
 
         return $classes;
+    }
+
+    /**
+     * Provides a list of classes for analysis in the form [Class, FileName]
+     *
+     * @param string   $file      File where classes are defined.
+     * @return array
+     */
+    public function getNeverIncludedClassInfo($file)
+    {
+        $fakeSourceCode = preg_replace('/\\bStub\\b/', 'Stub\\NeverIncluded', file_get_contents($file));
+        $fakeFileName   = preg_replace('/\\bStub\\b/', 'Stub/NeverIncluded', $file);
+        // Populate cache.
+        ReflectionEngine::parseFile($fakeFileName, $fakeSourceCode);
+
+        return [
+            $fakeFileName,
+            (function ($class) {
+                return preg_replace('/\\bStub\\b/', 'Stub\\NeverIncluded', $class);
+            })
+        ];
     }
 
     /**
@@ -136,19 +167,93 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
      */
     protected function setUpFile($fileName)
     {
-        $fileName = stream_resolve_include_path($fileName);
-        if ($this->lastFileSetUp !== $fileName) {
+        if ($resolvedFileName = stream_resolve_include_path($fileName)) {
+            $fileName = $resolvedFileName;
+        }
+        // if ($fileName && ($this->lastFileSetUp !== $fileName)) {
+        if ($fileName) {
             $fileNode = ReflectionEngine::parseFile($fileName);
 
             $reflectionFile = new ReflectionFile($fileName, $fileNode);
 
-            $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
-            $this->parsedRefFileNamespace = $parsedFileNamespace;
-            $this->parsedRefClass         = $parsedFileNamespace->getClass(static::$defaultClassToLoad);
+            // Break file directory into namespace parts.
+            $filenameParts = preg_split(',[/\\\\]+,', $fileName);
+            $origFilenameParts = $filenameParts;
 
-            include_once $fileName;
+            // Remove filename.
+            array_pop($filenameParts);
+            // Remove everything before 'Stub'.
+            while (count($filenameParts) && (reset($filenameParts) !== 'Stub')) {
+                array_shift($filenameParts);
+            }
+            // Prepend namespace prefix.
+            $namespace = 'Go\\ParserReflection\\' . implode('\\', $filenameParts);
+
+            $this->parsedRefFileNamespace = $reflectionFile->getFileNamespace($namespace);
+            if (
+                !($this->parsedRefFileNamespace instanceof ReflectionFileNamespace) ||
+                !($this->parsedRefFileNamespace->getNode()) ||
+                (preg_match('/\\bNeverIncluded\\b/', $fileName) xor preg_match('/\\bNeverIncluded\\b/', $namespace))
+            ) {
+                throw new \Exception(sprintf(
+                    '$reflectionFile->getFileNamespace(%s) returned %s instead of %s where ' .
+                        '$reflectionFile->getName() returned %s, ' .
+                        '$origFilenameParts is %s',
+                        var_export($namespace, true),
+                        var_export($this->parsedRefFileNamespace, true),
+                        ReflectionFileNamespace::class,
+                        var_export($reflectionFile->getName(), true),
+                        var_export($origFilenameParts, true)));
+            }
+            $this->parsedRefClass = $this->parsedRefFileNamespace->getClass(static::$defaultClassToLoad);
+
+            if (file_exists($fileName)) {
+                include_once $fileName;
+            }
+            else if (preg_match(',[/\\\\]+NeverIncluded[/\\\\]+,', $fileName)) {
+                $realFileName = preg_replace(',[/\\\\]+NeverIncluded[/\\\\]+,', '/', $fileName);
+                $resolvedRealFileName = stream_resolve_include_path($realFileName);
+                if (file_exists($resolvedRealFileName)) {
+                    include_once $resolvedRealFileName;
+                }
+                $this->setUpFakeFileLocator();
+            }
             $this->lastFileSetUp = $fileName;
         }
+    }
+
+    /**
+     * Setups file for parsing
+     */
+    protected function setUpFakeFileLocator()
+    {
+        ReflectionEngine::init(new CallableLocator(function ($className) {
+            if (preg_match('/(^|\\\\)Stub\\\\NeverIncluded\\\\/', $className)) {
+                $origClass = preg_replace('/(^|\\\\)Stub\\\\NeverIncluded\\\\/', '\\1Stub\\\\', $className);
+                if (
+                    class_exists($origClass, false) ||
+                    interface_exists($origClass, false) ||
+                    trait_exists($origClass, false)
+                ) {
+                    $origClassReflection = new \ReflectionClass($origClass);
+                    $origFile = $origClassReflection->getFileName();
+                    if ($origFile && preg_match(',[/\\\\]+Stub[/\\\\]+,', $origFile)) {
+                        $fakeFile = preg_replace(',([/\\\\]+)Stub([/\\\\]+),', '\\1Stub\\2NeverIncluded\\2', $origFile);
+                        return $fakeFile;
+                    }
+                    else {
+                        throw new \Exception(sprintf('locator failed becaue $origClass (%s) in file %s didn\'t contain Stub directory', var_export($origClass, true), var_export($origFile, true)));
+                    }
+                }
+                else {
+                    throw new \Exception(sprintf('locator failed becaue $origClass (%s) doesn\'t exist', var_export($origClass, true)));
+                }
+            }
+            else {
+                throw new \Exception(sprintf('locator failed becaue $className (%s) didn\'t contain Stub\\NeverIncluded', var_export($className, true)));
+            }
+            return false;
+        }));
     }
 
     protected function setUp()

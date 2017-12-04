@@ -24,15 +24,18 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
      *
      * @dataProvider getClassesToAnalyze
      *
-     * @param string $fileName File name to test
+     * @param string $class     Class to test.
+     * @param string $fileName  File name where class defined.
+     * @param string $origClass Included class that $class is based on.
      */
-    public function testGetModifiers($class, $fileName)
+    public function testGetModifiers($class, $fileName, $origClass)
     {
         $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
             + \ReflectionClass::IS_FINAL
             + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
 
+        $parsedRefClass = 'NEVER SET';
         if ($fileName) {
             $this->setUpFile($fileName);
             $parsedRefClass = $this->parsedRefFileNamespace->getClass($class);
@@ -42,7 +45,19 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
             $this->parsedRefClass         = null;
             $parsedRefClass               = new ReflectionClass($class);
         }
-        $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+        if (!($parsedRefClass instanceof ReflectionClass)) {
+            throw new \Exception(sprintf(
+                '$parsedRefClass is %s instead of a %s where ' .
+                    '$fileName is %s, ' .
+                    '$this->parsedRefFileNamespace->getName() is %s, ' .
+                    '$class is %s',
+                    var_export($parsedRefClass, true),
+                    ReflectionClass::class,
+                    var_export($fileName, true),
+                    var_export($this->parsedRefFileNamespace->getName(), true),
+                    var_export($class, true)));
+        }
+        $originalRefClass  = new \ReflectionClass($origClass);
         $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
         $originalModifiers = $originalRefClass->getModifiers() & $mask;
 
@@ -54,22 +69,31 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
      *
      * @dataProvider caseProvider
      *
-     * @param ReflectionClass $parsedClass Parsed class
-     * @param string          $getterName  Name of the reflection method to test
+     * @param ReflectionClass $parsedClass Parsed class.
+     * @param string          $getterName  Name of the reflection method to test.
+     * @param string $origClass Included class that $class is based on.
      */
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
-        $getterName
+        $getterName,
+        $origClass
     ) {
         $className = $parsedClass->getName();
-        $refClass  = new \ReflectionClass($className);
+        $refClass  = new \ReflectionClass($origClass);
+        $comparisonTransformer = 'strval';
+        if (preg_match('/\\bNeverIncluded\\b/', $className)) {
+            $comparisonTransformer = (function ($inStr) {
+                return preg_replace(',([/\\\\])Stub\\b,', '\\1Stub\\1NeverIncluded', $inStr);
+            });
+        }
 
         $expectedValue = $refClass->$getterName();
         $actualValue   = $parsedClass->$getterName();
         $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            get_class($parsedClass) . "->$getterName() for method $className should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
+            get_class($parsedClass) . "->$getterName() for method $className should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue),
+            $comparisonTransformer
         );
     }
 
@@ -91,14 +115,17 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
                 $namespace      = $this->getNamespaceFromName($classFilePair['class']);
                 $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
                 $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-                include_once $classFilePair['fileName'];
+                if ($classFilePair['class'] === $classFilePair['origClass']) {
+                    include_once $classFilePair['fileName'];
+                }
             } else {
                 $parsedClass    = new ReflectionClass($classFilePair['class']);
             }
             foreach ($allNameGetters as $getterName) {
                 $testCases[$testCaseDesc . ', ' . $getterName] = [
-                    $parsedClass,
-                    $getterName
+                    'parsedClass' => $parsedClass,
+                    'getterName'  => $getterName,
+                    'origClass'   => $classFilePair['origClass'],
                 ];
             }
         }
@@ -111,9 +138,11 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
      *
      * @dataProvider getClassesToAnalyze
      *
-     * @param string $fileName File name to test
+     * @param string $class     Class to test.
+     * @param string $fileName  File name where class defined.
+     * @param string $origClass Included class that $class is based on.
      */
-    public function testGetMethodCount($class, $fileName)
+    public function testGetMethodCount($class, $fileName, $origClass)
     {
         if ($fileName) {
             $this->setUpFile($fileName);
@@ -125,7 +154,18 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
             $parsedRefClass               = new ReflectionClass($class);
         }
 
-        $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+        if (!($parsedRefClass instanceof ReflectionClass)) {
+            throw new \Exception(sprintf(
+                '$parsedRefClass is %s instead of a %s where ' .
+                    '$fileName is %s, ' .
+                    '$class is %s',
+                    var_export($parsedRefClass, true),
+                    ReflectionClass::class,
+                    var_export($fileName, true),
+                    var_export($class, true)));
+        }
+        
+        $originalRefClass  = new \ReflectionClass($origClass);
         $parsedMethods     = $parsedRefClass->getMethods();
         $originalMethods   = $originalRefClass->getMethods();
         if ($parsedRefClass->getTraitAliases()) {
@@ -139,9 +179,11 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
      *
      * @dataProvider getClassesToAnalyze
      *
-     * @param string $fileName File name to test
+     * @param string $class     Class to test.
+     * @param string $fileName  File name where class defined.
+     * @param string $origClass Included class that $class is based on.
      */
-    public function testGetProperties($class, $fileName)
+    public function testGetProperties($class, $fileName, $origClass)
     {
         if ($fileName) {
             $this->setUpFile($fileName);
@@ -152,7 +194,17 @@ class ReflectionClassTest extends AbstractClassTestCaseBase
             $this->parsedRefClass         = null;
             $parsedRefClass               = new ReflectionClass($class);
         }
-        $originalRefClass   = new \ReflectionClass($parsedRefClass->getName());
+        if (!($parsedRefClass instanceof ReflectionClass)) {
+            throw new \Exception(sprintf(
+                '$parsedRefClass is %s instead of a %s where ' .
+                    '$fileName is %s, ' .
+                    '$class is %s',
+                    var_export($parsedRefClass, true),
+                    ReflectionClass::class,
+                    var_export($fileName, true),
+                    var_export($class, true)));
+        }
+        $originalRefClass   = new \ReflectionClass($origClass);
         $parsedProperties   = $parsedRefClass->getProperties();
         $originalProperties = $originalRefClass->getProperties();
 

@@ -215,9 +215,12 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
             ( is_object( $value ) && method_exists( $value, '__toString' ) ) );
     }
 
-    protected function assertReflectorValueSame($expected, $actual, $message = '')
+    protected function assertReflectorValueSame($expected, $actual, $message = '', $comparisonTrasformer = 'strval')
     {
-        if (!is_object($expected) && !is_array($expected)) {
+        if (is_string($expected) && is_string($expected) && ($comparisonTrasformer !== 'strval')) {
+            $this->assertSame($comparisonTrasformer($expected), $actual, $message);
+        }
+        else if (!is_object($expected) && !is_array($expected)) {
             $this->assertSame($expected, $actual, $message);
         }
         else if (is_array($expected)) {
@@ -225,8 +228,13 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
             $this->assertCount(count($expected), $actual, $message);
             $actKeys = array_keys($actual);
             foreach (array_keys($expected) as $exIndex => $exKey) {
-                $this->assertSame($exKey, $actKeys[$exIndex], $message);
-                $this->assertReflectorValueSame($expected[$exKey], $actual[$exKey], $message);
+                if (is_string($expected) && is_string($expected) && ($comparisonTrasformer !== 'strval')) {
+                    $this->assertSame($comparisonTrasformer($exKey), $actKeys[$exIndex], $message);
+                }
+                else {
+                    $this->assertSame($exKey, $actKeys[$exIndex], $message);
+                }
+                $this->assertReflectorValueSame($expected[$exKey], $actual[$exKey], $message, $comparisonTrasformer);
             }
         }
         else if (
@@ -284,23 +292,23 @@ class TestCaseBase extends \PHPUnit_Framework_TestCase
                         "Sameness assertion " . __CLASS__ .
                         "::{$sameObjAssertion}() for Reflector {$expectedNativeClassName} should exist") .
                     "\n" . $this->getStringificationOf($expected));
-            $this->$sameObjAssertion($expected, $actual, $message);
+            $this->$sameObjAssertion($expected, $actual, $message, $comparisonTrasformer);
         }
     }
 
-    private function assertSameReflectionExtension($expected, $actual, $message)
+    private function assertSameReflectionExtension($expected, $actual, $message, $comparisonTrasformer)
     {
-        $this->assertSame($expected->getName(),    $actual->getName(),    $message);
-        $this->assertSame($expected->getVersion(), $actual->getVersion(), $message);
+        $this->assertSame($expected->getName(),    $actual->getName(),    $message, $comparisonTrasformer);
+        $this->assertSame($expected->getVersion(), $actual->getVersion(), $message, $comparisonTrasformer);
     }
 
-    private function assertSameReflectionClass($expected, $actual, $message)
+    private function assertSameReflectionClass($expected, $actual, $message, $comparisonTrasformer)
     {
-        $this->assertSame($expected->getName(), $actual->getName(), $message);
+        $this->assertSame($comparisonTrasformer($expected->getName()), $actual->getName(), $message);
     }
 
-    private function assertSameReflectionFunction($expected, $actual, $message)
+    private function assertSameReflectionFunction($expected, $actual, $message, $comparisonTrasformer)
     {
-        $this->assertSame($expected->getName(), $actual->getName(), $message);
+        $this->assertSame($comparisonTrasformer($expected->getName()), $actual->getName(), $message);
     }
 }

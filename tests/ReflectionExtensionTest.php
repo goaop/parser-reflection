@@ -122,9 +122,9 @@ class ReflectionExtensionTest extends TestCaseBase
     /**
      * Verifies output of getExtension() methods.
      *
-     * @param \Reflection $nativeQueryTarget Native reflector to query.
-     * @param IReflection $parsedQueryTarget Parsed reflection to compare.
-     * @param string      $targetDescription description of what's being reflected.
+     * @param \Reflection         $nativeQueryTarget Native reflector to query.
+     * @param ReflectionInterface $parsedQueryTarget Parsed reflection to compare.
+     * @param string              $targetDescription description of what's being reflected.
      */
     public function verifyProperExtensionQuery(
         $nativeQueryTarget,

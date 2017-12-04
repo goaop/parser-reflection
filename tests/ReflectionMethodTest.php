@@ -63,9 +63,9 @@ class ReflectionMethodTest extends AbstractClassTestCaseBase
      *
      * @dataProvider caseProvider
      *
-     * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param ReflectionClass    $parsedClass  Parsed class.
+     * @param \ReflectionMethod  $refMethod    Method to analyze.
+     * @param string             $getterName   Name of the reflection method to test.
      */
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
@@ -75,6 +75,13 @@ class ReflectionMethodTest extends AbstractClassTestCaseBase
         $methodName   = $refMethod->getName();
         $className    = $parsedClass->getName();
         $parsedMethod = $parsedClass->getMethod($methodName);
+        $comparisonTransformer = 'strval';
+        if (preg_match('/\\bNeverIncluded\\b/', $className)) {
+            $this->setUpFakeFileLocator();
+            $comparisonTransformer = (function ($inStr) {
+                return preg_replace(',([/\\\\])Stub\\b,', '\\1Stub\\1NeverIncluded', $inStr);
+            });
+        }
         if (empty($parsedMethod)) {
             echo "Couldn't find method $methodName in the $className", PHP_EOL;
             return;
@@ -85,7 +92,8 @@ class ReflectionMethodTest extends AbstractClassTestCaseBase
         $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            get_class($parsedMethod) . "->$getterName() for method $className->$methodName() should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue)
+            get_class($parsedMethod) . "->$getterName() for method $className->$methodName() should be equal\nexpected: " . $this->getStringificationOf($expectedValue) . "\nactual: " . $this->getStringificationOf($actualValue),
+            $comparisonTransformer
         );
     }
 
@@ -97,6 +105,10 @@ class ReflectionMethodTest extends AbstractClassTestCaseBase
     public function caseProvider()
     {
         $allNameGetters = $this->getGettersToCheck();
+        $includedOnlyMethods = [
+            'getClosureScopeClass',
+            'getClosureThis',
+        ];
 
         $testCases = [];
         $classes   = $this->getClassesToAnalyze();
@@ -107,19 +119,26 @@ class ReflectionMethodTest extends AbstractClassTestCaseBase
                 $namespace      = $this->getNamespaceFromName($classFilePair['class']);
                 $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
                 $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-                include_once $classFilePair['fileName'];
+                if ($classFilePair['class'] === $classFilePair['origClass']) {
+                    include_once $classFilePair['fileName'];
+                }
             } else {
                 $parsedClass    = new ReflectionClass($classFilePair['class']);
             }
-            $refClass = new \ReflectionClass($parsedClass->getName());
+            $refClass = new \ReflectionClass($classFilePair['origClass']);
             foreach ($refClass->getMethods() as $classMethod) {
                 $caseName = $testCaseDesc . '->' . $classMethod->getName() . '()';
                 foreach ($allNameGetters as $getterName) {
-                    $testCases[$caseName . ', ' . $getterName] = [
-                        $parsedClass,
-                        $classMethod,
-                        $getterName
-                    ];
+                    if (
+                        ($classFilePair['class'] === $classFilePair['origClass']) ||
+                        !in_array($getterName, $includedOnlyMethods)
+                    ) {
+                        $testCases[$caseName . ', ' . $getterName] = [
+                            'parsedClass' => $parsedClass,
+                            'refMethod'   => $classMethod,
+                            'getterName'  => $getterName,
+                        ];
+                    }
                 }
             }
         }

@@ -65,18 +65,20 @@ class ReflectionPropertyTest extends AbstractClassTestCaseBase
                 $namespace      = $this->getNamespaceFromName($classFilePair['class']);
                 $fileNamespace  = $reflectionFile->getFileNamespace($namespace);
                 $parsedClass    = $fileNamespace->getClass($classFilePair['class']);
-                include_once $classFilePair['fileName'];
+                if ($classFilePair['class'] === $classFilePair['origClass']) {
+                    include_once $classFilePair['fileName'];
+                }
             } else {
                 $parsedClass    = new ReflectionClass($classFilePair['class']);
             }
-            $refClass = new \ReflectionClass($parsedClass->getName());
+            $refClass = new \ReflectionClass($classFilePair['origClass']);
             foreach ($refClass->getProperties() as $classProperty) {
                 $caseName = $testCaseDesc . '->' . $classProperty->getName();
                 foreach ($allNameGetters as $getterName) {
                     $testCases[$caseName . ', ' . $getterName] = [
-                        $parsedClass,
-                        $classProperty,
-                        $getterName
+                        'parsedClass' => $parsedClass,
+                        'refProperty' => $classProperty,
+                        'getterName'  => $getterName,
                     ];
                 }
             }
