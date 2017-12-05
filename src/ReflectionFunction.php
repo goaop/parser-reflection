@@ -148,16 +148,27 @@ class ReflectionFunction extends BaseReflectionFunction implements ReflectionInt
      */
     public function __toString()
     {
+        $origin = 'user';
+        $source = '';
+        if (!$this->isUserDefined()) {
+            $origin = 'internal';
+            $phpExt = $this->getExtension();
+            if ($phpExt) {
+                $origin .= ':' . $phpExt->getName();
+            }
+        }
+        else {
+            $source = sprintf("\n  @@ %s %d - %d", $this->getFileName(), $this->getStartLine(), $this->getEndLine());
+        }
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
-        $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";
+        $reflectionFormat = "%sFunction [ <%s> function %s ] {%s{$paramFormat}\n}\n";
 
         return sprintf(
             $reflectionFormat,
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
+            $origin,
             $this->getName(),
-            $this->getFileName(),
-            $this->getStartLine(),
-            $this->getEndLine(),
+            $source,
             count($this->getParameters()),
             array_reduce($this->getParameters(), function ($str, ReflectionParameter $param) {
                 return $str . "\n    " . $param;

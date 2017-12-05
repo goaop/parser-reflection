@@ -7,26 +7,35 @@ class ReflectionFunctionTest extends TestCaseBase
     const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
 
     /**
+     * @var string
+     */
+    protected $lastFileSetUp;
+
+    /**
      * @var ReflectionFile
      */
     protected $parsedRefFile;
 
-    protected function setUpParsedRefFile()
+    protected function setUpParsedRefFile($fileName)
     {
-        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
+        if ($this->lastFileSetUp !== $fileName) {
+            $reflectionFile = new ReflectionFile($fileName);
+            $this->parsedRefFile = $reflectionFile;
 
-        $reflectionFile = new ReflectionFile($fileName);
-        $this->parsedRefFile = $reflectionFile;
-
-        include_once $fileName;
+            if (!preg_match('/\\bNeverIncluded\\b/', $fileName)) {
+                include_once $fileName;
+            }
+            $this->lastFileSetUp = $fileName;
+        }
     }
 
     protected function setUp()
     {
-        $this->setUpParsedRefFile();
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
+        $this->setUpParsedRefFile($fileName);
     }
 
-    public function getGeneralInfoGetters()
+    public function generalInfoGetterProvider()
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
@@ -42,35 +51,104 @@ class ReflectionFunctionTest extends TestCaseBase
         return $result;
     }
 
-    public function getFunctionsToTest()
+    /**
+     * Provides a list of files for analysis
+     *
+     * @return array
+     */
+    public function fileProvider()
     {
-        $this->setUpParsedRefFile();
-        $result = [];
-        foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
-            foreach ($fileNamespace->getFunctions() as $refFunction) {
-                $result[] = ['functionName' => $refFunction->getName()];
-            }
+        $files = ['PHP5.5' => ['fileName' => __DIR__ . '/Stub/FileWithFunctions55.php']];
+
+        if (PHP_VERSION_ID >= 70000) {
+            $files['PHP7.0'] = ['fileName' => __DIR__ . '/Stub/FileWithFunctions70.php'];
         }
-        return $result;
+
+        return $files;
     }
 
-    public function getGeneralInfoGettersForFunctions()
+    /**
+     * Provides a list of functions for analysis in the form [Function, FileName]
+     *
+     * @return array
+     */
+    public function functionProvider()
     {
-        return $this->getPermutations(
-            $this->getGeneralInfoGetters(),
-            $this->getFunctionsToTest());
+        // Random selection of built in functions.
+        $builtInFunctions = ['preg_match', 'date', 'create_function'];
+        $functions = [];
+        foreach ($builtInFunctions as $functionsName) {
+            $functions[$functionsName] = [
+                'function'     => $functionsName,
+                'fileName'     => null,
+                'origFunction' => $functionsName,
+            ];
+        }
+        $files = $this->fileProvider();
+        foreach ($files as $filenameArgList) {
+            $argKeys = array_keys($filenameArgList);
+            $fileName = $filenameArgList[$argKeys[0]];
+            $resolvedFileName = stream_resolve_include_path($fileName);
+            $fileNode = ReflectionEngine::parseFile($resolvedFileName);
+            list($fakeFileName, $funcNameFilter) = $this->getNeverIncludedFileFilter($resolvedFileName);
+            $realAndFake = [
+                'real' => ['file' => $resolvedFileName, 'funcNameFilter' => 'strval'       ],
+                'fake' => ['file' => $fakeFileName,     'funcNameFilter' => $funcNameFilter],
+            ];
+
+            $reflectionFile = new ReflectionFile($resolvedFileName, $fileNode);
+            foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+                foreach ($fileNamespace->getFunctions() as $parsedFunction) {
+                    foreach ($realAndFake as $funcFaker) {
+                        $funcNameFilter = $funcFaker['funcNameFilter'];
+                        if (
+                            ($funcNameFilter === 'strval') ||
+                            ($funcNameFilter($parsedFunction->getName()) != $parsedFunction->getName())
+                        ) {
+                            $functions[$argKeys[0] . ': ' . $funcNameFilter($parsedFunction->getName())] = [
+                                'function'     => $funcNameFilter($parsedFunction->getName()),
+                                'fileName'     => $funcFaker['file'],
+                                'origFunction' => $parsedFunction->getName(),
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+
+        return $functions;
+    }
+
+    public function generalInfoGettersForFunctionsProvider()
+    {
+        $includedOnlyMethods = [
+            'getClosureScopeClass',
+            'getClosureThis',
+        ];
+        return 
+            array_filter(
+                $this->getPermutations(
+                    $this->generalInfoGetterProvider(),
+                    $this->functionProvider()),
+                (function ($argList) use ($includedOnlyMethods) {
+                    return
+                        !in_array($argList['getterName'], $includedOnlyMethods) ||
+                        !preg_match('/\\bNeverIncluded\\b/', $argList['function']);
+                }));
     }
 
 
     /**
      * Performs method-by-method comparison with original reflection
      *
-     * @dataProvider getGeneralInfoGettersForFunctions
+     * @dataProvider generalInfoGettersForFunctionsProvider
      *
      * @param string $getterName    Name of the reflection method to test.
      * @param string $functionName  Name of the function to test $getterName with.
+     * @param string $fileName      Name of file containing $functionName.
+     * @param string $origFunction  Name of included function $functionName is based on.
      */
-    public function testGeneralInfoGetters($getterName, $functionName)
+    public function testGeneralInfoGetters($getterName, $functionName, $fileName, $origFunction)
     {
         $unsupportedGetters = [];
         if (PHP_VERSION_ID < 70000) {
@@ -79,18 +157,31 @@ class ReflectionFunctionTest extends TestCaseBase
         if (in_array($getterName, $unsupportedGetters)) {
             $this->markTestSkipped("ReflectionFunction::{$getterName} not supported in " . PHP_VERSION);
         }
-        $namespaceParts      = explode('\\', $functionName);
-        $funcShortName       = array_pop($namespaceParts);
-        $namespace           = implode('\\', $namespaceParts);
-        $fileNamespace       = $this->parsedRefFile->getFileNamespace($namespace);
-        $refFunction         = $fileNamespace->getFunction($funcShortName);
-        $originalRefFunction = new \ReflectionFunction($functionName);
+        $comparisonTransformer = 'strval';
+        if (preg_match('/\\bNeverIncluded\\b/', $functionName)) {
+            $comparisonTransformer = (function ($inStr) {
+                return preg_replace(',([/\\\\])Stub\\b,', '\\1Stub\\1NeverIncluded', $inStr);
+            });
+        }
+        if ($fileName) {
+            $this->setUpParsedRefFile($fileName);
+            $fileNamespace = $this->parsedRefFile->getFileNamespace(
+                $this->getNamespaceFromName($functionName));
+            $refFunction   = $fileNamespace->getFunction(
+                $this->getShortNameFromName($functionName));
+        } else {
+            $this->lastFileSetUp = null;
+            $this->parsedRefFile = null;
+            $refFunction         = new ReflectionFunction($functionName);
+        }
+        $originalRefFunction = new \ReflectionFunction($origFunction);
         $expectedValue       = $originalRefFunction->$getterName();
         $actualValue         = $refFunction->$getterName();
-        $this->assertSame(
+        $this->assertReflectorValueSame(
             $expectedValue,
             $actualValue,
-            "{$getterName}() for function {$functionName} should be equal"
+            "{$getterName}() for function {$functionName} should be equal",
+            $comparisonTransformer
         );
     }
 
