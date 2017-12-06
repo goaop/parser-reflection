@@ -242,7 +242,7 @@ class ReflectionFunctionTest extends TestCaseBase
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE70);
 
         $reflectionFile = new ReflectionFile($fileName);
-        include $fileName;
+        include_once $fileName;
 
         foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
