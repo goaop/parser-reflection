@@ -299,13 +299,14 @@ class ReflectionParameter extends BaseReflectionParameter implements ReflectionI
 
         $allowsNull = $this->allowsNull();
         if (is_object($parameterType)) {
-            $parameterType = $parameterType->toString();
+            // $parameterType = $parameterType->toString();
         } elseif (is_string($parameterType)) {
             $isBuiltin = true;
         } else {
             return null;
         }
 
+        return new ReflectionType(var_export($parameterType, true), $allowsNull, $isBuiltin);
         return new ReflectionType($parameterType, $allowsNull, $isBuiltin);
     }
 

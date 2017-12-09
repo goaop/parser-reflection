@@ -3,6 +3,7 @@
 namespace Go\ParserReflection\Stub {
 
     use Go\ParserReflection\ReflectionMethod;
+    use Go\ParserReflection as Fred;
 
     function simpleIntArg(int $value) {}
     function simpleArrayOut() : array {}
@@ -16,4 +17,6 @@ namespace Go\ParserReflection\Stub {
     }
 
     function builtInArgs(int $a, float $b, bool $c, string $d, object $e) : integer {}
+
+    function mixedArgs(\DateTime $a, ReflectionMethod $b, bool $c, Fred\ReflectionEngine $d) : integer {}
 }
