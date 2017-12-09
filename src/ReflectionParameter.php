@@ -205,6 +205,10 @@ class ReflectionParameter extends BaseReflectionParameter implements ReflectionI
                     return $this->getDeclaringClass();
                 }
 
+                // The PHP documentation here:
+                //     http://php.net/manual/en/functions.arguments.php#functions.arguments.type-declaration
+                // seems to indicate that 'parent' is *NOT* a valid typehint.
+                // Testing PHP itself confirms that it *IS* valid.
                 if ('parent' === $parameterTypeName) {
                     return $this->getDeclaringClass()->getParentClass();
                 }
@@ -212,9 +216,8 @@ class ReflectionParameter extends BaseReflectionParameter implements ReflectionI
                 throw new ReflectionException("Can not resolve a class name for parameter");
             }
             $className   = $parameterType->toString();
-            $classOrInterfaceExists = class_exists($className, false) || interface_exists($className, false);
 
-            return $classOrInterfaceExists ? new \ReflectionClass($className) : new ReflectionClass($className);
+            return new ReflectionClass($className);
         }
 
         return null;
