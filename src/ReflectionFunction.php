@@ -156,12 +156,19 @@ class ReflectionFunction extends BaseReflectionFunction implements ReflectionInt
             if ($phpExt) {
                 $origin .= ':' . $phpExt->getName();
             }
-        }
-        else {
+        } else {
             $source = sprintf("\n  @@ %s %d - %d", $this->getFileName(), $this->getStartLine(), $this->getEndLine());
         }
-        $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
-        $reflectionFormat = "%sFunction [ <%s> function %s ] {%s{$paramFormat}\n}\n";
+        // Internally $this->getReturnType() !== null is the same as $this->hasReturnType()
+        $returnType    = $this->getReturnType();
+        $hasReturnType = $returnType !== null;
+        $paramFormat   = '';
+        $returnFormat  = '';
+        if (($this->getNumberOfParameters() > 0) || $hasReturnType) {
+            $paramFormat  = "\n\n  - Parameters [%d] {%s\n  }";
+            $returnFormat = $hasReturnType ? "\n  - Return [ %s ]" : '';
+        }
+        $reflectionFormat = "%sFunction [ <%s> function %s ] {%s{$paramFormat}{$returnFormat}\n}\n";
 
         return sprintf(
             $reflectionFormat,
@@ -170,9 +177,14 @@ class ReflectionFunction extends BaseReflectionFunction implements ReflectionInt
             $this->getName(),
             $source,
             count($this->getParameters()),
-            array_reduce($this->getParameters(), function ($str, ReflectionParameter $param) {
-                return $str . "\n    " . $param;
-            }, '')
+            array_reduce(
+                $this->getParameters(),
+                (function ($str, ReflectionParameter $param) {
+                    return $str . "\n    " . $param;
+                }),
+                ''
+            ),
+            $returnType ? ReflectionType::convertToDisplayType($returnType) : ''
         );
     }
 
