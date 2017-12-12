@@ -18,6 +18,9 @@ use PhpParser\NodeVisitorAbstract;
 
 class BuiltinAliasFixer extends NodeVisitorAbstract
 {
+    const PARAMETER_TYPES = 1;
+    const RETURN_TYPES    = 2;
+
     /** @var array Current list of valid builtin typehints */
     protected $supportedBuiltinTypeHints;
 
@@ -37,18 +40,55 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
                     "option 'supportedBuiltinTypeHints' must be an array."
                 );
             }
-            foreach ($options['supportedBuiltinTypeHints'] as $index => $typeHintName) {
-                if (!is_string($typeHintName) || !preg_match('/^\\w+$/', $typeHintName)) {
+            $numericIndexCount = count(array_filter(
+                $options['supportedBuiltinTypeHints'],
+                (function ($val) { return preg_match('/^0*(0|[1-9]\\d*)$/', $val); }),
+                ARRAY_FILTER_USE_KEY
+            ));
+            foreach ($options['supportedBuiltinTypeHints'] as $key => $value) {
+                $numericIndex = false;
+                $typeHintName = $key;
+                $validFor     = $value;
+                if (
+                    preg_match('/^0*(0|[1-9]\\d*)$/', $key) &&
+                    (intval($key) >= 0)                     &&
+                    (intval($key) <  $numericIndexCount)
+                ) {
+                    $numericIndex = true;
+                    $typeHintName = $value;
+                    $validFor     = self::PARAMETER_TYPES|self::RETURN_TYPES;
+                }
+                if (!is_string($typeHintName) || !preg_match('/^\\w(?<!\\d)\\w*$/', $typeHintName)) {
                     throw new \InvalidArgumentException(
                         sprintf(
-                            "All elements of option 'supportedBuiltinTypeHints' array " .
-                                "must be a single word string. Element %s (%s) isn't valid.",
-                            $index,
+                            "Option 'supportedBuiltinTypeHints's element %s " .
+                                " isn't a valid typehint string.",
                             var_export($typeHintName, true)
                         )
                     );
+                } elseif (
+                    !is_scalar($validFor)                                                                   ||
+                    (strval($validFor) != strval(intval($validFor)))                                        ||
+                    (intval($validFor) != (intval($validFor) & (self::PARAMETER_TYPES|self::RETURN_TYPES))) ||
+                    (intval($validFor) == 0)
+                ) {
+                    throw new \InvalidArgumentException(
+                        sprintf(
+                            "Option 'supportedBuiltinTypeHints's %s typehint applies to invalid " .
+                                "mask %s. Mask must be one of: %s::PARAMETER_TYPES (%d), %s::RETURN_TYPES (%d)" .
+                                " or %s::PARAMETER_TYPES|%s::RETURN_TYPES (%d)",
+                            var_export($validFor, true),
+                            self::class,
+                            self::PARAMETER_TYPES,
+                            self::class,
+                            self::RETURN_TYPES,
+                            self::class,
+                            self::class,
+                            (self::PARAMETER_TYPES | self::RETURN_TYPES)
+                        )
+                    );
                 } else {
-                    $this->supportedBuiltinTypeHints[] = $typeHintName;
+                    $this->supportedBuiltinTypeHints[$typeHintName] = intval($validFor) & (self::PARAMETER_TYPES|self::RETURN_TYPES);
                 }
             }
         } else {
@@ -84,17 +124,42 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
                 }
             }
             $builtInTypeNames = [
-                'array'    => 50100,
-                'callable' => 50400,
-                'bool'     => 70000,
-                'float'    => 70000,
-                'int'      => 70000,
-                'string'   => 70000,
-                'iterable' => 70100,
+                'array'    => [
+                    'introduced_version' => 50100,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'callable' => [
+                    'introduced_version' => 50400,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'bool'     => [
+                    'introduced_version' => 70000,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'float'    => [
+                    'introduced_version' => 70000,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'int'      => [
+                    'introduced_version' => 70000,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'string'   => [
+                    'introduced_version' => 70000,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'iterable' => [
+                    'introduced_version' => 70100,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
+                ],
+                'void'     => [
+                    'introduced_version' => 70100,
+                    'valid_for'          => self::RETURN_TYPES
+                ],
             ];
-            foreach ($builtInTypeNames as $typeHintName => $verIdIntroduced) {
-                if ($phpVersionToSupport >= $verIdIntroduced) {
-                    $this->supportedBuiltinTypeHints[] = $typeHintName;
+            foreach ($builtInTypeNames as $typeHintName => $valid) {
+                if ($phpVersionToSupport >= $valid['introduced_version']) {
+                    $this->supportedBuiltinTypeHints[$typeHintName] = $valid['valid_for'];
                 }
             }
         }
@@ -119,23 +184,29 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
     /** @param Stmt\Function_|Stmt\ClassMethod|Expr\Closure $node */
     private function fixSignature($node) {
         foreach ($node->params as $param) {
-            $param->type = $this->fixType($param->type);
+            $param->type = $this->fixType($param->type, self::PARAMETER_TYPES);
         }
-        $node->returnType = $this->fixType($node->returnType);
+        $node->returnType = $this->fixType($node->returnType, self::RETURN_TYPES);
     }
 
-    private function fixType($node) {
+    private function fixType($node, $contextType) {
         if (!is_object($node) && (strval($node) == '')) {
             return $node;
         }
         if ($node instanceof Node\NullableType) {
-            $node->type = $this->fixType($node->type);
+            $node->type = $this->fixType($node->type, $contextType);
             return $node;
         }
         // This is the actual problem we found:
         //     'object' is being interperted as a builtin typehint
         //     but it isn't.
-        if (!is_object($node) && !in_array(strval($node), $this->supportedBuiltinTypeHints)) {
+        if (
+            !is_object($node) &&
+            (
+                !array_key_exists(strval($node), $this->supportedBuiltinTypeHints) ||
+                (($contextType & $this->supportedBuiltinTypeHints[strval($node)]) != $contextType)
+            )
+        ) {
             return new Name(strval($node));
         }
         // Just in case:
@@ -145,8 +216,17 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
         if (
             ($node instanceof Name)      &&
             !($node->isFullyQualified()) &&
-            (count($node->parts) == 1)   &&
-            in_array(strval(implode('\\', $node->parts)), $this->supportedBuiltinTypeHints)
+            (count($node->parts) == 1) &&
+            (
+                array_key_exists(
+                    strval(implode('\\', $node->parts)),
+                    $this->supportedBuiltinTypeHints
+                ) &&
+                (
+                    ($contextType & $this->supportedBuiltinTypeHints[strval(implode('\\', $node->parts))]) ==
+                    $contextType
+                )
+            )
         ) {
             return strval(implode('\\', $node->parts));
         }
