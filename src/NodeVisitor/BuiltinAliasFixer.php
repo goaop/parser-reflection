@@ -32,25 +32,27 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
      *
      * @param array $options Options
      */
-    public function __construct(array $options = []) {
+    public function __construct(array $options = [])
+    {
         $this->supportedBuiltinTypeHints = [];
         if (isset($options['supportedBuiltinTypeHints'])) {
             if (!is_array($options['supportedBuiltinTypeHints'])) {
                 throw new \InvalidArgumentException(
-                    "option 'supportedBuiltinTypeHints' must be an array."
+                    "Option 'supportedBuiltinTypeHints' must be an array."
                 );
             }
             $numericIndexCount = count(array_filter(
                 $options['supportedBuiltinTypeHints'],
-                (function ($val) { return preg_match('/^0*(0|[1-9]\\d*)$/', $val); }),
+                (function ($val) {
+                    return preg_match('/^0*(0|[1-9]\\d*)$/', $val);
+                }),
                 ARRAY_FILTER_USE_KEY
             ));
             foreach ($options['supportedBuiltinTypeHints'] as $key => $value) {
                 $numericIndex = false;
                 $typeHintName = $key;
                 $validFor     = $value;
-                if (
-                    preg_match('/^0*(0|[1-9]\\d*)$/', $key) &&
+                if (preg_match('/^0*(0|[1-9]\\d*)$/', $key) &&
                     (intval($key) >= 0)                     &&
                     (intval($key) <  $numericIndexCount)
                 ) {
@@ -62,21 +64,19 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
                     throw new \InvalidArgumentException(
                         sprintf(
                             "Option 'supportedBuiltinTypeHints's element %s " .
-                                " isn't a valid typehint string.",
+                                "isn't a valid typehint string.",
                             var_export($typeHintName, true)
                         )
                     );
-                } elseif (
-                    !is_scalar($validFor)                                                                   ||
+                } elseif (!is_scalar($validFor)                                                                   ||
                     (strval($validFor) != strval(intval($validFor)))                                        ||
                     (intval($validFor) != (intval($validFor) & (self::PARAMETER_TYPES|self::RETURN_TYPES))) ||
                     (intval($validFor) == 0)
                 ) {
                     throw new \InvalidArgumentException(
                         sprintf(
-                            "Option 'supportedBuiltinTypeHints's %s typehint applies to invalid " .
-                                "mask %s. Mask must be one of: %s::PARAMETER_TYPES (%d), %s::RETURN_TYPES (%d)" .
-                                " or %s::PARAMETER_TYPES|%s::RETURN_TYPES (%d)",
+                            "Option 'supportedBuiltinTypeHints's %s typehint applies to invalid mask %s. Mask must be one of: %s::PARAMETER_TYPES (%d), %s::RETURN_TYPES (%d) or %s::PARAMETER_TYPES|%s::RETURN_TYPES (%d)",
+                            var_export($typeHintName, true),
                             var_export($validFor, true),
                             self::class,
                             self::PARAMETER_TYPES,
@@ -163,15 +163,10 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
                 }
             }
         }
-        // error_log(var_export([
-        //     '$this->supportedBuiltinTypeHints' => $this->supportedBuiltinTypeHints,
-        //     '$phpVersionToSupport' => $phpVersionToSupport,
-        //     '$builtInTypeNames' => $builtInTypeNames,
-        //     'isset($options[\'supportedBuiltinTypeHints\'])' => isset($options['supportedBuiltinTypeHints']),
-        // ], true));
     }
 
-    public function enterNode(Node $node) {
+    public function enterNode(Node $node)
+    {
         if (
             ($node instanceof Stmt\Function_)   ||
             ($node instanceof Stmt\ClassMethod) ||
@@ -182,14 +177,16 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
     }
 
     /** @param Stmt\Function_|Stmt\ClassMethod|Expr\Closure $node */
-    private function fixSignature($node) {
+    private function fixSignature($node)
+    {
         foreach ($node->params as $param) {
             $param->type = $this->fixType($param->type, self::PARAMETER_TYPES);
         }
         $node->returnType = $this->fixType($node->returnType, self::RETURN_TYPES);
     }
 
-    private function fixType($node, $contextType) {
+    private function fixType($node, $contextType)
+    {
         if (!is_object($node) && (strval($node) == '')) {
             return $node;
         }
