@@ -63,12 +63,11 @@ class BuiltinTypeFixer extends NodeVisitorAbstract
                 if (!is_string($typeHintName) || !preg_match('/^\\w(?<!\\d)\\w*$/', $typeHintName)) {
                     throw new \InvalidArgumentException(
                         sprintf(
-                            "Option 'supportedBuiltinTypeHints's element %s " .
-                                "isn't a valid typehint string.",
+                            "Option 'supportedBuiltinTypeHints's element %s isn't a valid typehint string.",
                             var_export($typeHintName, true)
                         )
                     );
-                } elseif (!is_scalar($validFor)                                                                   ||
+                } elseif (!is_scalar($validFor)                                                             ||
                     (strval($validFor) != strval(intval($validFor)))                                        ||
                     (intval($validFor) != (intval($validFor) & (self::PARAMETER_TYPES|self::RETURN_TYPES))) ||
                     (intval($validFor) == 0)
@@ -171,8 +170,7 @@ class BuiltinTypeFixer extends NodeVisitorAbstract
 
     public function enterNode(Node $node)
     {
-        if (
-            ($node instanceof Stmt\Function_)   ||
+        if (($node instanceof Stmt\Function_)   ||
             ($node instanceof Stmt\ClassMethod) ||
             ($node instanceof Expr\Closure)
         ) {

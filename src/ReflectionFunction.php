@@ -203,10 +203,10 @@ class ReflectionFunction extends BaseReflectionFunction implements ReflectionInt
     }
 
     /**
-     * Has class been loaded by PHP.
+     * Has function been loaded by PHP.
      *
      * @return bool
-     *     If class file was included.
+     *     If file containing function was included.
      */
     public function wasIncluded()
     {

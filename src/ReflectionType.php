@@ -100,10 +100,10 @@ class ReflectionType extends BaseReflectionType implements ReflectionInterface
     }
 
     /**
-     * Has class been loaded by PHP.
+     * Has type been loaded by PHP.
      *
      * @return bool
-     *     If class file was included.
+     *     If a builtin type or class file was included.
      */
     public function wasIncluded()
     {
