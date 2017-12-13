@@ -152,6 +152,9 @@ class ReflectionFunction extends BaseReflectionFunction implements ReflectionInt
         $source = '';
         if (!$this->isUserDefined()) {
             $origin = 'internal';
+            if ($this->isDeprecated()) {
+                $origin .= ', deprecated';
+            }
             $phpExt = $this->getExtension();
             if ($phpExt) {
                 $origin .= ':' . $phpExt->getName();

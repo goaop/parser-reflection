@@ -62,6 +62,8 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
         }
 
         if ($allMissedMethods) {
+            // This **SHOULD** fail, but we'll turn this off until PHP 7.2 support is complete:
+            // $this->fail('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
             $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
         }
     }

@@ -12,7 +12,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
-use Go\ParserReflection\NodeVisitor\BuiltinAliasFixer;
+use Go\ParserReflection\NodeVisitor\BuiltinTypeFixer;
 use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
@@ -82,9 +82,9 @@ class ReflectionEngine
         }
 
         self::$traverser = $traverser = new NodeTraverser();
-        // BuiltinAliasFixer is a temprary fix for a bug in PhpParser.
+        // BuiltinTypeFixer is a temprary fix for a bug in PhpParser.
         // https://github.com/nikic/PHP-Parser/issues/449
-        $traverser->addVisitor(new BuiltinAliasFixer());
+        $traverser->addVisitor(new BuiltinTypeFixer());
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor(new RootNamespaceNormalizer());
 

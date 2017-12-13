@@ -1,7 +1,7 @@
 <?php
 namespace Go\ParserReflection\NodeVisitor;
 
-class BuiltinAliasFixerTest extends \PHPUnit_Framework_TestCase
+class BuiltinTypeFixerTest extends \PHPUnit_Framework_TestCase
 {
 
     /**
@@ -10,7 +10,7 @@ class BuiltinAliasFixerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSupportedBuiltinTypeHintsNotArray()
     {
-        new BuiltinAliasFixer([
+        new BuiltinTypeFixer([
             'supportedBuiltinTypeHints' => 'int'
         ]);
     }
@@ -21,7 +21,7 @@ class BuiltinAliasFixerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSupportedBuiltinTypeHintsNotValidKeyword()
     {
-        new BuiltinAliasFixer([
+        new BuiltinTypeFixer([
             'supportedBuiltinTypeHints' => ['too many words']
         ]);
     }
@@ -32,18 +32,18 @@ class BuiltinAliasFixerTest extends \PHPUnit_Framework_TestCase
      */
     public function testSupportedBuiltinTypeHintsKeyNotValidKeyword()
     {
-        new BuiltinAliasFixer([
-            'supportedBuiltinTypeHints' => ['too many words' => BuiltinAliasFixer::PARAMETER_TYPES]
+        new BuiltinTypeFixer([
+            'supportedBuiltinTypeHints' => ['too many words' => BuiltinTypeFixer::PARAMETER_TYPES]
         ]);
     }
 
     /**
      * @expectedException        InvalidArgumentException
-     * @expectedExceptionMessage Option 'supportedBuiltinTypeHints's 'int' typehint applies to invalid mask 75. Mask must be one of: Go\ParserReflection\NodeVisitor\BuiltinAliasFixer::PARAMETER_TYPES (1), Go\ParserReflection\NodeVisitor\BuiltinAliasFixer::RETURN_TYPES (2) or Go\ParserReflection\NodeVisitor\BuiltinAliasFixer::PARAMETER_TYPES|Go\ParserReflection\NodeVisitor\BuiltinAliasFixer::RETURN_TYPES (3)
+     * @expectedExceptionMessage Option 'supportedBuiltinTypeHints's 'int' typehint applies to invalid mask 75. Mask must be one of: Go\ParserReflection\NodeVisitor\BuiltinTypeFixer::PARAMETER_TYPES (1), Go\ParserReflection\NodeVisitor\BuiltinTypeFixer::RETURN_TYPES (2) or Go\ParserReflection\NodeVisitor\BuiltinTypeFixer::PARAMETER_TYPES|Go\ParserReflection\NodeVisitor\BuiltinTypeFixer::RETURN_TYPES (3)
      */
     public function testSupportedBuiltinTypeHintsInvalidMask()
     {
-        new BuiltinAliasFixer([
+        new BuiltinTypeFixer([
             'supportedBuiltinTypeHints' => ['int' => 75]
         ]);
     }

@@ -16,7 +16,7 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Stmt;
 use PhpParser\NodeVisitorAbstract;
 
-class BuiltinAliasFixer extends NodeVisitorAbstract
+class BuiltinTypeFixer extends NodeVisitorAbstract
 {
     const PARAMETER_TYPES = 1;
     const RETURN_TYPES    = 2;
@@ -154,7 +154,11 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
                 ],
                 'void'     => [
                     'introduced_version' => 70100,
-                    'valid_for'          => self::RETURN_TYPES
+                    'valid_for'          => self::RETURN_TYPES,
+                ],
+                'object'   => [
+                    'introduced_version' => 70200,
+                    'valid_for'          => self::PARAMETER_TYPES|self::RETURN_TYPES,
                 ],
             ];
             foreach ($builtInTypeNames as $typeHintName => $valid) {
@@ -187,46 +191,51 @@ class BuiltinAliasFixer extends NodeVisitorAbstract
 
     private function fixType($node, $contextType)
     {
-        if (!is_object($node) && (strval($node) == '')) {
+        $typeAsString = $this->getTypeAsString($node);
+        if ($typeAsString == '') {
+            // $node === null
             return $node;
         }
         if ($node instanceof Node\NullableType) {
             $node->type = $this->fixType($node->type, $contextType);
             return $node;
         }
+        $shouldBeBuiltInType = $this->isTypeDefinedForContext($typeAsString, $contextType);
         // This is the actual problem we found:
         //     'object' is being interperted as a builtin typehint
         //     but it isn't.
-        if (
-            !is_object($node) &&
-            (
-                !array_key_exists(strval($node), $this->supportedBuiltinTypeHints) ||
-                (($contextType & $this->supportedBuiltinTypeHints[strval($node)]) != $contextType)
-            )
-        ) {
-            return new Name(strval($node));
+        if (is_string($node) && !$shouldBeBuiltInType) {
+            return new Name($typeAsString);
         }
         // Just in case:
         //     This is the *OPPOSITE* of the issue we're seeing,
         //     where a builtin type could be recognized as a class
         //     name instead.
-        if (
-            ($node instanceof Name)      &&
-            !($node->isFullyQualified()) &&
-            (count($node->parts) == 1) &&
-            (
-                array_key_exists(
-                    strval(implode('\\', $node->parts)),
-                    $this->supportedBuiltinTypeHints
-                ) &&
-                (
-                    ($contextType & $this->supportedBuiltinTypeHints[strval(implode('\\', $node->parts))]) ==
-                    $contextType
-                )
-            )
-        ) {
-            return strval(implode('\\', $node->parts));
+        if (($node instanceof Name) && $shouldBeBuiltInType) {
+            return $typeAsString;
         }
         return $node;
+    }
+
+    private function getTypeAsString($node)
+    {
+        if (!is_null($node) && !is_string($node) && !($node instanceof Name) && !($node instanceof Node\NullableType)) {
+            throw new \Exception(sprintf('LOGIC ERROR: %s doesn\'t look like a type. This shouldn\'t get called here.', var_export($node, true)));
+        }
+        if ($node instanceof Node\NullableType) {
+            // This *SHOULD* never be called, but correct behavior shorter than Exception.
+            return '?' . $this->getTypeAsString($node->type);
+        }
+        if ($node instanceof Name) {
+            return ($node->isFullyQualified() ? '\\' : '') . $node->toString();
+        }
+        return strval($node);
+    }
+
+    private function isTypeDefinedForContext($typeName, $contextType)
+    {
+        return
+            array_key_exists($typeName, $this->supportedBuiltinTypeHints) &&
+            (($contextType & $this->supportedBuiltinTypeHints[$typeName]) == $contextType);
     }
 }
