@@ -413,13 +413,13 @@ class ReflectionMethod extends BaseReflectionMethod implements ReflectionInterfa
      * Has class been loaded by PHP.
      *
      * @return bool
-     *     If class file was included.
+     *     If class file with this method was included.
      */
     public function wasIncluded()
     {
         return
             interface_exists($this->className, false) ||
-            trait_exists($this->className, false) ||
+            trait_exists($this->className, false)     ||
             class_exists($this->className, false);
     }
 }

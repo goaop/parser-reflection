@@ -71,7 +71,8 @@ class ReflectionProperty extends BaseReflectionProperty implements ReflectionInt
         $this->className        = $className;
         $this->propertyName     = $propertyName;
         if (!$propertyType || !$propertyNode) {
-            $oneNodeProvided = $propertyType || $propertyNode;
+            // $propertyType and $propertyNode will never both be null
+            $oneNodeProvided = ($propertyType xor $propertyNode);
             $propertyType    = null;
             $propertyNode    = null;
             $isUserDefined   = true;
@@ -81,8 +82,7 @@ class ReflectionProperty extends BaseReflectionProperty implements ReflectionInt
                 $isUserDefined = $nativeRef->isUserDefined();
             }
             if ($isUserDefined) {
-                list ($propertyType, $propertyNode) =
-                    ReflectionEngine::parseClassProperty($className, $propertyName);
+                list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
                 if (!isset($propertyNode)) {
                     $this->propertyName = null;
                 }
@@ -346,13 +346,13 @@ class ReflectionProperty extends BaseReflectionProperty implements ReflectionInt
      * Has class been loaded by PHP.
      *
      * @return bool
-     *     If class file was included.
+     *     If class file with this property was included.
      */
     public function wasIncluded()
     {
         return
             interface_exists($this->className, false) ||
-            trait_exists($this->className, false) ||
+            trait_exists($this->className, false)     ||
             class_exists($this->className, false);
     }
 }

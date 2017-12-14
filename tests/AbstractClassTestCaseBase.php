@@ -100,16 +100,16 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
     {
         // Random selection of built in classes.
         $builtInClasses = ['stdClass', 'DateTime', 'Exception', 'Directory', 'Closure', 'ReflectionFunction'];
-        $classes = [];
+        $classes        = [];
         foreach ($builtInClasses as $className) {
             $classes[$className] = ['class' => $className, 'fileName'  => null, 'origClass' => $className];
         }
         $files = $this->getFilesToAnalyze();
         foreach ($files as $filenameArgList) {
-            $argKeys = array_keys($filenameArgList);
-            $fileName = $filenameArgList[$argKeys[0]];
-            $resolvedFileName = stream_resolve_include_path($fileName);
-            $fileNode = ReflectionEngine::parseFile($resolvedFileName);
+            $argKeys                              = array_keys($filenameArgList);
+            $fileName                             = $filenameArgList[$argKeys[0]];
+            $resolvedFileName                     = stream_resolve_include_path($fileName);
+            $fileNode                             = ReflectionEngine::parseFile($resolvedFileName);
             list($fakeFileName, $classNameFilter) = $this->getNeverIncludedFileFilter($resolvedFileName);
             $realAndFake = [
                 'real' => ['file' => $resolvedFileName, 'classNameFilter' => 'strval'         ],
@@ -153,12 +153,12 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
         }
         // if ($fileName && ($this->lastFileSetUp !== $fileName)) {
         if ($fileName) {
-            $fileNode = ReflectionEngine::parseFile($fileName);
+            $fileNode          = ReflectionEngine::parseFile($fileName);
 
-            $reflectionFile = new ReflectionFile($fileName, $fileNode);
+            $reflectionFile    = new ReflectionFile($fileName, $fileNode);
 
             // Break file directory into namespace parts.
-            $filenameParts = preg_split(',[/\\\\]+,', $fileName);
+            $filenameParts     = preg_split(',[/\\\\]+,', $fileName);
             $origFilenameParts = $filenameParts;
 
             // Remove filename.
@@ -192,7 +192,7 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
                 include_once $fileName;
             }
             else if (preg_match(',[/\\\\]+NeverIncluded[/\\\\]+,', $fileName)) {
-                $realFileName = preg_replace(',[/\\\\]+NeverIncluded[/\\\\]+,', '/', $fileName);
+                $realFileName         = preg_replace(',[/\\\\]+NeverIncluded[/\\\\]+,', '/', $fileName);
                 $resolvedRealFileName = stream_resolve_include_path($realFileName);
                 if (file_exists($resolvedRealFileName)) {
                     include_once $resolvedRealFileName;
@@ -217,7 +217,7 @@ abstract class AbstractClassTestCaseBase extends TestCaseBase
                     trait_exists($origClass, false)
                 ) {
                     $origClassReflection = new \ReflectionClass($origClass);
-                    $origFile = $origClassReflection->getFileName();
+                    $origFile            = $origClassReflection->getFileName();
                     if ($origFile && preg_match(',[/\\\\]+Stub[/\\\\]+,', $origFile)) {
                         $fakeFile = preg_replace(',([/\\\\]+)Stub([/\\\\]+),', '\\1Stub\\2NeverIncluded\\2', $origFile);
                         return $fakeFile;

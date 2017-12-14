@@ -449,22 +449,11 @@ trait ReflectionFunctionLikeTrait
         $builder = new ParamNodeBuilder($orig->name);
         if ($orig->isDefaultValueAvailable() || $orig->isOptional()) {
             if ($orig->isDefaultValueAvailable()) {
+                $defaultValueAsCodeString = var_export($orig->getDefaultValue(), true);
                 if (method_exists($orig, 'isDefaultValueConstant') && $orig->isDefaultValueConstant()) {
-                    $constNameParts = explode('::', $orig->getDefaultValueConstantName(), 2);
-                    if (count($constNameParts) > 1) {
-                        $classNameNode = new FullyQualifiedName($constNameParts[0]);
-                        $default = new ClassConstFetch($classNameNode, $constNameParts[1]);
-                    } else {
-                        $constNameNode = new FullyQualifiedName($constNameParts[0]);
-                        $default = new ConstFetch($constNameNode);
-                    }
-                } else {
-                    $default = $orig->getDefaultValue();
-                    if (is_null($default) || is_bool($default)) {
-                        $constantName = var_export($default, true);
-                        $default = new ConstFetch(new Name($constantName));
-                    }
+                    $defaultValueAsCodeString = $orig->getDefaultValueConstantName();
                 }
+                $default = ReflectionEngine::parseDefaultValue($defaultValueAsCodeString);
                 if (is_null($orig->getDefaultValue())) {
                     $nullableImplied = true;
                 }

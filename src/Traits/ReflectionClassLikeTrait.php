@@ -356,10 +356,10 @@ trait ReflectionClassLikeTrait
             } else {
                 $this->initializeInternalReflection();
                 // We need the native implementation of getInterfaceNames() here.
-                $ifaceNames = parent::getInterfaceNames();
+                $parentInterfaceNames   = parent::getInterfaceNames();
                 $this->interfaceClasses = [];
-                foreach ($ifaceNames as $ifaceName) {
-                    $this->interfaceClasses[$ifaceName] = new ReflectionClass($ifaceName);
+                foreach ($parentInterfaceNames as $interfaceName) {
+                    $this->interfaceClasses[$interfaceName] = new ReflectionClass($interfaceName);
                 }
             }
         }
@@ -411,10 +411,10 @@ trait ReflectionClassLikeTrait
                 $this->initializeInternalReflection();
                 $methodRefs = parent::getMethods();
                 $this->methods = [];
-                foreach ($methodRefs as $eachMethod) {
-                    $this->methods[$eachMethod->getName()] = new ReflectionMethod(
+                foreach ($methodRefs as $reflectionMethod) {
+                    $this->methods[$reflectionMethod->getName()] = new ReflectionMethod(
                         $this->getName(),
-                        $eachMethod->getName()
+                        $reflectionMethod->getName()
                     );
                 }
             }
@@ -1095,7 +1095,7 @@ trait ReflectionClassLikeTrait
     {
         return
             interface_exists($this->getName(), false) ||
-            trait_exists($this->getName(), false) ||
+            trait_exists($this->getName(), false)     ||
             class_exists($this->getName(), false);
     }
 }

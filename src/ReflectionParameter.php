@@ -419,16 +419,16 @@ class ReflectionParameter extends BaseReflectionParameter implements ReflectionI
     }
 
     /**
-     * Has class been loaded by PHP.
+     * Has function or method been loaded by PHP.
      *
      * @return bool
-     *     If class file was included.
+     *     If file containing this function or method was included.
      */
     public function wasIncluded()
     {
-        $hintedClass = $this->getClass();
-        return
-            $this->getDeclaringFunction()->wasIncluded() &&
-            (!$hintedClass || $hintedClass->wasIncluded());
+        $hintedClass      = $this->getClass();
+        $hintTypeIncluded = !$hintedClass || $hintedClass->wasIncluded();
+        $functionIncluded = $this->getDeclaringFunction()->wasIncluded();
+        return $functionIncluded && $hintTypeIncluded;
     }
 }
