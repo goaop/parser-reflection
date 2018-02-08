@@ -60,7 +60,7 @@ class ReflectionProperty extends BaseReflectionProperty
         Property $propertyType = null,
         PropertyProperty $propertyNode = null
     ) {
-        $this->className    = $className;
+        $this->className = ltrim($className, '\\');
         if (!$propertyType || !$propertyNode) {
             list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
         }
