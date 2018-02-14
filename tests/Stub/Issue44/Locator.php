@@ -11,7 +11,7 @@ class Locator implements LocatorInterface
      */
     public function locateClass($className)
     {
-        if ($className === ClassWithNamespace::class) {
+        if (ltrim($className, '\\') === ClassWithNamespace::class) {
             return __DIR__ . '/ClassWithNamespace.php';
         }
 
