@@ -33,7 +33,7 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function __construct($argument, ClassLike $classLikeNode = null)
     {
-        $fullClassName       = is_object($argument) ? get_class($argument) : $argument;
+        $fullClassName       = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts      = explode('\\', $fullClassName);
         $this->className     = array_pop($namespaceParts);
         // Let's unset original read-only property to have a control over it via __get

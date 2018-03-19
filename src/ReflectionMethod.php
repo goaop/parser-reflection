@@ -52,7 +52,7 @@ class ReflectionMethod extends BaseReflectionMethod
         ReflectionClass $declaringClass = null
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
-        $this->className        = $className;
+        $this->className        = ltrim($className, '\\');
         $this->declaringClass   = $declaringClass;
         $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
 
