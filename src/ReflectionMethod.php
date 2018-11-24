@@ -76,7 +76,7 @@ class ReflectionMethod extends BaseReflectionMethod
     public function ___debugInfo()
     {
         return [
-            'name'  => $this->getClassMethodNode()->name,
+            'name'  => $this->getClassMethodNode()->name->toString(),
             'class' => $this->className
         ];
     }
@@ -309,7 +309,7 @@ class ReflectionMethod extends BaseReflectionMethod
             if ($classLevelNode instanceof ClassMethod) {
                 $classLevelNode->setAttribute('fileName', $classLikeNode->getAttribute('fileName'));
 
-                $methodName = $classLevelNode->name;
+                $methodName = $classLevelNode->name->toString();
                 $methods[$methodName] = new ReflectionMethod(
                     $reflectionClass->name,
                     $methodName,

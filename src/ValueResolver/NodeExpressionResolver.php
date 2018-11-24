@@ -17,6 +17,7 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\MagicConst;
+use PhpParser\Node\Stmt\Expression;
 
 /**
  * Tries to resolve expression into value
@@ -93,6 +94,11 @@ class NodeExpressionResolver
      */
     public function process(Node $node)
     {
+        // Unwrap "expr;" statements.
+        if ($node instanceof Expression) {
+            $node = $node->expr;
+        }
+
         $this->nodeLevel    = 0;
         $this->isConstant   = false;
         $this->constantName = null;
@@ -269,7 +275,7 @@ class NodeExpressionResolver
             $classToReflect = new Node\Name\FullyQualified(ltrim($classToReflect, '\\'));
         }
         $refClass = $this->fetchReflectionClass($classToReflect);
-        $constantName = $node->name;
+        $constantName = ($node->name instanceof Expr\Error) ? '' : $node->name->toString();
 
         // special handling of ::class constants
         if ('class' === $constantName) {

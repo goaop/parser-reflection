@@ -44,7 +44,7 @@ class RootNamespaceNormalizer extends NodeVisitorAbstract
             }
         }
         // Wrap all statements into the namespace block
-        $globalNamespaceNode = new Namespace_(new FullyQualified(''), array_slice($nodes, $lastDeclareOffset));
+        $globalNamespaceNode = new Namespace_(null, array_slice($nodes, $lastDeclareOffset));
         // Replace top-level nodes with namespaced node
         array_splice($nodes, $lastDeclareOffset, count($nodes), [$globalNamespaceNode]);
 

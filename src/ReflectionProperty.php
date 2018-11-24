@@ -98,7 +98,7 @@ class ReflectionProperty extends BaseReflectionProperty
     public function ___debugInfo()
     {
         return array(
-            'name'  => isset($this->propertyNode) ? $this->propertyNode->name : 'unknown',
+            'name'  => isset($this->propertyNode) ? $this->propertyNode->name->toString() : 'unknown',
             'class' => $this->className
         );
     }
@@ -163,7 +163,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getName()
     {
-        return $this->propertyNode->name;
+        return $this->propertyNode->name->toString();
     }
 
     /**
@@ -263,7 +263,7 @@ class ReflectionProperty extends BaseReflectionProperty
         foreach ($classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classPropertyNode) {
-                    $propertyName = $classPropertyNode->name;
+                    $propertyName = $classPropertyNode->name->toString();
                     $properties[$propertyName] = new static(
                         $fullClassName,
                         $propertyName,

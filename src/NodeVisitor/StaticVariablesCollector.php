@@ -61,7 +61,13 @@ class StaticVariablesCollector extends NodeVisitorAbstract
                     $value = null;
                 }
 
-                $this->staticVariables[$staticVariable->name] = $value;
+                if ($staticVariable->var->name instanceof Node\Expr) {
+                    $expressionSolver->process($staticVariable->var->name);
+                    $name = $expressionSolver->getValue();
+                } else {
+                    $name = $staticVariable->var->name;
+                }
+                $this->staticVariables[$name] = $value;
             }
         }
 

@@ -949,7 +949,7 @@ trait ReflectionClassLikeTrait
                 if (!empty($nodeConstants)) {
                     foreach ($nodeConstants as $nodeConstant) {
                         $expressionSolver->process($nodeConstant->value);
-                        $localConstants[$nodeConstant->name] = $expressionSolver->getValue();
+                        $localConstants[$nodeConstant->name->toString()] = $expressionSolver->getValue();
                         $this->constants = $localConstants + $this->constants;
                     }
                 }
