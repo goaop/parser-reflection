@@ -6,11 +6,12 @@ class CallableLocatorTest extends \PHPUnit_Framework_TestCase
     public function testLocateClass()
     {
         $callable = function ($class) {
-            return $class . '.php';
+            return ltrim($class, '\\') . '.php';
         };
 
         $locator = new CallableLocator($callable);
 
         $this->assertSame('class.php', $locator->locateClass('class'));
+        $this->assertSame('class.php', $locator->locateClass('\class'));
     }
 }

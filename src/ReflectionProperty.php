@@ -60,7 +60,7 @@ class ReflectionProperty extends BaseReflectionProperty
         Property $propertyType = null,
         PropertyProperty $propertyNode = null
     ) {
-        $this->className    = $className;
+        $this->className = ltrim($className, '\\');
         if (!$propertyType || !$propertyNode) {
             list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
         }
@@ -70,6 +70,26 @@ class ReflectionProperty extends BaseReflectionProperty
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
+    }
+
+    /**
+     * Returns an AST-node for property
+     *
+     * @return PropertyProperty
+     */
+    public function getNode()
+    {
+        return $this->propertyNode;
+    }
+
+    /**
+     * Returns an AST-node for property type
+     *
+     * @return Property
+     */
+    public function getTypeNode()
+    {
+        return $this->propertyTypeNode;
     }
 
     /**

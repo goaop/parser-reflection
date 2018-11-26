@@ -54,6 +54,16 @@ class ReflectionFunction extends BaseReflectionFunction
     }
 
     /**
+     * Returns an AST-node for function
+     *
+     * @return Function_
+     */
+    public function getNode()
+    {
+        return $this->functionLikeNode;
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getClosure()

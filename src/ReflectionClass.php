@@ -33,7 +33,7 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function __construct($argument, ClassLike $classLikeNode = null)
     {
-        $fullClassName       = is_object($argument) ? get_class($argument) : $argument;
+        $fullClassName       = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts      = explode('\\', $fullClassName);
         $this->className     = array_pop($namespaceParts);
         // Let's unset original read-only property to have a control over it via __get
@@ -117,6 +117,16 @@ class ReflectionClass extends InternalReflectionClass
     }
 
     /**
+     * Returns an AST-node for class
+     *
+     * @return ClassLike
+     */
+    public function getNode()
+    {
+        return $this->classLikeNode;
+    }
+
+    /**
      * Implementation of internal reflection initialization
      *
      * @return void
@@ -124,5 +134,19 @@ class ReflectionClass extends InternalReflectionClass
     protected function __initialize()
     {
         parent::__construct($this->getName());
+    }
+
+    /**
+     * Create a ReflectionClass for a given class name.
+     *
+     * @param string $className
+     *     The name of the class to create a reflection for.
+     *
+     * @return ReflectionClass
+     *     The apropriate reflection object.
+     */
+    protected function createReflectionForClass($className)
+    {
+        return class_exists($className, false) ? new parent($className) : new static($className);
     }
 }

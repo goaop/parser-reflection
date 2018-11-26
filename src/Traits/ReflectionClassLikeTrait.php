@@ -322,6 +322,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     * @param string $name
      */
     public function getMethod($name)
     {
@@ -442,7 +443,7 @@ trait ReflectionClassLikeTrait
             $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
             if ($extendsNode instanceof FullyQualified) {
                 $extendsName = $extendsNode->toString();
-                $parentClass = class_exists($extendsName, false) ? new parent($extendsName) : new static($extendsName);
+                $parentClass = $this->createReflectionForClass($extendsName);
             }
             $this->parentClass = $parentClass;
         }
@@ -592,6 +593,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     * @param string $name
      */
     public function hasMethod($name)
     {
@@ -622,6 +624,7 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     * @param string $interfaceName
      */
     public function implementsInterface($interfaceName)
     {
@@ -698,7 +701,6 @@ trait ReflectionClassLikeTrait
         }
 
         $className = $this->getName();
-
         return $className === get_class($object) || is_subclass_of($object, $className);
     }
 
@@ -798,7 +800,7 @@ trait ReflectionClassLikeTrait
     {
         // In runtime static properties can be changed in any time
         if ($this->isInitialized()) {
-            return forward_static_call('parent::getStaticProperties');
+            return parent::getStaticProperties();
         }
 
         $properties = [];
@@ -843,15 +845,23 @@ trait ReflectionClassLikeTrait
      * Creates a new class instance from given arguments.
      *
      * @link http://php.net/manual/en/reflectionclass.newinstance.php
+     *
+     * Signature was hacked to support both 5.6, 7.1.x and 7.2.0 versions
+     * @see https://3v4l.org/hW9O9
+     * @see https://3v4l.org/sWT3j
+     * @see https://3v4l.org/eeVf8
+     *
+     * @param mixed $arg First argument
      * @param mixed $args Accepts a variable number of arguments which are passed to the class constructor
      *
      * @return object
      */
-    public function newInstance($args = null)
+    public function newInstance($arg = null, ...$args)
     {
+        $args = array_slice(array_merge([$arg], $args), 0, \func_num_args());
         $this->initializeInternalReflection();
 
-        return call_user_func_array('parent::newInstance', func_get_args());
+        return parent::newInstance(...$args);
     }
 
     /**
@@ -898,7 +908,7 @@ trait ReflectionClassLikeTrait
     {
         $this->initializeInternalReflection();
 
-        forward_static_call('parent::setStaticPropertyValue', $name, $value);
+        parent::setStaticPropertyValue($name, $value);
     }
 
     private function recursiveCollect(\Closure $collector)
@@ -946,4 +956,15 @@ trait ReflectionClassLikeTrait
             }
         }
     }
+
+    /**
+     * Create a ReflectionClass for a given class name.
+     *
+     * @param string $className
+     *     The name of the class to create a reflection for.
+     *
+     * @return ReflectionClass
+     *     The apropriate reflection object.
+     */
+    abstract protected function createReflectionForClass($className);
 }

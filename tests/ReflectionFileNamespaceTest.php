@@ -26,6 +26,24 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
         include_once $fileName;
     }
 
+    /**
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage $fileName must be a string, but a array was passed
+     */
+    public function testBadFilenameTypeArray()
+    {
+        new ReflectionFileNamespace([1, 3, 5, 7], 'BogusNamespace');
+    }
+
+    /**
+     * @expectedException        InvalidArgumentException
+     * @expectedExceptionMessage $fileName must be a string, but a object was passed
+     */
+    public function testBadFilenameTypeObject()
+    {
+        new ReflectionFileNamespace(new \DateTime(), 'BogusNamespace');
+    }
+
     public function testGetClass()
     {
         $refClass = $this->parsedRefFileNamespace->getClass('Unknown');

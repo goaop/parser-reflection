@@ -53,18 +53,31 @@ class ReflectionEngine
      */
     protected static $traverser = null;
 
+    /**
+     * @var null|Lexer
+     */
+    protected static $lexer = null;
+
     private function __construct() {}
 
     public static function init(LocatorInterface $locator)
     {
+        self::$lexer = new Lexer(['usedAttributes' => [
+            'comments',
+            'startLine',
+            'endLine',
+            'startTokenPos',
+            'endTokenPos',
+            'startFilePos',
+            'endFilePos'
+        ]]);
+
         $refParser   = new \ReflectionClass(Parser::class);
         $isNewParser = $refParser->isInterface();
         if (!$isNewParser) {
-            self::$parser = new Parser(new Lexer(['usedAttributes' => [
-                'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-            ]]));
+            self::$parser = new Parser(self::$lexer);
         } else {
-            self::$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+            self::$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, self::$lexer);
         }
 
         self::$traverser = $traverser = new NodeTraverser();
@@ -203,7 +216,7 @@ class ReflectionEngine
     public static function parseFile($fileName, $fileContent = null)
     {
         $fileName = PathResolver::realpath($fileName);
-        if (isset(self::$parsedFiles[$fileName])) {
+        if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
             return self::$parsedFiles[$fileName];
         }
 

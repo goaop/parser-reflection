@@ -105,6 +105,16 @@ class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
+     * Returns an AST-node for parameter
+     *
+     * @return Param
+     */
+    public function getNode()
+    {
+        return $this->parameterNode;
+    }
+
+    /**
      * Emulating original behaviour of reflection
      */
     public function ___debugInfo()
@@ -132,7 +142,7 @@ class ReflectionParameter extends BaseReflectionParameter
             }
             /* @see https://3v4l.org/DJOEb for behaviour changes */
             if (is_double($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
-                $defaultValue = (int) $defaultValue;
+                $defaultValue = (int)$defaultValue;
             }
 
             $defaultValue = str_replace('\\\\', '\\', var_export($defaultValue, true));

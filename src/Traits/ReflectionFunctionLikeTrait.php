@@ -53,7 +53,7 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureScopeClass');
+        return parent::getClosureScopeClass();
     }
 
     /**
@@ -63,7 +63,7 @@ trait ReflectionFunctionLikeTrait
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureThis');
+        return parent::getClosureThis();
     }
 
     public function getDocComment()
@@ -220,6 +220,15 @@ trait ReflectionFunctionLikeTrait
      */
     public function getStaticVariables()
     {
+        // In nikic/PHP-Parser < 2.0.0 the default behavior is cloning
+        //     nodes when traversing them. Passing FALSE to the constructor
+        //     prevents this.
+        // In nikic/PHP-Parser >= 2.0.0 and < 3.0.0 the default behavior was
+        //     changed to not clone nodes, but the parameter was retained as
+        //     an option.
+        // In nikic/PHP-Parser >= 3.0.0 the option to clone nodes was removed
+        //     as a constructor parameter, so Scrutinizer will pick this up as
+        //     an issue. It is retained for legacy compatibility.
         $nodeTraverser      = new NodeTraverser(false);
         $variablesCollector = new StaticVariablesCollector($this);
         $nodeTraverser->addVisitor($variablesCollector);
@@ -274,6 +283,15 @@ trait ReflectionFunctionLikeTrait
      */
     public function isGenerator()
     {
+        // In nikic/PHP-Parser < 2.0.0 the default behavior is cloning
+        //     nodes when traversing them. Passing FALSE to the constructor
+        //     prevents this.
+        // In nikic/PHP-Parser >= 2.0.0 and < 3.0.0 the default behavior was
+        //     changed to not clone nodes, but the parameter was retained as
+        //     an option.
+        // In nikic/PHP-Parser >= 3.0.0 the option to clone nodes was removed
+        //     as a constructor parameter, so Scrutinizer will pick this up as
+        //     an issue. It is retained for legacy compatibility.
         $nodeTraverser = new NodeTraverser(false);
         $nodeDetector  = new GeneratorDetector();
         $nodeTraverser->addVisitor($nodeDetector);
