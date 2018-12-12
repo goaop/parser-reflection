@@ -47,7 +47,7 @@ class ReflectionFunction extends BaseReflectionFunction
         $nodeName = 'unknown';
 
         if ($this->functionLikeNode instanceof Function_) {
-            $nodeName = $this->functionLikeNode->name;
+            $nodeName = $this->functionLikeNode->name->toString();
         }
 
         return ['name' => $nodeName];

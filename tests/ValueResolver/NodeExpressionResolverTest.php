@@ -13,15 +13,7 @@ class NodeExpressionResolverTest extends \PHPUnit_Framework_TestCase
 
     protected function setUp()
     {
-        $refParser   = new \ReflectionClass(Parser::class);
-        $isNewParser = $refParser->isInterface();
-        if (!$isNewParser) {
-            $this->parser = new Parser(new Lexer(['usedAttributes' => [
-                'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos', 'startFilePos', 'endFilePos'
-            ]]));
-        } else {
-            $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        }
+        $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
     }
 
     /**
@@ -68,7 +60,7 @@ class NodeExpressionResolverTest extends \PHPUnit_Framework_TestCase
         $expressionNodeTree = $this->parser->parse("<?php ClassNameToReplace::Bar;");
         $notAnExpressionNodeTree = $this->parser->parse("<?php if (true) { \$baz = 3; }");
         // This should never happen...
-        $expressionNodeTree[0]->class = $notAnExpressionNodeTree[0];
+        $expressionNodeTree[0]->expr->class = $notAnExpressionNodeTree[0];
         $expressionSolver = new NodeExpressionResolver(NULL);
         $expressionSolver->process($expressionNodeTree[0]);
     }

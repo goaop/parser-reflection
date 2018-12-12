@@ -12,6 +12,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
@@ -120,7 +121,7 @@ class ReflectionParameter extends BaseReflectionParameter
     public function ___debugInfo()
     {
         return array(
-            'name' => $this->parameterNode->name,
+            'name' => (string)$this->parameterNode->var->name,
         );
     }
 
@@ -264,7 +265,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function getName()
     {
-        return $this->parameterNode->name;
+        return (string)$this->parameterNode->var->name;
     }
 
     /**
@@ -287,7 +288,10 @@ class ReflectionParameter extends BaseReflectionParameter
         }
 
         $allowsNull = $this->allowsNull();
-        if (is_object($parameterType)) {
+        if ($parameterType instanceof Identifier) {
+            $isBuiltin = true;
+            $parameterType = $parameterType->toString();
+        } elseif (is_object($parameterType)) {
             $parameterType = $parameterType->toString();
         } elseif (is_string($parameterType)) {
             $isBuiltin = true;
@@ -313,7 +317,9 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isArray()
     {
-        return 'array' === $this->parameterNode->type;
+        $type = $this->parameterNode->type;
+
+        return ($type instanceof Identifier) && 'array' === $type->name;
     }
 
     /**
@@ -321,7 +327,9 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isCallable()
     {
-        return 'callable' === $this->parameterNode->type;
+        $type = $this->parameterNode->type;
+
+        return ($type instanceof Identifier) && 'callable' === $type->name;
     }
 
     /**

@@ -17,6 +17,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Const_;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Use_;
@@ -353,7 +354,7 @@ class ReflectionFileNamespace
         // classes can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof ClassLike) {
-                $classShortName = $namespaceLevelNode->name;
+                $classShortName = $namespaceLevelNode->name->toString();
                 $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 
                 $namespaceLevelNode->setAttribute('fileName', $this->fileName);
@@ -377,7 +378,7 @@ class ReflectionFileNamespace
         // functions can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
             if ($namespaceLevelNode instanceof Function_) {
-                $funcShortName = $namespaceLevelNode->name;
+                $funcShortName = $namespaceLevelNode->name->toString();
                 $functionName  = $namespaceName ? $namespaceName .'\\' . $funcShortName : $funcShortName;
 
                 $namespaceLevelNode->setAttribute('fileName', $this->fileName);
@@ -407,7 +408,7 @@ class ReflectionFileNamespace
                 if (!empty($nodeConstants)) {
                     foreach ($nodeConstants as $nodeConstant) {
                         $expressionSolver->process($nodeConstant->value);
-                        $constants[$nodeConstant->name] = $expressionSolver->getValue();
+                        $constants[$nodeConstant->name->toString()] = $expressionSolver->getValue();
                     }
                 }
             }
@@ -415,16 +416,18 @@ class ReflectionFileNamespace
 
         if ($withDefined) {
             foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
-                if ($namespaceLevelNode instanceof FuncCall
-                    && $namespaceLevelNode->name instanceof Name
-                    && (string)$namespaceLevelNode->name === 'define'
+                if ($namespaceLevelNode instanceof Expression
+                    && $namespaceLevelNode->expr instanceof FuncCall
+                    && $namespaceLevelNode->expr->name instanceof Name
+                    && (string)$namespaceLevelNode->expr->name === 'define'
                 ) {
-                    $expressionSolver->process($namespaceLevelNode->args[0]->value);
+                    $functionCallNode = $namespaceLevelNode->expr;
+                    $expressionSolver->process($functionCallNode->args[0]->value);
                     $constantName = $expressionSolver->getValue();
 
                     // Ignore constants, for which name can't be determined.
                     if (strlen($constantName)) {
-                        $expressionSolver->process($namespaceLevelNode->args[1]->value);
+                        $expressionSolver->process($functionCallNode->args[1]->value);
                         $constantValue = $expressionSolver->getValue();
 
                         $constants[$constantName] = $constantValue;

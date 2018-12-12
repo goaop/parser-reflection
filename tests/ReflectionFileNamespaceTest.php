@@ -149,6 +149,16 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $namespaceName);
     }
 
+    public function testGetNameOfGlobalNamespace()
+    {
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_GLOBAL_FILE);
+        $reflectionFile = new ReflectionFile($fileName);
+
+        $reflectionFileNamespace = $reflectionFile->getFileNamespace('');
+
+        $this->assertSame('', $reflectionFileNamespace->getName());
+    }
+
     public function testGetNamespaceAliases()
     {
         $expectedAliases = [

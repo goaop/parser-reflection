@@ -17,6 +17,7 @@ use Go\ParserReflection\ReflectionParameter;
 use Go\ParserReflection\ReflectionType;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
@@ -99,7 +100,7 @@ trait ReflectionFunctionLikeTrait
     public function getName()
     {
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
-            $functionName = $this->functionLikeNode->name;
+            $functionName = $this->functionLikeNode->name->toString();
 
             return $this->namespaceName ? $this->namespaceName . '\\' . $functionName : $functionName;
         }
@@ -157,7 +158,7 @@ trait ReflectionFunctionLikeTrait
             foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
                 $reflectionParameter = new ReflectionParameter(
                     $this->getName(),
-                    $parameterNode->name,
+                    (string)$parameterNode->var->name,
                     $parameterNode,
                     $parameterIndex,
                     $this
@@ -187,7 +188,10 @@ trait ReflectionFunctionLikeTrait
         if ($isNullable) {
             $returnType = $returnType->type;
         }
-        if (is_object($returnType)) {
+        if ($returnType instanceof Identifier) {
+            $isBuiltin = true;
+            $returnType = $returnType->toString();
+        } elseif (is_object($returnType)) {
             $returnType = $returnType->toString();
         } elseif (is_string($returnType)) {
             $isBuiltin = true;
@@ -204,7 +208,7 @@ trait ReflectionFunctionLikeTrait
     public function getShortName()
     {
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
-            return $this->functionLikeNode->name;
+            return $this->functionLikeNode->name->toString();
         }
 
         return false;

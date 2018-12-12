@@ -141,7 +141,7 @@ class ReflectionFile
         }
 
         $declareStatement = reset($topLevelNode->declares);
-        $isStrictTypeKey  = $declareStatement->key === 'strict_types';
+        $isStrictTypeKey  = $declareStatement->key->toString() === 'strict_types';
         $isScalarValue    = $declareStatement->value instanceof Node\Scalar\LNumber;
         $isStrictMode     = $isStrictTypeKey && $isScalarValue && $declareStatement->value->value === 1;
 

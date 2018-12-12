@@ -72,13 +72,7 @@ class ReflectionEngine
             'endFilePos'
         ]]);
 
-        $refParser   = new \ReflectionClass(Parser::class);
-        $isNewParser = $refParser->isInterface();
-        if (!$isNewParser) {
-            self::$parser = new Parser(self::$lexer);
-        } else {
-            self::$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, self::$lexer);
-        }
+        self::$parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7, self::$lexer);
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
@@ -171,7 +165,7 @@ class ReflectionEngine
         $classNodes = $class->stmts;
 
         foreach ($classNodes as $classLevelNode) {
-            if ($classLevelNode instanceof ClassMethod && $classLevelNode->name == $methodName) {
+            if ($classLevelNode instanceof ClassMethod && $classLevelNode->name->toString() == $methodName) {
                 return $classLevelNode;
             }
         }
@@ -195,7 +189,7 @@ class ReflectionEngine
         foreach ($classNodes as $classLevelNode) {
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classProperty) {
-                    if ($classProperty->name == $propertyName) {
+                    if ($classProperty->name->toString() == $propertyName) {
                         return [$classLevelNode, $classProperty];
                     }
                 }
