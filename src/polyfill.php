@@ -8,8 +8,6 @@
  * with this source code in the file LICENSE.
  */
 
-use Go\ParserReflection\ReflectionClass;
-
 /**
  * This file is for ployfilling classes not defined in all supported
  * versions of PHP, (i.e. PHP < 7).
