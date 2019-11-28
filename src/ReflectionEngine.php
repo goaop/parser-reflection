@@ -14,6 +14,7 @@ use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
 use PhpParser\Lexer;
 use PhpParser\Node;
+use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Namespace_;
@@ -197,6 +198,31 @@ class ReflectionEngine
         }
 
         throw new \InvalidArgumentException("Property $propertyName was not found in the $fullClassName");
+    }
+
+    /**
+     * Parses class constants
+     *
+     * @param string $fullClassName
+     * @param string $constantName
+     * @return array Pair of [ClassConst and Const_] nodes
+     */
+    public static function parseClassConstant(string $fullClassName, string $constantName): array
+    {
+        $class      = self::parseClass($fullClassName);
+        $classNodes = $class->stmts;
+
+        foreach ($classNodes as $classLevelNode) {
+            if ($classLevelNode instanceof ClassConst) {
+                foreach ($classLevelNode->consts as $classConst) {
+                    if ($classConst->name->toString() === $constantName) {
+                        return [$classLevelNode, $classConst];
+                    }
+                }
+            }
+        }
+
+        throw new \InvalidArgumentException("ClassConstant $constantName was not found in the $fullClassName");
     }
 
     /**
