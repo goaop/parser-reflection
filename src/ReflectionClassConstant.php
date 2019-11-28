@@ -73,7 +73,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Initializes a reflection for the property
      *
-     * @param string|array $className Name of the function/method
+     * @param string $className Name of the function/method
      * @param string $classConstantName Name of the parameter to reflect
      * @param ClassConst $classConstNode ClassConstant definition node
      * @param Const_|null $constNode Concrete const definition node
