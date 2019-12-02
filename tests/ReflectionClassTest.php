@@ -128,6 +128,29 @@ class ReflectionClassTest extends AbstractTestCase
     }
 
     /**
+     * Tests getReflectionConstants() returns correct number of reflectionConstants for the class
+     *
+     * @requires PHP 7.1
+     * @dataProvider getFilesToAnalyze
+     *
+     * @param string $fileName File name to test
+     */
+    public function testGetReflectionConstantCount($fileName)
+    {
+        $this->setUpFile($fileName);
+        $parsedClasses = $this->parsedRefFileNamespace->getClasses();
+
+        foreach ($parsedClasses as $parsedRefClass) {
+            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+            $parsedReflectionConstants     = $parsedRefClass->getReflectionConstants();
+            $originalReflectionConstants   = $originalRefClass->getReflectionConstants();
+            $this->assertCount(count($originalReflectionConstants), $parsedReflectionConstants);
+        }
+    }
+
+
+
+    /**
      * Tests getProperties() returns correct number of properties for the class
      *
      * @dataProvider getFilesToAnalyze
@@ -270,6 +293,25 @@ class ReflectionClassTest extends AbstractTestCase
 
         $this->assertSame($originalRefClass->getConstant('D'), $parsedRefClass->getConstant('D'));
         $this->assertSame($originalRefClass->getConstant('E'), $parsedRefClass->getConstant('E'));
+    }
+
+    /**
+     * @requires PHP 7.1
+     */
+    public function testGetReflectionConstant()
+    {
+        $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
+        $originalRefClass = new \ReflectionClass(ClassWithScalarConstants::class);
+
+        $this->assertFalse($parsedRefClass->getReflectionConstant('NOT_EXISTING'));
+        $this->assertSame(
+            (string) $originalRefClass->getReflectionConstant('D'),
+            (string) $parsedRefClass->getReflectionConstant('D')
+        );
+        $this->assertSame(
+            (string) $originalRefClass->getReflectionConstant('E'),
+            (string) $parsedRefClass->getReflectionConstant('E')
+        );
     }
 
     /**
