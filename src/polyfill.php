@@ -9,29 +9,9 @@
  */
 
 /**
- * This file is for ployfilling classes not defined in all supported
+ * This file is for polyfilling classes not defined in all supported
  * versions of PHP, (i.e. PHP < 7).
  */
-if (!class_exists(ReflectionType::class, false)) {
-    /* Dummy polyfill class */
-    class ReflectionType
-    {
-        public function allowsNull()
-        {
-            return true;
-        }
-
-        public function isBuiltin()
-        {
-            return false;
-        }
-
-        public function __toString()
-        {
-            return '';
-        }
-    }
-}
 
 if (!class_exists(ReflectionClassConstant::class, false)) {
     // php version < 7.1
