@@ -138,7 +138,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getClosure($object)
+    public function getClosure($object = null)
     {
         $this->initializeInternalReflection();
 
