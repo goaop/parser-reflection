@@ -16,5 +16,3 @@ use Go\ParserReflection\ReflectionEngine;
  * Go\ParserReflection\ReflectionEngine class
  */
 ReflectionEngine::init(new ComposerLocator());
-
-require(__DIR__ . '/polyfill.php');

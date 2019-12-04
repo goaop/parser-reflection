@@ -11,6 +11,7 @@
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionClassConstant;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
@@ -93,6 +94,11 @@ trait ReflectionClassLikeTrait
      * @var array|ReflectionProperty[]
      */
     protected $properties;
+
+    /**
+     * @var array|ReflectionClassConstant[]
+     */
+    protected $classConstants;
 
     /**
      * Returns the string representation of the ReflectionClass object.
@@ -506,6 +512,45 @@ trait ReflectionClassLikeTrait
         }
 
         return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getReflectionConstant($name)
+    {
+        $classConstants = $this->getReflectionConstants();
+        foreach ($classConstants as $classConstant) {
+            if ($classConstant->getName() == $name) {
+                return $classConstant;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getReflectionConstants()
+    {
+        if (!isset($this->classConstants)) {
+            $directClassConstants = ReflectionClassConstant::collectFromClassNode($this->classLikeNode, $this->getName());
+            $parentClassConstants = $this->recursiveCollect(function (array &$result, \ReflectionClass $instance, $isParent) {
+                $reflectionClassConstants = [];
+                foreach ($instance->getReflectionConstants() as $reflectionClassConstant) {
+                    if (!$isParent || !$reflectionClassConstant->isPrivate()) {
+                        $reflectionClassConstants[$reflectionClassConstant->name] = $reflectionClassConstant;
+                    }
+                }
+                $result += $reflectionClassConstants;
+            });
+            $classConstants = $directClassConstants + $parentClassConstants;
+
+            $this->classConstants = $classConstants;
+        }
+
+        return array_values($this->classConstants);
     }
 
     /**
