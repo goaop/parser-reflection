@@ -454,7 +454,7 @@ class ReflectionFileNamespace
                 $useAliases = $namespaceLevelNode->uses;
                 if (!empty($useAliases)) {
                     foreach ($useAliases as $useNode) {
-                        $namespaceAliases[$useNode->name->toString()] = $useNode->alias;
+                        $namespaceAliases[$useNode->name->toString()] = (string) $useNode->getAlias();
                     }
                 }
             }
