@@ -8,9 +8,6 @@ use Go\ParserReflection\Stub\SubFoo;
 use TestParametersForRootNsClass;
 use Go\ParserReflection\Stub\ClassWithPhp71Features;
 
-/**
- * @requires PHP 7.1
- */
 class ReflectionClassConstantTest extends \PHPUnit_Framework_TestCase
 {
     /**

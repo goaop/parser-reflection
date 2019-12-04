@@ -18,8 +18,6 @@ class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
      *
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
-     *
-     * @requires PHP 7.0.0
      */
     public function testTypeConvertToDisplayTypeWithNativeType()
     {
@@ -41,8 +39,6 @@ class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
      *
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
-     *
-     * @requires PHP 7.1.0
      */
     public function testTypeConvertToDisplayTypeWithNullableNativeType()
     {
@@ -64,8 +60,6 @@ class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
      *
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
-     *
-     * @requires PHP 7.0.0
      */
     public function testTypeConvertToDisplayTypeImplicitlyNullable()
     {

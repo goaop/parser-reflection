@@ -130,7 +130,6 @@ class ReflectionClassTest extends AbstractTestCase
     /**
      * Tests getReflectionConstants() returns correct number of reflectionConstants for the class
      *
-     * @requires PHP 7.1
      * @dataProvider getFilesToAnalyze
      *
      * @param string $fileName File name to test
@@ -295,9 +294,6 @@ class ReflectionClassTest extends AbstractTestCase
         $this->assertSame($originalRefClass->getConstant('E'), $parsedRefClass->getConstant('E'));
     }
 
-    /**
-     * @requires PHP 7.1
-     */
     public function testGetReflectionConstant()
     {
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
