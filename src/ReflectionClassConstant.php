@@ -2,7 +2,7 @@
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2019, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -46,7 +46,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      *
      * @return array|ReflectionClassConstant[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, $reflectionClassName)
+    public static function collectFromClassNode(ClassLike $classLikeNode, string $reflectionClassName): array
     {
         $classConstants = [];
 
@@ -76,8 +76,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      * @param Const_|null $constNode Concrete const definition node
      */
     public function __construct(
-        $className,
-        $classConstantName,
+        string $className,
+        string $classConstantName,
         ClassConst $classConstNode = null,
         Const_ $constNode = null
     ) {
@@ -91,11 +91,17 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         $this->constNode = $constNode;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getDeclaringClass()
     {
         return new ReflectionClass($this->className);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getDocComment()
     {
         $docBlock = $this->classConstantNode->getDocComment();
@@ -103,6 +109,9 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         return $docBlock ? $docBlock->getText() : false;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getModifiers()
     {
         $modifiers = 0;
@@ -119,11 +128,17 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         return $modifiers;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getName()
     {
         return $this->constNode->name->toString();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getValue()
     {
         $solver = new NodeExpressionResolver($this->getDeclaringClass());
@@ -131,21 +146,33 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         return $solver->getValue();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function isPrivate()
     {
         return $this->classConstantNode->isPrivate();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function isProtected()
     {
         return $this->classConstantNode->isProtected();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function isPublic()
     {
         return $this->classConstantNode->isPublic();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function __toString()
     {
         $value = $this->getValue();
