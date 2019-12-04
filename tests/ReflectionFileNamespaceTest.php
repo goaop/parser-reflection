@@ -162,9 +162,10 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
     public function testGetNamespaceAliases()
     {
         $expectedAliases = [
-            'ReflectionClass'     => 'UnusedReflectionClass',
-            'PhpParser\Node'      => 'UnusedNode',
-            'PhpParser\Node\Expr' => 'UnusedNodeExpr'
+            'SomeClass\WithoutAlias' => 'WithoutAlias',
+            'ReflectionClass'        => 'UnusedReflectionClass',
+            'PhpParser\Node'         => 'UnusedNode',
+            'PhpParser\Node\Expr'    => 'UnusedNodeExpr'
         ];
 
         $realAliases = $this->parsedRefFileNamespace->getNamespaceAliases();
