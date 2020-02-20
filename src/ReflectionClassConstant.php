@@ -101,10 +101,10 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function ___debugInfo()
     {
-        return array(
+        return [
             'name' => $this->getName(),
             'class' => $this->className
-        );
+        ];
     }
 
     /**
