@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\ClassConst;
@@ -19,6 +20,8 @@ use \ReflectionClassConstant as BaseReflectionClassConstant;
 
 class ReflectionClassConstant extends BaseReflectionClassConstant
 {
+    use InternalPropertiesEmulationTrait;
+
     /**
      * Concrete class constant node
      *
@@ -84,11 +87,24 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         $this->className = ltrim($className, '\\');
 
         if (!$classConstNode || !$constNode) {
-            list($classConstNode, $constNode) = ReflectionEngine::parseClassConstant($className, $classConstantName);
+            [$classConstNode, $constNode] = ReflectionEngine::parseClassConstant($className, $classConstantName);
         }
+        // Let's unset original read-only property to have a control over it via __get
+        unset($this->name, $this->class);
 
         $this->classConstantNode = $classConstNode;
         $this->constNode = $constNode;
+    }
+
+    /**
+     * Emulating original behaviour of reflection
+     */
+    public function ___debugInfo()
+    {
+        return [
+            'name' => $this->getName(),
+            'class' => $this->className
+        ];
     }
 
     /**

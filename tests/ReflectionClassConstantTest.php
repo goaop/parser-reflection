@@ -53,6 +53,16 @@ class ReflectionClassConstantTest extends \PHPUnit_Framework_TestCase
         }
     }
 
+    public function testGetClassConstantProperties()
+    {
+        $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $parsedClass = $parsedNamespace->getClass(ClassWithPhp71Features::class);
+
+        $constant = $parsedClass->getReflectionConstant('PUBLIC_CONST_A');
+        $this->assertSame('PUBLIC_CONST_A', $constant->name);
+        $this->assertSame(ClassWithPhp71Features::class, $constant->class);
+    }
+
     public function testGetClassConstant()
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
