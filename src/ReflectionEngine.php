@@ -141,15 +141,46 @@ class ReflectionEngine
         $namespace      = self::parseFileNamespace($classFileName, $namespaceName);
         $namespaceNodes = $namespace->stmts;
 
-        foreach ($namespaceNodes as $namespaceLevelNode) {
-            if ($namespaceLevelNode instanceof ClassLike && $namespaceLevelNode->name == $className) {
-                $namespaceLevelNode->setAttribute('fileName', $classFileName);
+        $node = self::findClassLikeNodeByClassName($namespaceNodes, $className);
 
-                return $namespaceLevelNode;
-            }
+        if ($node instanceof ClassLike) {
+            $node->setAttribute('fileName', $classFileName);
+
+            return $node;
         }
 
         throw new \InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
+    }
+
+    /**
+     * Loop through an array and find a ClassLike statement by the given class name.
+     *
+     * If an if statement like `if (false) {` is found, the class will also be search inside that if statement.
+     * This relies on the guide of greg0ire on how to deprecate a type.
+     *
+     * @see https://dev.to/greg0ire/how-to-deprecate-a-type-in-php-48cf
+     * @param array $nodes
+     * @param string $className
+     *
+     * @return null|ClassLike
+     */
+    protected static function findClassLikeNodeByClassName($nodes, $className) {
+        foreach ($nodes as $node) {
+            if ($node instanceof ClassLike && $node->name == $className) {
+                return $node;
+            } elseif (
+                $node instanceof Node\Stmt\If_
+                && $node->cond instanceof Node\Expr\ConstFetch
+                && isset($node->cond->name->parts[0])
+                && $node->cond->name->parts[0] === 'false'
+            ) {
+                $result = self::findClassLikeNodeByClassName($node->stmts, $className);
+
+                if ($result instanceof ClassLike) {
+                    return $result;
+                }
+            }
+        }
     }
 
     /**
