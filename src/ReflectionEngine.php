@@ -164,12 +164,12 @@ class ReflectionEngine
      *
      * @return null|ClassLike
      */
-    protected static function findClassLikeNodeByClassName($nodes, $className) {
+    protected static function findClassLikeNodeByClassName($nodes, $className)
+    {
         foreach ($nodes as $node) {
             if ($node instanceof ClassLike && $node->name == $className) {
                 return $node;
-            } elseif (
-                $node instanceof Node\Stmt\If_
+            } elseif ($node instanceof Node\Stmt\If_
                 && $node->cond instanceof Node\Expr\ConstFetch
                 && isset($node->cond->name->parts[0])
                 && $node->cond->name->parts[0] === 'false'
