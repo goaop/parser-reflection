@@ -3,7 +3,7 @@ language: php
 php:
   - 7.1
   - 7.2
-  - hhvm
+  - 7.3
 
 before_script:
   - composer install
@@ -13,7 +13,3 @@ script:
 
 after_script:
   - sh .travis.coverage.sh
-
-matrix:
-  allow_failures:
-    - php: hhvm
