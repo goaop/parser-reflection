@@ -191,8 +191,18 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function __toString()
     {
+        # Starting from PHP7.3 gettype returns different names, need to remap them
+        static $typeMap = [
+            'integer' => 'int',
+            'boolean' => 'bool',
+            'double'  => 'float',
+        ];
         $value = $this->getValue();
-        $valueType = new ReflectionType(gettype($value), null, true);
+        $type  = gettype($value);
+        if (PHP_VERSION_ID >= 70300 && isset($typeMap[$type])) {
+            $type = $typeMap[$type];
+        }
+        $valueType = new ReflectionType($type, null, true);
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",
