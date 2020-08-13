@@ -125,7 +125,12 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
                     $originalReturnType = $originalRefFunction->getReturnType();
                     $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
                     $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
-                    $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
+                    // TODO: To prevent deprecation error in tests
+                    if (PHP_VERSION_ID < 70400) {
+                        $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
+                    } else {
+                        $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString());
+                    }
                 } else {
                     $this->assertSame(
                         $originalRefFunction->getReturnType(),
