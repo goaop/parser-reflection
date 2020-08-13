@@ -844,7 +844,7 @@ trait ReflectionClassLikeTrait
     public function getStaticProperties()
     {
         // In runtime static properties can be changed in any time
-        if ($this->isInitialized()) {
+        if ($this->__isInitialized()) {
             return parent::getStaticProperties();
         }
 

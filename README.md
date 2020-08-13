@@ -3,7 +3,7 @@ Parser Reflection API Library
 
 Parser Reflection API library provides a set of classes that extend original internal Reflection classes, but powered by [PHP-Parser](https://github.com/nikic/PHP-Parser) library thus allowing to create a reflection instance without loading classes into the memory.
 
-This library can be used for analysing the source code for PHP versions 7.1, 7.2; for automatic proxy creation and much more.
+This library can be used for analysing the source code; for automatic proxy creation and much more.
 
 [![Build Status](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/build.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/build-status/master)
 [![Code Coverage](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
