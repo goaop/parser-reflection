@@ -279,7 +279,12 @@ class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
                         $originalReturnType = $originalRefParameter->getType();
                         $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull(), $message);
                         $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin(), $message);
-                        $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString(), $message);
+                        // TODO: To prevent deprecation error in tests
+                        if (PHP_VERSION_ID < 70400) {
+                            $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString(), $message);
+                        } else {
+                            $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString(), $message);
+                        }
                     } else {
                         $this->assertSame(
                             $originalRefParameter->getType(),

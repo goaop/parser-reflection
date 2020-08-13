@@ -41,17 +41,17 @@ class ClassWithPhp71Features
      * Description for PUBLIC_CONST_A
      */
     const PUBLIC_CONST_A = 1;
-    
+
     /**
      * Description for PUBLIC_CONST_B
      */
     public const PUBLIC_CONST_B = 2;
-    
+
     /**
      * Description for PROTECTED_CONST
      */
     protected const PROTECTED_CONST = 3;
-    
+
     /**
      * Description for PRIVATE_CONST
      */

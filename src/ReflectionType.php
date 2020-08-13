@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use ReflectionNamedType;
 use ReflectionType as BaseReflectionType;
 
 /**
@@ -82,11 +83,18 @@ class ReflectionType extends BaseReflectionType
     public static function convertToDisplayType(\ReflectionType $type)
     {
         static $typeMap = [
-            'int'  => 'integer',
-            'bool' => 'boolean'
+            'int'    => 'integer',
+            'bool'   => 'boolean',
+            'double' => 'float',
         ];
-        $displayType = (string)$type;
-        if (isset($typeMap[$displayType])) {
+
+        if ($type instanceof ReflectionNamedType) {
+            $displayType = $type->getName();
+        } else {
+            $displayType = (string) $type;
+        };
+
+        if (PHP_VERSION_ID < 70300 && isset($typeMap[$displayType])) {
             $displayType = $typeMap[$displayType];
         }
 

@@ -36,7 +36,7 @@ trait InitializationTrait
      *
      * @return bool
      */
-    public function isInitialized()
+    public function __isInitialized()
     {
         return $this->isInitialized;
     }
