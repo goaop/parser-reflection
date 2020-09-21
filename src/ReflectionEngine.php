@@ -281,4 +281,8 @@ class ReflectionEngine
         throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
     }
 
+    public static function getLexer()
+    {
+        return self::$lexer;
+    }
 }
