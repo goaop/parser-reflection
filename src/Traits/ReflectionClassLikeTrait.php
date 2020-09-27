@@ -1009,7 +1009,7 @@ trait ReflectionClassLikeTrait
      *     The name of the class to create a reflection for.
      *
      * @return ReflectionClass
-     *     The apropriate reflection object.
+     *     The appropriate reflection object.
      */
     abstract protected function createReflectionForClass($className);
 }

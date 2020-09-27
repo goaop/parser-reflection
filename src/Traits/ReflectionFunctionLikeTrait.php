@@ -278,7 +278,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isDeprecated()
     {
-        // userland method/function/closure can not be deprecated
+        // user-land method/function/closure can not be deprecated
         return false;
     }
 

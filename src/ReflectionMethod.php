@@ -105,9 +105,9 @@ class ReflectionMethod extends BaseReflectionMethod
         $prototypeClass = $prototype ? $prototype->getDeclaringClass()->name : '';
 
         $paramString = '';
-        $identation  = str_repeat(' ', 4);
+        $indentation = str_repeat(' ', 4);
         foreach ($methodParameters as $methodParameter) {
-            $paramString .= "\n{$identation}" . $methodParameter;
+            $paramString .= "\n{$indentation}" . $methodParameter;
         }
 
         return sprintf(

@@ -84,12 +84,12 @@ To understand how library works let's look at what happens during the call to th
  * `ComposerLocator` instance asks the Composer to find a filename for the given class and returns this result back to the reflection engine
  * Reflection engine loads the content of file and passes it to the [PHP-Parser](https://github.com/nikic/PHP-Parser) for tokenization and processing
  * PHP-Parser returns an AST (Abstract Syntax Tree)
- * Reflection engine then analyse this AST to extract specific nodes an wrap them into corresponding reflection classes.
+ * Reflection engine then analyse this AST to extract specific nodes and wrap them into corresponding reflection classes.
 
 Compatibility
 ------------
 
-All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the autoloading of class and switching to the internal reflection.
+All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the process of class loading and switching to the internal reflection.
 
 [0]: docs/reflection_file.md
 [1]: docs/reflection_file_namespace.md

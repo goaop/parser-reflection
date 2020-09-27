@@ -16,7 +16,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 /**
- * Visitor to collect static variables in the method/function body and resove them
+ * Visitor to collect static variables in the method/function body and resolve them
  */
 class StaticVariablesCollector extends NodeVisitorAbstract
 {

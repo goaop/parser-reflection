@@ -143,7 +143,7 @@ class ReflectionClass extends InternalReflectionClass
      *     The name of the class to create a reflection for.
      *
      * @return ReflectionClass
-     *     The apropriate reflection object.
+     *     The appropriate reflection object.
      */
     protected function createReflectionForClass($className)
     {

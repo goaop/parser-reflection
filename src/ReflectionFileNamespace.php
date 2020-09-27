@@ -301,7 +301,7 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Checks if the given class is present in this filenamespace
+     * Checks if the given class is present in this file namespace
      *
      * @param string $className
      *
@@ -315,7 +315,7 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Checks if the given constant is present in this filenamespace
+     * Checks if the given constant is present in this file namespace
      *
      * @param string $constantName
      *
@@ -329,7 +329,7 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Checks if the given function is present in this filenamespace
+     * Checks if the given function is present in this file namespace
      *
      * @param string $functionName
      *
@@ -440,7 +440,7 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Searchse for namespace aliases for the current block
+     * Searches for namespace aliases for the current block
      *
      * @return array
      */

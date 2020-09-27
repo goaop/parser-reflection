@@ -22,7 +22,7 @@ class ReflectionFile
 {
 
     /**
-     * Name of the file for reflectino
+     * Name of the file for reflection
      *
      * @var string
      */
