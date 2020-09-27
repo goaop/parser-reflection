@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -427,7 +428,7 @@ class ReflectionFileNamespace
                     $constantName = $expressionSolver->getValue();
 
                     // Ignore constants, for which name can't be determined.
-                    if (strlen($constantName)) {
+                    if (!empty($constantName)) {
                         $expressionSolver->process($functionCallNode->args[1]->value);
                         $constantValue = $expressionSolver->getValue();
 
