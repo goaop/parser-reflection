@@ -166,7 +166,7 @@ trait ReflectionClassLikeTrait
             $modifiers = 'abstract ';
         } elseif ($this->isFinal()) {
             $modifiers = 'final ';
-        };
+        }
 
         $string = sprintf(
             $format,

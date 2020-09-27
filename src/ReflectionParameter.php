@@ -95,7 +95,7 @@ class ReflectionParameter extends BaseReflectionParameter
                 $context = $declaringFunction->getDeclaringClass();
             } else {
                 $context = $declaringFunction;
-            };
+            }
 
             $expressionSolver = new NodeExpressionResolver($context);
             $expressionSolver->process($this->parameterNode->default);
@@ -223,7 +223,7 @@ class ReflectionParameter extends BaseReflectionParameter
     {
         if ($this->declaringFunction instanceof \ReflectionMethod) {
             return $this->declaringFunction->getDeclaringClass();
-        };
+        }
 
         return null;
     }

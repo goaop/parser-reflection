@@ -92,7 +92,7 @@ class ReflectionType extends BaseReflectionType
             $displayType = $type->getName();
         } else {
             $displayType = (string) $type;
-        };
+        }
 
         if (PHP_VERSION_ID < 70300 && isset($typeMap[$displayType])) {
             $displayType = $typeMap[$displayType];
