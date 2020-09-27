@@ -192,7 +192,7 @@ class ReflectionParameterTest extends TestCase
         $parsedRefParameter   = $parsedRefParameters[0];
         $originalRefParameter = new \ReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
         $expectedValue        = (array) $originalRefParameter;
-        $this->assertSame($expectedValue, $parsedRefParameter->___debugInfo());
+        $this->assertSame($expectedValue, $parsedRefParameter->__debugInfo());
     }
 
     /**

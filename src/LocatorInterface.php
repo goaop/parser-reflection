@@ -24,5 +24,5 @@ interface LocatorInterface
      *
      * @return string|false Path to the file with given class or false if not found
      */
-    public function locateClass($className);
+    public function locateClass(string $className);
 }

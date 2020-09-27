@@ -36,7 +36,7 @@ class ReflectionMethodTest extends AbstractTestCase
         $parsedRefMethod   = $this->parsedRefClass->getMethod('funcWithDocAndBody');
         $originalRefMethod = new \ReflectionMethod($this->parsedRefClass->getName(), 'funcWithDocAndBody');
         $expectedValue     = (array) $originalRefMethod;
-        $this->assertSame($expectedValue, $parsedRefMethod->___debugInfo());
+        $this->assertSame($expectedValue, $parsedRefMethod->__debugInfo());
     }
 
     public function testSetAccessibleMethod()

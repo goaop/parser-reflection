@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Parser Reflection API
@@ -24,23 +25,24 @@ use ReflectionClass as InternalReflectionClass;
  */
 class ReflectionClass extends InternalReflectionClass
 {
-    use ReflectionClassLikeTrait, InternalPropertiesEmulationTrait;
+    use InternalPropertiesEmulationTrait;
+    use ReflectionClassLikeTrait;
 
     /**
      * Initializes reflection instance
      *
-     * @param string|object $argument Class name or instance of object
-     * @param ClassLike $classLikeNode AST node for class
+     * @param string|object $argument      Class name or instance of object
+     * @param ?ClassLike    $classLikeNode AST node for class
      */
     public function __construct($argument, ClassLike $classLikeNode = null)
     {
-        $fullClassName       = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
-        $namespaceParts      = explode('\\', $fullClassName);
-        $this->className     = array_pop($namespaceParts);
+        $fullClassName   = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
+        $namespaceParts  = explode('\\', $fullClassName);
+        $this->className = array_pop($namespaceParts);
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
 
-        $this->namespaceName = join('\\', $namespaceParts);
+        $this->namespaceName = implode('\\', $namespaceParts);
 
         $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
     }
@@ -48,25 +50,24 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Parses interfaces from the concrete class node
      *
-     * @param ClassLike $classLikeNode Class-like node
-     *
-     * @return array|InternalReflectionClass[] List of reflections of interfaces
+     * @return InternalReflectionClass[] List of reflections of interfaces
      */
-    public static function collectInterfacesFromClassNode(ClassLike $classLikeNode)
+    public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
         $interfaces = [];
 
         $isInterface    = $classLikeNode instanceof Interface_;
         $interfaceField = $isInterface ? 'extends' : 'implements';
-        $hasInterfaces  = in_array($interfaceField, $classLikeNode->getSubNodeNames());
-        $implementsList = $hasInterfaces ? $classLikeNode->$interfaceField : array();
+        $hasInterfaces  = in_array($interfaceField, $classLikeNode->getSubNodeNames(), true);
+        $implementsList = $hasInterfaces ? $classLikeNode->$interfaceField : [];
         if ($implementsList) {
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
-                    $implementName  = $implementNode->toString();
-                    $interface      = interface_exists($implementName, false)
+                    $implementName = $implementNode->toString();
+                    $interface     = interface_exists($implementName, false)
                         ? new parent($implementName)
                         : new static($implementName);
+
                     $interfaces[$implementName] = $interface;
                 }
             }
@@ -78,12 +79,11 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Parses traits from the concrete class node
      *
-     * @param ClassLike $classLikeNode Class-like node
-     * @param array     $traitAdaptations List of method adaptations
+     * @param array $traitAdaptations List of method adaptations
      *
-     * @return array|InternalReflectionClass[] List of reflections of traits
+     * @return InternalReflectionClass[] List of reflections of traits
      */
-    public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations)
+    public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations): array
     {
         $traits = [];
 
@@ -110,19 +110,17 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
-        return array(
+        return [
             'name' => $this->getName()
-        );
+        ];
     }
 
     /**
      * Returns an AST-node for class
-     *
-     * @return ClassLike
      */
-    public function getNode()
+    public function getNode(): ?ClassLike
     {
         return $this->classLikeNode;
     }
@@ -132,7 +130,7 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @return void
      */
-    protected function __initialize()
+    protected function __initialize(): void
     {
         parent::__construct($this->getName());
     }
@@ -143,10 +141,9 @@ class ReflectionClass extends InternalReflectionClass
      * @param string $className
      *     The name of the class to create a reflection for.
      *
-     * @return ReflectionClass
-     *     The appropriate reflection object.
+     * @return InternalReflectionClass The appropriate reflection object.
      */
-    protected function createReflectionForClass($className)
+    protected function createReflectionForClass(string $className)
     {
         return class_exists($className, false) ? new parent($className) : new static($className);
     }

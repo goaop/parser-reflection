@@ -126,7 +126,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         $parsedRefProperty   = $this->parsedRefClass->getProperty('publicStaticProperty');
         $originalRefProperty = new \ReflectionProperty($this->parsedRefClass->getName(), 'publicStaticProperty');
         $expectedValue     = (array) $originalRefProperty;
-        $this->assertSame($expectedValue, $parsedRefProperty->___debugInfo());
+        $this->assertSame($expectedValue, $parsedRefProperty->__debugInfo());
     }
 
     /**

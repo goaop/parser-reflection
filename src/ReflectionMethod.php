@@ -23,7 +23,8 @@ use ReflectionMethod as BaseReflectionMethod;
  */
 class ReflectionMethod extends BaseReflectionMethod
 {
-    use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
+    use InternalPropertiesEmulationTrait;
+    use ReflectionFunctionLikeTrait;
 
     /**
      * Name of the class
@@ -42,10 +43,10 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * Initializes reflection instance for the method node
      *
-     * @param string $className Name of the class
-     * @param string $methodName Name of the method
-     * @param ClassMethod $classMethodNode AST-node for method
-     * @param ReflectionClass $declaringClass Optional declaring class
+     * @param string           $className       Name of the class
+     * @param string           $methodName      Name of the method
+     * @param ?ClassMethod     $classMethodNode AST-node for method
+     * @param ?ReflectionClass $declaringClass  Optional declaring class
      */
     public function __construct(
         $className,
@@ -64,10 +65,8 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * Returns an AST-node for method
-     *
-     * @return ClassMethod
      */
-    public function getNode()
+    public function getNode(): ClassMethod
     {
         return $this->functionLikeNode;
     }
@@ -75,7 +74,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
         return [
             'name'  => $this->getClassMethodNode()->name->toString(),
@@ -121,7 +120,7 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
-            join(
+            implode(
                 ' ',
                 Reflection::getModifierNames(
                     $this->getModifiers() & (self::IS_PUBLIC | self::IS_PROTECTED | self::IS_PRIVATE)
@@ -152,7 +151,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getDeclaringClass()
     {
-        return isset($this->declaringClass) ? $this->declaringClass : new ReflectionClass($this->className);
+        return $this->declaringClass ?? new ReflectionClass($this->className);
     }
 
     /**
@@ -208,7 +207,7 @@ class ReflectionMethod extends BaseReflectionMethod
     {
         $this->initializeInternalReflection();
 
-        return call_user_func_array('parent::invoke', func_get_args());
+        return parent::invoke(...func_get_args());
     }
 
     /**
@@ -234,7 +233,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isConstructor()
     {
-        return $this->getClassMethodNode()->name == '__construct';
+        return $this->getClassMethodNode()->name->toLowerString() === '__construct';
     }
 
     /**
@@ -242,7 +241,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function isDestructor()
     {
-        return $this->getClassMethodNode()->name == '__destruct';
+        return $this->getClassMethodNode()->name->toLowerString() === '__destruct';
     }
 
     /**
@@ -301,9 +300,9 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param ClassLike $classLikeNode Class-like node
      * @param ReflectionClass $reflectionClass Reflection of the class
      *
-     * @return array|ReflectionMethod[]
+     * @return ReflectionMethod[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass)
+    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass): array
     {
         $methods = [];
 
@@ -326,20 +325,16 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * Implementation of internal reflection initialization
-     *
-     * @return void
      */
-    protected function __initialize()
+    protected function __initialize(): void
     {
         parent::__construct($this->className, $this->getName());
     }
 
     /**
      * Returns ClassMethod node to prevent all possible type checks with instanceof
-     *
-     * @return ClassMethod
      */
-    private function getClassMethodNode()
+    private function getClassMethodNode(): ClassMethod
     {
         return $this->functionLikeNode;
     }

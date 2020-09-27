@@ -74,10 +74,10 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Initializes a reflection for the class constant
      *
-     * @param string $className Name of the class
-     * @param string $classConstantName Name of the class constant to reflect
-     * @param ClassConst $classConstNode ClassConstant definition node
-     * @param Const_|null $constNode Concrete const definition node
+     * @param string      $className         Name of the class
+     * @param string      $classConstantName Name of the class constant to reflect
+     * @param ?ClassConst $classConstNode    ClassConstant definition node
+     * @param Const_|null $constNode         Concrete const definition node
      */
     public function __construct(
         string $className,
@@ -100,7 +100,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
         return [
             'name' => $this->getName(),

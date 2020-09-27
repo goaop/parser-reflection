@@ -5,6 +5,7 @@ namespace Go\ParserReflection;
 
 use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\TestNamespaceClassFoo;
+use TypeError;
 
 class ReflectionFileNamespaceTest extends TestCase
 {
@@ -29,21 +30,9 @@ class ReflectionFileNamespaceTest extends TestCase
         include_once $fileName;
     }
 
-    /**
-     * @expectedException        InvalidArgumentException
-     * @expectedExceptionMessage $fileName must be a string, but a array was passed
-     */
-    public function testBadFilenameTypeArray()
-    {
-        new ReflectionFileNamespace([1, 3, 5, 7], 'BogusNamespace');
-    }
-
-    /**
-     * @expectedException        InvalidArgumentException
-     * @expectedExceptionMessage $fileName must be a string, but a object was passed
-     */
     public function testBadFilenameTypeObject()
     {
+        $this->setExpectedException(TypeError::class);
         new ReflectionFileNamespace(new \DateTime(), 'BogusNamespace');
     }
 

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 /**
  * Parser Reflection API
@@ -164,6 +165,7 @@ trait ReflectionFunctionLikeTrait
                     $parameterIndex,
                     $this
                 );
+
                 $parameters[] = $reflectionParameter;
             }
 
@@ -190,7 +192,7 @@ trait ReflectionFunctionLikeTrait
             $returnType = $returnType->type;
         }
         if ($returnType instanceof Identifier) {
-            $isBuiltin = true;
+            $isBuiltin  = true;
             $returnType = $returnType->toString();
         } elseif (is_object($returnType)) {
             $returnType = $returnType->toString();
@@ -230,7 +232,7 @@ trait ReflectionFunctionLikeTrait
         $nodeTraverser->addVisitor($variablesCollector);
 
         /* @see https://github.com/nikic/PHP-Parser/issues/235 */
-        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: []);
 
         return $variablesCollector->getStaticVariables();
     }
@@ -284,7 +286,7 @@ trait ReflectionFunctionLikeTrait
         $nodeTraverser->addVisitor($nodeDetector);
 
         /* @see https://github.com/nikic/PHP-Parser/issues/235 */
-        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: []);
 
         return $nodeDetector->isGenerator();
     }

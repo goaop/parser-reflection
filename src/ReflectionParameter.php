@@ -39,7 +39,7 @@ class ReflectionParameter extends BaseReflectionParameter
      *
      * @var mixed
      */
-    private $defaultValue = null;
+    private $defaultValue;
 
     /**
      * Whether or not default value is constant
@@ -60,7 +60,7 @@ class ReflectionParameter extends BaseReflectionParameter
      *
      * @var int
      */
-    private $parameterIndex = 0;
+    private $parameterIndex;
 
     /**
      * Concrete parameter node
@@ -72,11 +72,11 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Initializes a reflection for the property
      *
-     * @param string|array $unusedFunctionName Name of the function/method
-     * @param string $parameterName Name of the parameter to reflect
-     * @param Param $parameterNode Parameter definition node
-     * @param int $parameterIndex Index of parameter
-     * @param ReflectionFunctionAbstract $declaringFunction
+     * @param string|array                $unusedFunctionName Name of the function/method
+     * @param string                      $parameterName      Name of the parameter to reflect
+     * @param ?Param                      $parameterNode      Parameter definition node
+     * @param int                         $parameterIndex     Index of parameter
+     * @param ?ReflectionFunctionAbstract $declaringFunction
      */
     public function __construct(
         $unusedFunctionName,
@@ -120,11 +120,11 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
-        return array(
+        return [
             'name' => (string)$this->parameterNode->var->name,
-        );
+        ];
     }
 
     /**
@@ -144,7 +144,7 @@ class ReflectionParameter extends BaseReflectionParameter
                 $defaultValue = substr($defaultValue, 0, 15) . '...';
             }
             /* @see https://3v4l.org/DJOEb for behaviour changes */
-            if (is_double($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
+            if (is_float($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
                 $defaultValue = (int)$defaultValue;
             }
 
@@ -209,7 +209,8 @@ class ReflectionParameter extends BaseReflectionParameter
 
                 throw new ReflectionException("Can not resolve a class name for parameter");
             }
-            $className   = $parameterType->toString();
+            $className = $parameterType->toString();
+
             $classOrInterfaceExists = class_exists($className, false) || interface_exists($className, false);
 
             return $classOrInterfaceExists ? new \ReflectionClass($className) : new ReflectionClass($className);

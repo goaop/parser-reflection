@@ -5,6 +5,7 @@ namespace Go\ParserReflection;
 
 use PHPUnit\Framework\TestCase;
 use Stub\Issue44\Locator;
+use TypeError;
 
 class ReflectionFileTest extends TestCase
 {
@@ -24,21 +25,9 @@ class ReflectionFileTest extends TestCase
         $this->parsedRefFile = $reflectionFile;
     }
 
-    /**
-     * @expectedException        InvalidArgumentException
-     * @expectedExceptionMessage $fileName must be a string, but a array was passed
-     */
-    public function testBadFilenameTypeArray()
-    {
-        new ReflectionFile([1, 3, 5, 7]);
-    }
-
-    /**
-     * @expectedException        InvalidArgumentException
-     * @expectedExceptionMessage $fileName must be a string, but a object was passed
-     */
     public function testBadFilenameTypeObject()
     {
+        $this->setExpectedException(TypeError::class);
         new ReflectionFile(new \DateTime());
     }
 
