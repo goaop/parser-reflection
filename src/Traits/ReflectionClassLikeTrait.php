@@ -693,10 +693,10 @@ trait ReflectionClassLikeTrait
     {
         if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
             return true;
-        } elseif ($this->isInterface() && !empty($this->getMethods())) {
+        }
+
+        if ($this->isInterface() && !empty($this->getMethods())) {
             return true;
-        } elseif ($this->isTrait()) {
-            return PHP_VERSION_ID < 70000 ? true : false;
         }
 
         return false;
