@@ -12,6 +12,7 @@ namespace Go\ParserReflection;
 
 
 use Go\ParserReflection\Instrument\PathResolver;
+use InvalidArgumentException;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
 
@@ -51,7 +52,7 @@ class ReflectionFile
     public function __construct($fileName, $topLevelNodes = null)
     {
         if (!is_string($fileName)) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 sprintf(
                     '$fileName must be a string, but a %s was passed',
                     gettype($fileName)

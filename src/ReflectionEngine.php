@@ -12,6 +12,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
+use InvalidArgumentException;
 use PhpParser\Lexer;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassConst;
@@ -117,7 +118,7 @@ class ReflectionEngine
         }
 
         if (!$classFileName) {
-            throw new \InvalidArgumentException("Class $fullClassName was not found by locator");
+            throw new InvalidArgumentException("Class $fullClassName was not found by locator");
         }
 
         return $classFileName;
@@ -149,7 +150,7 @@ class ReflectionEngine
             }
         }
 
-        throw new \InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
+        throw new InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
     }
 
     /**
@@ -171,7 +172,7 @@ class ReflectionEngine
             }
         }
 
-        throw new \InvalidArgumentException("Method $methodName was not found in the $fullClassName");
+        throw new InvalidArgumentException("Method $methodName was not found in the $fullClassName");
     }
 
     /**
@@ -197,7 +198,7 @@ class ReflectionEngine
             }
         }
 
-        throw new \InvalidArgumentException("Property $propertyName was not found in the $fullClassName");
+        throw new InvalidArgumentException("Property $propertyName was not found in the $fullClassName");
     }
 
     /**
@@ -222,7 +223,7 @@ class ReflectionEngine
             }
         }
 
-        throw new \InvalidArgumentException("ClassConstant $constantName was not found in the $fullClassName");
+        throw new InvalidArgumentException("ClassConstant $constantName was not found in the $fullClassName");
     }
 
     /**
@@ -231,7 +232,7 @@ class ReflectionEngine
      * @param string      $fileName Name of the file
      * @param string|null $fileContent Optional content of the file
      *
-     * @return \PhpParser\Node[]
+     * @return Node[]
      */
     public static function parseFile($fileName, $fileContent = null)
     {

@@ -49,7 +49,7 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @param ClassLike $classLikeNode Class-like node
      *
-     * @return array|\ReflectionClass[] List of reflections of interfaces
+     * @return array|InternalReflectionClass[] List of reflections of interfaces
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode)
     {
@@ -80,7 +80,7 @@ class ReflectionClass extends InternalReflectionClass
      * @param ClassLike $classLikeNode Class-like node
      * @param array     $traitAdaptations List of method adaptations
      *
-     * @return array|\ReflectionClass[] List of reflections of traits
+     * @return array|InternalReflectionClass[] List of reflections of traits
      */
     public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations)
     {

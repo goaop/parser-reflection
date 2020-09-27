@@ -14,6 +14,7 @@ use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use Reflection;
 use ReflectionMethod as BaseReflectionMethod;
 
 /**
@@ -121,7 +122,7 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->isAbstract() ? ' abstract' : '',
             join(
                 ' ',
-                \Reflection::getModifierNames(
+                Reflection::getModifierNames(
                     $this->getModifiers() & (self::IS_PUBLIC | self::IS_PROTECTED | self::IS_PRIVATE)
                 )
             ),

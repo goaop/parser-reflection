@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection\Traits;
 
+use Closure;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionClassConstant;
 use Go\ParserReflection\ReflectionException;
@@ -23,6 +24,9 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUseAdaptation;
+use ReflectionObject;
+use RuntimeException;
+use function func_num_args;
 
 /**
  * General class-like reflection
@@ -107,7 +111,7 @@ trait ReflectionClassLikeTrait
      */
     public function __toString()
     {
-        $isObject = $this instanceof \ReflectionObject;
+        $isObject = $this instanceof ReflectionObject;
 
         $staticProperties = $staticMethods = $defaultProperties = $dynamicProperties = $methods = [];
 
@@ -463,7 +467,7 @@ trait ReflectionClassLikeTrait
      * @param int $filter The optional filter, for filtering desired property types.
      *                    It's configured using the ReflectionProperty constants, and defaults to all property types.
      *
-     * @return array|\Go\ParserReflection\ReflectionProperty[]
+     * @return array|ReflectionProperty[]
      */
     public function getProperties($filter = null)
     {
@@ -742,7 +746,7 @@ trait ReflectionClassLikeTrait
     public function isInstance($object)
     {
         if (!is_object($object)) {
-            throw new \RuntimeException(sprintf('Parameter must be an object, "%s" provided.', gettype($object)));
+            throw new RuntimeException(sprintf('Parameter must be an object, "%s" provided.', gettype($object)));
         }
 
         $className = $this->getName();
@@ -903,7 +907,7 @@ trait ReflectionClassLikeTrait
      */
     public function newInstance($arg = null, ...$args)
     {
-        $args = array_slice(array_merge([$arg], $args), 0, \func_num_args());
+        $args = array_slice(array_merge([$arg], $args), 0, func_num_args());
         $this->initializeInternalReflection();
 
         return parent::newInstance(...$args);
@@ -956,7 +960,7 @@ trait ReflectionClassLikeTrait
         parent::setStaticPropertyValue($name, $value);
     }
 
-    private function recursiveCollect(\Closure $collector)
+    private function recursiveCollect(Closure $collector)
     {
         $result   = [];
         $isParent = true;

@@ -16,6 +16,7 @@ use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
+use Reflection;
 use ReflectionProperty as BaseReflectionProperty;
 
 /**
@@ -62,7 +63,7 @@ class ReflectionProperty extends BaseReflectionProperty
     ) {
         $this->className = ltrim($className, '\\');
         if (!$propertyType || !$propertyNode) {
-            list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
+            [$propertyType, $propertyNode] = ReflectionEngine::parseClassProperty($className, $propertyName);
         }
 
         $this->propertyTypeNode = $propertyType;
@@ -113,7 +114,7 @@ class ReflectionProperty extends BaseReflectionProperty
         return sprintf(
             "Property [%s %s $%s ]\n",
             $this->isStatic() ? '' : ($this->isDefault() ? ' <default>' : ' <dynamic>'),
-            join(' ', \Reflection::getModifierNames($this->getModifiers())),
+            join(' ', Reflection::getModifierNames($this->getModifiers())),
             $this->getName()
         );
     }

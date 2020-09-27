@@ -16,6 +16,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
+use ReflectionFunctionAbstract;
 use ReflectionParameter as BaseReflectionParameter;
 
 /**
@@ -28,7 +29,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Reflection function or method
      *
-     * @var \ReflectionFunctionAbstract
+     * @var ReflectionFunctionAbstract
      */
     private $declaringFunction;
 
@@ -74,14 +75,14 @@ class ReflectionParameter extends BaseReflectionParameter
      * @param string $parameterName Name of the parameter to reflect
      * @param Param $parameterNode Parameter definition node
      * @param int $parameterIndex Index of parameter
-     * @param \ReflectionFunctionAbstract $declaringFunction
+     * @param ReflectionFunctionAbstract $declaringFunction
      */
     public function __construct(
         $unusedFunctionName,
         $parameterName,
         Param $parameterNode = null,
         $parameterIndex = 0,
-        \ReflectionFunctionAbstract $declaringFunction = null
+        ReflectionFunctionAbstract $declaringFunction = null
     ) {
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
@@ -385,7 +386,7 @@ class ReflectionParameter extends BaseReflectionParameter
             throw new ReflectionException('Could not get the declaring function reflection.');
         }
 
-        /** @var \ReflectionParameter[] $remainingParameters */
+        /** @var BaseReflectionParameter[] $remainingParameters */
         $remainingParameters = array_slice($function->getParameters(), $this->parameterIndex + 1);
         foreach ($remainingParameters as $reflectionParameter) {
             if (!$reflectionParameter->isDefaultValueAvailable()) {

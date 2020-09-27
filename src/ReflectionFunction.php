@@ -10,6 +10,7 @@
 
 namespace Go\ParserReflection;
 
+use Closure;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\Function_;
@@ -25,8 +26,8 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * Initializes reflection instance for given AST-node
      *
-     * @param string|\Closure $functionName The name of the function to reflect or a closure.
-     * @param Function_|null  $functionNode Function node AST
+     * @param string|Closure $functionName The name of the function to reflect or a closure.
+     * @param Function_|null $functionNode Function node AST
      */
     public function __construct($functionName, Function_ $functionNode)
     {

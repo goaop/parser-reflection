@@ -16,7 +16,8 @@ use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
-use \ReflectionClassConstant as BaseReflectionClassConstant;
+use Reflection;
+use ReflectionClassConstant as BaseReflectionClassConstant;
 
 class ReflectionClassConstant extends BaseReflectionClassConstant
 {
@@ -206,7 +207,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",
-            implode(' ', \Reflection::getModifierNames($this->getModifiers())),
+            implode(' ', Reflection::getModifierNames($this->getModifiers())),
             strtolower((string) ReflectionType::convertToDisplayType($valueType)),
             $this->getName(),
             (string) $value

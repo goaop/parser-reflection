@@ -18,6 +18,8 @@ use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar;
 use PhpParser\Node\Scalar\MagicConst;
 use PhpParser\Node\Stmt\Expression;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 
 /**
  * Tries to resolve expression into value
@@ -46,7 +48,7 @@ class NodeExpressionResolver
     /**
      * Current reflection context for parsing
      *
-     * @var mixed|\Go\ParserReflection\ReflectionClass
+     * @var mixed|ReflectionClass
      */
     private $context;
 
@@ -146,7 +148,7 @@ class NodeExpressionResolver
 
     protected function resolveScalarMagicConstMethod()
     {
-        if ($this->context instanceof \ReflectionMethod) {
+        if ($this->context instanceof ReflectionMethod) {
             $fullName = $this->context->getDeclaringClass()->name . '::' . $this->context->getShortName();
 
             return $fullName;
@@ -157,7 +159,7 @@ class NodeExpressionResolver
 
     protected function resolveScalarMagicConstFunction()
     {
-        if ($this->context instanceof \ReflectionFunctionAbstract) {
+        if ($this->context instanceof ReflectionFunctionAbstract) {
             return $this->context->getName();
         }
 
