@@ -25,21 +25,21 @@ class ComposerLocator implements LocatorInterface
      */
     private $loader;
 
-    public function __construct(ClassLoader $loader = null)
+    public function __construct(ClassLoader $composerLoader = null)
     {
-        if (!$loader) {
+        if ($composerLoader === null) {
             $loaders = spl_autoload_functions();
             foreach ($loaders as $loader) {
                 if (is_array($loader) && $loader[0] instanceof ClassLoader) {
-                    $loader = $loader[0];
+                    $composerLoader = $loader[0];
                     break;
                 }
             }
-            if (!$loader) {
+            if ($composerLoader === null) {
                 throw new ReflectionException("Can not found a correct composer loader");
             }
         }
-        $this->loader = $loader;
+        $this->loader = $composerLoader;
     }
 
     /**
