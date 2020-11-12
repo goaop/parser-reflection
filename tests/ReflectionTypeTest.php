@@ -1,9 +1,11 @@
 <?php
 namespace Go\ParserReflection;
 
-class ReflectionTypeTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class ReflectionTypeTest extends TestCase
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         if (PHP_VERSION_ID >= 70000) {
             include_once (__DIR__ . '/Stub/FileWithClasses70.php');

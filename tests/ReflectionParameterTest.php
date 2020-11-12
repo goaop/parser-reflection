@@ -1,18 +1,19 @@
 <?php
 namespace Go\ParserReflection;
 
+use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\Foo;
 use Go\ParserReflection\Stub\SubFoo;
 use TestParametersForRootNsClass;
 
-class ReflectionParameterTest extends \PHPUnit_Framework_TestCase
+class ReflectionParameterTest extends TestCase
 {
     /**
      * @var ReflectionFile
      */
     protected $parsedRefFile;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters55.php');
     }

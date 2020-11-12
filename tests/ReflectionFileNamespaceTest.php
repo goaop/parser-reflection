@@ -1,9 +1,10 @@
 <?php
 namespace Go\ParserReflection;
 
+use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\TestNamespaceClassFoo;
 
-class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
+class ReflectionFileNamespaceTest extends TestCase
 {
     const STUB_FILE = '/Stub/FileWithNamespaces.php';
     const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
@@ -13,7 +14,7 @@ class ReflectionFileNamespaceTest extends \PHPUnit_Framework_TestCase
      */
     protected $parsedRefFileNamespace;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
         $fileNode = ReflectionEngine::parseFile($fileName);
