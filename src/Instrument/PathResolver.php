@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /*
  * Go! AOP framework
  *
@@ -13,8 +15,8 @@ namespace Go\ParserReflection\Instrument;
 /**
  * Special class for resolving path for different file systems, wrappers, etc
  *
- * @see http://stackoverflow.com/questions/4049856/replace-phps-realpath/4050444
- * @see http://bugs.php.net/bug.php?id=52769
+ * @see  http://stackoverflow.com/questions/4049856/replace-phps-realpath/4050444
+ * @see  http://bugs.php.net/bug.php?id=52769
  *
  * @link https://github.com/goaop/framework/blob/master/src/Instrument/PathResolver.php
  */
@@ -24,8 +26,8 @@ class PathResolver
     /**
      * Custom replacement for realpath() and stream_resolve_include_path()
      *
-     * @param string|array $somePath Path without normalization or array of paths
-     * @param bool $shouldCheckExistence Flag for checking existence of resolved filename
+     * @param string|array $somePath             Path without normalization or array of paths
+     * @param bool         $shouldCheckExistence Flag for checking existence of resolved filename
      *
      * @return array|bool|string
      */
@@ -37,11 +39,11 @@ class PathResolver
         }
 
         if (is_array($somePath)) {
-            return array_map(array(__CLASS__, __FUNCTION__), $somePath);
+            return array_map([__CLASS__, __FUNCTION__], $somePath);
         }
         // Trick to get scheme name and path in one action. If no scheme, then there will be only one part
         $components = explode('://', $somePath, 2);
-        list ($pathScheme, $path) = isset($components[1]) ? $components : array(null, $components[0]);
+        [$pathScheme, $path] = isset($components[1]) ? $components : [null, $components[0]];
 
         // Optimization to bypass complex logic for simple paths (eg. not in phar archives)
         if (!$pathScheme && ($fastPath = stream_resolve_include_path($somePath))) {
@@ -54,14 +56,16 @@ class PathResolver
         }
 
         // resolve path parts (single dot, double dot and double delimiters)
-        $path = str_replace(array('/', '\\'), DIRECTORY_SEPARATOR, $path);
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
         if (strpos($path, '.') !== false) {
             $parts     = explode(DIRECTORY_SEPARATOR, $path);
             $absolutes = [];
             foreach ($parts as $part) {
-                if ('.' == $part) {
+                if ('.' === $part) {
                     continue;
-                } elseif ('..' == $part) {
+                }
+
+                if ('..' === $part) {
                     array_pop($absolutes);
                 } else {
                     $absolutes[] = $part;

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -21,7 +23,7 @@ class ReflectionType extends BaseReflectionType
     /**
      * If type allows null or not
      *
-     * @var boolean
+     * @var bool
      */
     private $allowsNull;
 
@@ -76,26 +78,16 @@ class ReflectionType extends BaseReflectionType
      *
      * @see https://3v4l.org/nZFiT
      *
-     * @param ReflectionType $type Type to display
+     * @param BaseReflectionType $type Type to display
      *
      * @return string
      */
-    public static function convertToDisplayType(\ReflectionType $type)
+    public static function convertToDisplayType(BaseReflectionType $type)
     {
-        static $typeMap = [
-            'int'    => 'integer',
-            'bool'   => 'boolean',
-            'double' => 'float',
-        ];
-
         if ($type instanceof ReflectionNamedType) {
             $displayType = $type->getName();
         } else {
-            $displayType = (string) $type;
-        };
-
-        if (PHP_VERSION_ID < 70300 && isset($typeMap[$displayType])) {
-            $displayType = $typeMap[$displayType];
+            $displayType = (string)$type;
         }
 
         $displayType = ltrim($displayType, '\\');

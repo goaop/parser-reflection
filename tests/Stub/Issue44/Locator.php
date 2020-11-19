@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Stub\Issue44;
 
@@ -9,7 +10,7 @@ class Locator implements LocatorInterface
     /**
      * @inheritdoc
      */
-    public function locateClass($className)
+    public function locateClass(string $className)
     {
         if (ltrim($className, '\\') === ClassWithNamespace::class) {
             return __DIR__ . '/ClassWithNamespace.php';

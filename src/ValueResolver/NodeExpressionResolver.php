@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -15,9 +17,13 @@ use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
-use PhpParser\Node\Scalar;
-use PhpParser\Node\Scalar\MagicConst;
+use PhpParser\Node\Scalar\DNumber;
+use PhpParser\Node\Scalar\LNumber;
+use PhpParser\Node\Scalar\MagicConst\Line;
+use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use ReflectionFunctionAbstract;
+use ReflectionMethod;
 
 /**
  * Tries to resolve expression into value
@@ -39,14 +45,14 @@ class NodeExpressionResolver
     /**
      * Name of the constant (if present)
      *
-     * @var null|string
+     * @var ?string
      */
-    private $constantName = null;
+    private $constantName;
 
     /**
      * Current reflection context for parsing
      *
-     * @var mixed|\Go\ParserReflection\ReflectionClass
+     * @var mixed|ReflectionClass
      */
     private $context;
 
@@ -74,7 +80,7 @@ class NodeExpressionResolver
         $this->context = $context;
     }
 
-    public function getConstantName()
+    public function getConstantName(): ?string
     {
         return $this->constantName;
     }
@@ -84,15 +90,12 @@ class NodeExpressionResolver
         return $this->value;
     }
 
-    public function isConstant()
+    public function isConstant(): bool
     {
         return $this->isConstant;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function process(Node $node)
+    public function process(Node $node): void
     {
         // Unwrap "expr;" statements.
         if ($node instanceof Expression) {
@@ -129,24 +132,24 @@ class NodeExpressionResolver
         return $value;
     }
 
-    protected function resolveScalarDNumber(Scalar\DNumber $node)
+    protected function resolveScalarDNumber(DNumber $node): float
     {
         return $node->value;
     }
 
-    protected function resolveScalarLNumber(Scalar\LNumber $node)
+    protected function resolveScalarLNumber(LNumber $node): int
     {
         return $node->value;
     }
 
-    protected function resolveScalarString(Scalar\String_ $node)
+    protected function resolveScalarString(String_ $node): string
     {
         return $node->value;
     }
 
-    protected function resolveScalarMagicConstMethod()
+    protected function resolveScalarMagicConstMethod(): string
     {
-        if ($this->context instanceof \ReflectionMethod) {
+        if ($this->context instanceof ReflectionMethod) {
             $fullName = $this->context->getDeclaringClass()->name . '::' . $this->context->getShortName();
 
             return $fullName;
@@ -155,16 +158,16 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstFunction()
+    protected function resolveScalarMagicConstFunction(): string
     {
-        if ($this->context instanceof \ReflectionFunctionAbstract) {
+        if ($this->context instanceof ReflectionFunctionAbstract) {
             return $this->context->getName();
         }
 
         return '';
     }
 
-    protected function resolveScalarMagicConstNamespace()
+    protected function resolveScalarMagicConstNamespace(): string
     {
         if (method_exists($this->context, 'getNamespaceName')) {
             return $this->context->getNamespaceName();
@@ -177,7 +180,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstClass()
+    protected function resolveScalarMagicConstClass(): string
     {
         if ($this->context instanceof \ReflectionClass) {
             return $this->context->name;
@@ -192,7 +195,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstDir()
+    protected function resolveScalarMagicConstDir(): string
     {
         if (method_exists($this->context, 'getFileName')) {
             return dirname($this->context->getFileName());
@@ -201,7 +204,7 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstFile()
+    protected function resolveScalarMagicConstFile(): string
     {
         if (method_exists($this->context, 'getFileName')) {
             return $this->context->getFileName();
@@ -210,12 +213,12 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveScalarMagicConstLine(MagicConst\Line $node)
+    protected function resolveScalarMagicConstLine(Line $node): int
     {
         return $node->hasAttribute('startLine') ? $node->getAttribute('startLine') : 0;
     }
 
-    protected function resolveScalarMagicConstTrait()
+    protected function resolveScalarMagicConstTrait(): string
     {
         if ($this->context instanceof \ReflectionClass && $this->context->isTrait()) {
             return $this->context->name;
@@ -232,16 +235,14 @@ class NodeExpressionResolver
         $isFQNConstant = $node->name instanceof Node\Name\FullyQualified;
         $constantName  = $node->name->toString();
 
-        if (!$isFQNConstant) {
-            if (method_exists($this->context, 'getFileName')) {
-                $fileName      = $this->context->getFileName();
-                $namespaceName = $this->resolveScalarMagicConstNamespace();
-                $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
-                if ($fileNamespace->hasConstant($constantName)) {
-                    $constantValue = $fileNamespace->getConstant($constantName);
-                    $constantName  = $fileNamespace->getName() . '\\' . $constantName;
-                    $isResolved    = true;
-                }
+        if (!$isFQNConstant && method_exists($this->context, 'getFileName')) {
+            $fileName      = $this->context->getFileName();
+            $namespaceName = $this->resolveScalarMagicConstNamespace();
+            $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
+            if ($fileNamespace->hasConstant($constantName)) {
+                $constantValue = $fileNamespace->getConstant($constantName);
+                $constantName  = $fileNamespace->getName() . '\\' . $constantName;
+                $isResolved    = true;
             }
         }
 
@@ -266,7 +267,7 @@ class NodeExpressionResolver
                 $reason = 'Unable';
                 if ($classToReflect instanceof Expr) {
                     $methodName = $this->getDispatchMethodFor($classToReflect);
-                    $reason = "Method " . __CLASS__ . "::{$methodName}() not found trying";
+                    $reason     = "Method " . __CLASS__ . "::{$methodName}() not found trying";
                 }
                 throw new ReflectionException("$reason to resolve class constant.");
             }
@@ -274,7 +275,7 @@ class NodeExpressionResolver
             // qualified.
             $classToReflect = new Node\Name\FullyQualified(ltrim($classToReflect, '\\'));
         }
-        $refClass = $this->fetchReflectionClass($classToReflect);
+        $refClass     = $this->fetchReflectionClass($classToReflect);
         $constantName = ($node->name instanceof Expr\Error) ? '' : $node->name->toString();
 
         // special handling of ::class constants
@@ -282,18 +283,18 @@ class NodeExpressionResolver
             return $refClass->getName();
         }
 
-        $this->isConstant = true;
-        $this->constantName = (string)$classToReflect . '::' . $constantName;
+        $this->isConstant   = true;
+        $this->constantName = $classToReflect . '::' . $constantName;
 
         return $refClass->getConstant($constantName);
     }
 
-    protected function resolveExprArray(Expr\Array_ $node)
+    protected function resolveExprArray(Expr\Array_ $node): array
     {
         $result = [];
         foreach ($node->items as $itemIndex => $arrayItem) {
-            $itemValue = $this->resolve($arrayItem->value);
-            $itemKey   = isset($arrayItem->key) ? $this->resolve($arrayItem->key) : $itemIndex;
+            $itemValue        = $this->resolve($arrayItem->value);
+            $itemKey          = isset($arrayItem->key) ? $this->resolve($arrayItem->key) : $itemIndex;
             $result[$itemKey] = $itemValue;
         }
 
@@ -317,7 +318,7 @@ class NodeExpressionResolver
 
     protected function resolveExprBinaryOpPow(Expr\BinaryOp\Pow $node)
     {
-        return pow($this->resolve($node->left), $this->resolve($node->right));
+        return $this->resolve($node->left) ** $this->resolve($node->right);
     }
 
     protected function resolveExprBinaryOpDiv(Expr\BinaryOp\Div $node)
@@ -325,12 +326,12 @@ class NodeExpressionResolver
         return $this->resolve($node->left) / $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpMod(Expr\BinaryOp\Mod $node)
+    protected function resolveExprBinaryOpMod(Expr\BinaryOp\Mod $node): int
     {
         return $this->resolve($node->left) % $this->resolve($node->right);
     }
 
-    protected function resolveExprBooleanNot(Expr\BooleanNot $node)
+    protected function resolveExprBooleanNot(Expr\BooleanNot $node): bool
     {
         return !$this->resolve($node->expr);
     }
@@ -340,32 +341,32 @@ class NodeExpressionResolver
         return ~$this->resolve($node->expr);
     }
 
-    protected function resolveExprBinaryOpBitwiseOr(Expr\BinaryOp\BitwiseOr $node)
+    protected function resolveExprBinaryOpBitwiseOr(Expr\BinaryOp\BitwiseOr $node): int
     {
         return $this->resolve($node->left) | $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpBitwiseAnd(Expr\BinaryOp\BitwiseAnd $node)
+    protected function resolveExprBinaryOpBitwiseAnd(Expr\BinaryOp\BitwiseAnd $node): int
     {
         return $this->resolve($node->left) & $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpBitwiseXor(Expr\BinaryOp\BitwiseXor $node)
+    protected function resolveExprBinaryOpBitwiseXor(Expr\BinaryOp\BitwiseXor $node): int
     {
         return $this->resolve($node->left) ^ $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpShiftLeft(Expr\BinaryOp\ShiftLeft $node)
+    protected function resolveExprBinaryOpShiftLeft(Expr\BinaryOp\ShiftLeft $node): int
     {
         return $this->resolve($node->left) << $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpShiftRight(Expr\BinaryOp\ShiftRight $node)
+    protected function resolveExprBinaryOpShiftRight(Expr\BinaryOp\ShiftRight $node): int
     {
         return $this->resolve($node->left) >> $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpConcat(Expr\BinaryOp\Concat $node)
+    protected function resolveExprBinaryOpConcat(Expr\BinaryOp\Concat $node): string
     {
         return $this->resolve($node->left) . $this->resolve($node->right);
     }
@@ -376,81 +377,82 @@ class NodeExpressionResolver
             // Full syntax $a ? $b : $c;
 
             return $this->resolve($node->cond) ? $this->resolve($node->if) : $this->resolve($node->else);
-        } else {
-            // Short syntax $a ?: $c;
-
-            return $this->resolve($node->cond) ?: $this->resolve($node->else);
         }
+
+        return $this->resolve($node->cond) ?: $this->resolve($node->else);
     }
 
-    protected function resolveExprBinaryOpSmallerOrEqual(Expr\BinaryOp\SmallerOrEqual $node)
+    protected function resolveExprBinaryOpSmallerOrEqual(Expr\BinaryOp\SmallerOrEqual $node): bool
     {
         return $this->resolve($node->left) <= $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpGreaterOrEqual(Expr\BinaryOp\GreaterOrEqual $node)
+    protected function resolveExprBinaryOpGreaterOrEqual(Expr\BinaryOp\GreaterOrEqual $node): bool
     {
         return $this->resolve($node->left) >= $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpEqual(Expr\BinaryOp\Equal $node)
+    protected function resolveExprBinaryOpEqual(Expr\BinaryOp\Equal $node): bool
     {
+        /** @noinspection TypeUnsafeComparisonInspection */
         return $this->resolve($node->left) == $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpNotEqual(Expr\BinaryOp\NotEqual $node)
+    protected function resolveExprBinaryOpNotEqual(Expr\BinaryOp\NotEqual $node): bool
     {
+        /** @noinspection TypeUnsafeComparisonInspection */
         return $this->resolve($node->left) != $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpSmaller(Expr\BinaryOp\Smaller $node)
+    protected function resolveExprBinaryOpSmaller(Expr\BinaryOp\Smaller $node): bool
     {
         return $this->resolve($node->left) < $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpGreater(Expr\BinaryOp\Greater $node)
+    protected function resolveExprBinaryOpGreater(Expr\BinaryOp\Greater $node): bool
     {
         return $this->resolve($node->left) > $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpIdentical(Expr\BinaryOp\Identical $node)
+    protected function resolveExprBinaryOpIdentical(Expr\BinaryOp\Identical $node): bool
     {
         return $this->resolve($node->left) === $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpNotIdentical(Expr\BinaryOp\NotIdentical $node)
+    protected function resolveExprBinaryOpNotIdentical(Expr\BinaryOp\NotIdentical $node): bool
     {
         return $this->resolve($node->left) !== $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpBooleanAnd(Expr\BinaryOp\BooleanAnd $node)
+    protected function resolveExprBinaryOpBooleanAnd(Expr\BinaryOp\BooleanAnd $node): bool
     {
         return $this->resolve($node->left) && $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpLogicalAnd(Expr\BinaryOp\LogicalAnd $node)
+    protected function resolveExprBinaryOpLogicalAnd(Expr\BinaryOp\LogicalAnd $node): bool
     {
         return $this->resolve($node->left) and $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpBooleanOr(Expr\BinaryOp\BooleanOr $node)
+    protected function resolveExprBinaryOpBooleanOr(Expr\BinaryOp\BooleanOr $node): bool
     {
         return $this->resolve($node->left) || $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpLogicalOr(Expr\BinaryOp\LogicalOr $node)
+    protected function resolveExprBinaryOpLogicalOr(Expr\BinaryOp\LogicalOr $node): bool
     {
         return $this->resolve($node->left) or $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpLogicalXor(Expr\BinaryOp\LogicalXor $node)
+    protected function resolveExprBinaryOpLogicalXor(Expr\BinaryOp\LogicalXor $node): bool
     {
         return $this->resolve($node->left) xor $this->resolve($node->right);
     }
 
-    private function getDispatchMethodFor(Node $node)
+    private function getDispatchMethodFor(Node $node): string
     {
         $nodeType = $node->getType();
+
         return 'resolve' . str_replace('_', '', $nodeType);
     }
 
@@ -481,13 +483,16 @@ class NodeExpressionResolver
                     return $refClass;
                 }
             }
+
             return new ReflectionClass($className);
         }
 
         if ('self' === $className) {
             if ($this->context instanceof \ReflectionClass) {
                 return $this->context;
-            } elseif (method_exists($this->context, 'getDeclaringClass')) {
+            }
+
+            if (method_exists($this->context, 'getDeclaringClass')) {
                 return $this->context->getDeclaringClass();
             }
         }
@@ -495,8 +500,12 @@ class NodeExpressionResolver
         if ('parent' === $className) {
             if ($this->context instanceof \ReflectionClass) {
                 return $this->context->getParentClass();
-            } elseif (method_exists($this->context, 'getDeclaringClass')) {
-                return $this->context->getDeclaringClass()->getParentClass();
+            }
+
+            if (method_exists($this->context, 'getDeclaringClass')) {
+                return $this->context->getDeclaringClass()
+                                     ->getParentClass()
+                    ;
             }
         }
 
@@ -506,6 +515,7 @@ class NodeExpressionResolver
             $namespaceName = $this->resolveScalarMagicConstNamespace();
 
             $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
+
             return $fileNamespace->getClass($className);
         }
 

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -10,7 +12,6 @@
 
 namespace Go\ParserReflection\NodeVisitor;
 
-use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeVisitorAbstract;

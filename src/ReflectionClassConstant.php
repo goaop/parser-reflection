@@ -16,7 +16,8 @@ use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
-use \ReflectionClassConstant as BaseReflectionClassConstant;
+use Reflection;
+use ReflectionClassConstant as BaseReflectionClassConstant;
 
 class ReflectionClassConstant extends BaseReflectionClassConstant
 {
@@ -73,10 +74,10 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Initializes a reflection for the class constant
      *
-     * @param string $className Name of the class
-     * @param string $classConstantName Name of the class constant to reflect
-     * @param ClassConst $classConstNode ClassConstant definition node
-     * @param Const_|null $constNode Concrete const definition node
+     * @param string      $className         Name of the class
+     * @param string      $classConstantName Name of the class constant to reflect
+     * @param ?ClassConst $classConstNode    ClassConstant definition node
+     * @param Const_|null $constNode         Concrete const definition node
      */
     public function __construct(
         string $className,
@@ -99,7 +100,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
         return [
             'name' => $this->getName(),
@@ -206,7 +207,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",
-            implode(' ', \Reflection::getModifierNames($this->getModifiers())),
+            implode(' ', Reflection::getModifierNames($this->getModifiers())),
             strtolower((string) ReflectionType::convertToDisplayType($valueType)),
             $this->getName(),
             (string) $value

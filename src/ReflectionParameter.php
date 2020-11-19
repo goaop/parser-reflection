@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -16,6 +17,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
+use ReflectionFunctionAbstract;
 use ReflectionParameter as BaseReflectionParameter;
 
 /**
@@ -28,7 +30,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Reflection function or method
      *
-     * @var \ReflectionFunctionAbstract
+     * @var ReflectionFunctionAbstract
      */
     private $declaringFunction;
 
@@ -37,7 +39,7 @@ class ReflectionParameter extends BaseReflectionParameter
      *
      * @var mixed
      */
-    private $defaultValue = null;
+    private $defaultValue;
 
     /**
      * Whether or not default value is constant
@@ -58,7 +60,7 @@ class ReflectionParameter extends BaseReflectionParameter
      *
      * @var int
      */
-    private $parameterIndex = 0;
+    private $parameterIndex;
 
     /**
      * Concrete parameter node
@@ -70,18 +72,18 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Initializes a reflection for the property
      *
-     * @param string|array $unusedFunctionName Name of the function/method
-     * @param string $parameterName Name of the parameter to reflect
-     * @param Param $parameterNode Parameter definition node
-     * @param int $parameterIndex Index of parameter
-     * @param \ReflectionFunctionAbstract $declaringFunction
+     * @param string|array                $unusedFunctionName Name of the function/method
+     * @param string                      $parameterName      Name of the parameter to reflect
+     * @param ?Param                      $parameterNode      Parameter definition node
+     * @param int                         $parameterIndex     Index of parameter
+     * @param ?ReflectionFunctionAbstract $declaringFunction
      */
     public function __construct(
         $unusedFunctionName,
         $parameterName,
         Param $parameterNode = null,
         $parameterIndex = 0,
-        \ReflectionFunctionAbstract $declaringFunction = null
+        ReflectionFunctionAbstract $declaringFunction = null
     ) {
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
@@ -95,7 +97,7 @@ class ReflectionParameter extends BaseReflectionParameter
                 $context = $declaringFunction->getDeclaringClass();
             } else {
                 $context = $declaringFunction;
-            };
+            }
 
             $expressionSolver = new NodeExpressionResolver($context);
             $expressionSolver->process($this->parameterNode->default);
@@ -118,11 +120,11 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
-        return array(
+        return [
             'name' => (string)$this->parameterNode->var->name,
-        );
+        ];
     }
 
     /**
@@ -142,7 +144,7 @@ class ReflectionParameter extends BaseReflectionParameter
                 $defaultValue = substr($defaultValue, 0, 15) . '...';
             }
             /* @see https://3v4l.org/DJOEb for behaviour changes */
-            if (is_double($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
+            if (is_float($defaultValue) && fmod($defaultValue, 1.0) === 0.0) {
                 $defaultValue = (int)$defaultValue;
             }
 
@@ -207,7 +209,8 @@ class ReflectionParameter extends BaseReflectionParameter
 
                 throw new ReflectionException("Can not resolve a class name for parameter");
             }
-            $className   = $parameterType->toString();
+            $className = $parameterType->toString();
+
             $classOrInterfaceExists = class_exists($className, false) || interface_exists($className, false);
 
             return $classOrInterfaceExists ? new \ReflectionClass($className) : new ReflectionClass($className);
@@ -223,7 +226,7 @@ class ReflectionParameter extends BaseReflectionParameter
     {
         if ($this->declaringFunction instanceof \ReflectionMethod) {
             return $this->declaringFunction->getDeclaringClass();
-        };
+        }
 
         return null;
     }
@@ -353,7 +356,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isOptional()
     {
-        return $this->isVariadic() || ($this->isDefaultValueAvailable() && $this->haveSiblingsDefalutValues());
+        return $this->isVariadic() || ($this->isDefaultValueAvailable() && $this->haveSiblingsDefaultValues());
     }
 
     /**
@@ -378,14 +381,14 @@ class ReflectionParameter extends BaseReflectionParameter
      * @return bool
      * @throws ReflectionException If could not fetch declaring function reflection
      */
-    protected function haveSiblingsDefalutValues()
+    protected function haveSiblingsDefaultValues()
     {
         $function = $this->getDeclaringFunction();
         if (null === $function) {
             throw new ReflectionException('Could not get the declaring function reflection.');
         }
 
-        /** @var \ReflectionParameter[] $remainingParameters */
+        /** @var BaseReflectionParameter[] $remainingParameters */
         $remainingParameters = array_slice($function->getParameters(), $this->parameterIndex + 1);
         foreach ($remainingParameters as $reflectionParameter) {
             if (!$reflectionParameter->isDefaultValueAvailable()) {

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -34,7 +36,7 @@ class CallableLocator implements LocatorInterface
      *
      * @return string|false Path to the file with given class or false if not found
      */
-    public function locateClass($className)
+    public function locateClass(string $className)
     {
         return call_user_func($this->callable, ltrim($className, '\\'));
     }

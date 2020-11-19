@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Go\ParserReflection\Locator;
 
 use PHPUnit\Framework\TestCase;

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -38,12 +40,7 @@ class GeneratorDetector extends NodeVisitorAbstract
         return null;
     }
 
-    /**
-     * Returns the
-     *
-     * @return bool
-     */
-    public function isGenerator()
+    public function isGenerator(): bool
     {
         return $this->isGenerator;
     }

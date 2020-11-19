@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\ClassWithProperties;
@@ -124,7 +126,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         $parsedRefProperty   = $this->parsedRefClass->getProperty('publicStaticProperty');
         $originalRefProperty = new \ReflectionProperty($this->parsedRefClass->getName(), 'publicStaticProperty');
         $expectedValue     = (array) $originalRefProperty;
-        $this->assertSame($expectedValue, $parsedRefProperty->___debugInfo());
+        $this->assertSame($expectedValue, $parsedRefProperty->__debugInfo());
     }
 
     /**

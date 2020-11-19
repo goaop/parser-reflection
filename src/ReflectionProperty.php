@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -16,6 +17,7 @@ use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
+use Reflection;
 use ReflectionProperty as BaseReflectionProperty;
 
 /**
@@ -23,7 +25,8 @@ use ReflectionProperty as BaseReflectionProperty;
  */
 class ReflectionProperty extends BaseReflectionProperty
 {
-    use InitializationTrait, InternalPropertiesEmulationTrait;
+    use InitializationTrait;
+    use InternalPropertiesEmulationTrait;
 
     /**
      * Type of property node
@@ -49,10 +52,10 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Initializes a reflection for the property
      *
-     * @param string $className Name of the class with properties
-     * @param string $propertyName Name of the property to reflect
-     * @param Property $propertyType Property type definition node
-     * @param PropertyProperty $propertyNode Concrete property definition (value, name)
+     * @param string            $className    Name of the class with properties
+     * @param string            $propertyName Name of the property to reflect
+     * @param ?Property         $propertyType Property type definition node
+     * @param ?PropertyProperty $propertyNode Concrete property definition (value, name)
      */
     public function __construct(
         $className,
@@ -62,7 +65,7 @@ class ReflectionProperty extends BaseReflectionProperty
     ) {
         $this->className = ltrim($className, '\\');
         if (!$propertyType || !$propertyNode) {
-            list ($propertyType, $propertyNode) = ReflectionEngine::parseClassProperty($className, $propertyName);
+            [$propertyType, $propertyNode] = ReflectionEngine::parseClassProperty($className, $propertyName);
         }
 
         $this->propertyTypeNode = $propertyType;
@@ -95,12 +98,12 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Emulating original behaviour of reflection
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
-        return array(
+        return [
             'name'  => isset($this->propertyNode) ? $this->propertyNode->name->toString() : 'unknown',
             'class' => $this->className
-        );
+        ];
     }
 
     /**
@@ -113,7 +116,7 @@ class ReflectionProperty extends BaseReflectionProperty
         return sprintf(
             "Property [%s %s $%s ]\n",
             $this->isStatic() ? '' : ($this->isDefault() ? ' <default>' : ' <dynamic>'),
-            join(' ', \Reflection::getModifierNames($this->getModifiers())),
+            implode(' ', Reflection::getModifierNames($this->getModifiers())),
             $this->getName()
         );
     }
@@ -282,7 +285,7 @@ class ReflectionProperty extends BaseReflectionProperty
      *
      * @return void
      */
-    protected function __initialize()
+    protected function __initialize(): void
     {
         parent::__construct($this->className, $this->getName());
     }
