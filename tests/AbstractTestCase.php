@@ -9,9 +9,10 @@
  */
 namespace Go\ParserReflection;
 
+use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\AbstractClassWithMethods;
 
-abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
+abstract class AbstractTestCase extends TestCase
 {
     const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
 
@@ -109,7 +110,7 @@ abstract class AbstractTestCase extends \PHPUnit_Framework_TestCase
         include_once $fileName;
     }
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->setUpFile(__DIR__ . self::DEFAULT_STUB_FILENAME);
     }

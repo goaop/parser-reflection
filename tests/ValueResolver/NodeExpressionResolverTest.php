@@ -1,17 +1,19 @@
 <?php
 namespace Go\ParserReflection\ValueResolver;
 
+
+use PHPUnit\Framework\TestCase;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 
-class NodeExpressionResolverTest extends \PHPUnit_Framework_TestCase
+class NodeExpressionResolverTest extends TestCase
 {
     /**
      * @var null|Parser
      */
     protected $parser = null;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
     }

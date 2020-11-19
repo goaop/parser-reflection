@@ -1,9 +1,10 @@
 <?php
 namespace Go\ParserReflection\Locator;
 
+use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\ReflectionClass;
 
-class ComposerLocatorTest extends \PHPUnit_Framework_TestCase
+class ComposerLocatorTest extends TestCase
 {
     public function testLocateClass()
     {

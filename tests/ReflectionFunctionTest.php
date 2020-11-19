@@ -1,7 +1,9 @@
 <?php
 namespace Go\ParserReflection;
 
-class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+
+class ReflectionFunctionTest extends TestCase
 {
     const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
     const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
@@ -11,7 +13,7 @@ class ReflectionFunctionTest extends \PHPUnit_Framework_TestCase
      */
     protected $parsedRefFile;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE55);
 

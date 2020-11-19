@@ -1,9 +1,10 @@
 <?php
 namespace Go\ParserReflection;
 
+use PHPUnit\Framework\TestCase;
 use Stub\Issue44\Locator;
 
-class ReflectionFileTest extends \PHPUnit_Framework_TestCase
+class ReflectionFileTest extends TestCase
 {
     const STUB_FILE        = '/Stub/FileWithNamespaces.php';
     const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
@@ -13,7 +14,7 @@ class ReflectionFileTest extends \PHPUnit_Framework_TestCase
      */
     protected $parsedRefFile;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $fileName       = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
         $reflectionFile = new ReflectionFile($fileName);

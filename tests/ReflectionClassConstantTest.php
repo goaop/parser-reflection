@@ -3,19 +3,20 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\Foo;
 use Go\ParserReflection\Stub\SubFoo;
 use TestParametersForRootNsClass;
 use Go\ParserReflection\Stub\ClassWithPhp71Features;
 
-class ReflectionClassConstantTest extends \PHPUnit_Framework_TestCase
+class ReflectionClassConstantTest extends TestCase
 {
     /**
      * @var ReflectionFile
      */
     protected $parsedRefFile;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithClasses71.php');
     }
@@ -93,7 +94,7 @@ class ReflectionClassConstantTest extends \PHPUnit_Framework_TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . implode($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . implode(', ', $allMissedMethods) . ' are not implemented');
         }
     }
 
