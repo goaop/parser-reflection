@@ -25,12 +25,6 @@ class ReflectionFileTest extends TestCase
         $this->parsedRefFile = $reflectionFile;
     }
 
-    public function testBadFilenameTypeObject()
-    {
-        $this->setExpectedException(TypeError::class);
-        new ReflectionFile(new \DateTime());
-    }
-
     public function testGetName()
     {
         $fileName     = $this->parsedRefFile->getName();

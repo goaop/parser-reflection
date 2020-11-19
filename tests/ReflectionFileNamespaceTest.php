@@ -30,12 +30,6 @@ class ReflectionFileNamespaceTest extends TestCase
         include_once $fileName;
     }
 
-    public function testBadFilenameTypeObject()
-    {
-        $this->setExpectedException(TypeError::class);
-        new ReflectionFileNamespace(new \DateTime(), 'BogusNamespace');
-    }
-
     public function testGetClass()
     {
         $refClass = $this->parsedRefFileNamespace->getClass('Unknown');
