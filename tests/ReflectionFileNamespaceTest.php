@@ -56,6 +56,33 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $constValue);
     }
 
+    public function testGetConstants()
+    {
+        $constValue = $this->parsedRefFileNamespace->getConstants(true);
+        $this->assertEquals(
+            array(
+                'START_MARKER' => 9,
+                'NAMESPACE_NAME' => 'Go\ParserReflection\Stub',
+                'FILE_NAME' => __DIR__ . self::STUB_FILE,
+                'END_MARKER' => 26,
+                'INT_CONST' => 5,
+            ),
+            $constValue
+        );
+
+        $constValue = $this->parsedRefFileNamespace->getConstants(false);
+        $this->assertNotFalse($constValue);
+        $this->assertEquals(
+            array(
+                'START_MARKER' => 9,
+                'NAMESPACE_NAME' => 'Go\ParserReflection\Stub',
+                'FILE_NAME' => __DIR__ . self::STUB_FILE,
+                'END_MARKER' => 26,
+            ),
+            $constValue
+        );
+    }
+
     public function testGetConstantsCacheIndependence()
     {
         $globalConstants = $this->parsedRefFileNamespace->getConstants(true);
