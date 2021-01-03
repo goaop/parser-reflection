@@ -302,7 +302,7 @@ class ReflectionParameter extends BaseReflectionParameter
             return null;
         }
 
-        return new ReflectionType($parameterType, $allowsNull, $isBuiltin);
+        return new ReflectionNamedType($parameterType, $allowsNull, $isBuiltin);
     }
 
     /**
