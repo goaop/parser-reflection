@@ -58,6 +58,7 @@ class ClassWithPhp71Features
     private const PRIVATE_CONST = 4;
 
     public const CALCULATED_CONST = 1 + 1;
+    public const CALCULATED_CONST2 = -1 + -1;
 
     public function returnsVoid() : void {}
     public function acceptsIterable(iterable $iterable) : iterable {}
