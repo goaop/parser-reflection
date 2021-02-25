@@ -9,6 +9,7 @@ abstract class ImplicitAbstractClass
     private $a = 'foo';
     protected $b = 'bar';
     public $c = 'baz';
+    public $d = -1;
 
     abstract function test();
 }
@@ -39,6 +40,7 @@ class BaseClass
 abstract class AbstractClassWithMethods extends BaseClass
 {
     const TEST = 5;
+    const TEST2 = -5;
 
     public function __construct(){}
     public function __destruct(){}
@@ -56,14 +58,14 @@ abstract class AbstractClassWithMethods extends BaseClass
      */
     public static function funcWithDocAndBody()
     {
-        static $a =5, $test = '1234';
+        static $a =5, $b = -5, $test = '1234';
 
         return 'hello';
     }
 
-    public static function funcWithReturnArgs($a, $b = 100, $c = 10.0)
+    public static function funcWithReturnArgs($a, $b = 100, $c = 10.0, $d = -100, $e = -10.5)
     {
-        return [$a, $b, $c];
+        return [$a, $b, $c, $d, $e];
     }
 
     public static function prototypeMethod()
@@ -102,6 +104,7 @@ class ClassWithProperties
     private $privateProperty = 123;
     protected $protectedProperty = 'a';
     public $publicProperty = 42.0;
+    private $privateProperty2 = -123;
 
     /**
      * Some message to test docBlock
@@ -228,6 +231,8 @@ class ClassWithScalarConstants
     const C = 'foo';
     const D = false;
     const E = null;
+    const F = -5;
+    const G = -6.123;
 }
 
 class ClassWithMagicConstants
