@@ -148,6 +148,11 @@ class NodeExpressionResolver
         return -1 * $value;
     }
 
+    protected function resolveExprUnaryPlus(Expr\UnaryMinus $node)
+    {
+        return $this->resolve($node->expr);
+    }
+
     protected function resolveScalarString(String_ $node): string
     {
         return $node->value;
