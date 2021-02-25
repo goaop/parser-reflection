@@ -20,15 +20,15 @@ class ReflectionMethodTest extends AbstractTestCase
     public function testInvokeMethod()
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
-        $retValue  = $refMethod->invoke(null, 1, 2, 3);
-        $this->assertEquals([1, 2, 3], $retValue);
+        $retValue  = $refMethod->invoke(null, 1, 2, 3, -100, -10.5);
+        $this->assertEquals([1, 2, 3, -100, -10.5], $retValue);
     }
 
     public function testInvokeArgsMethod()
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
-        $retValue  = $refMethod->invokeArgs(null, [1, 2, 3]);
-        $this->assertEquals([1, 2, 3], $retValue);
+        $retValue  = $refMethod->invokeArgs(null, [1, 2, 3, -100, -10.5]);
+        $this->assertEquals([1, 2, 3, -100, -10.5], $retValue);
     }
 
     public function testDebugInfoMethod()
