@@ -1,5 +1,5 @@
 {
-  "name": "goaop/parser-reflection",
+  "name": "lanfix/goaop-parser-reflection",
   "description": "Provides reflection information, based on raw source",
   "license": "MIT",
   "authors": [
