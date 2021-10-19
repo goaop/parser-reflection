@@ -4,9 +4,6 @@ declare(strict_types=1);
 namespace Go\ParserReflection;
 
 use PHPUnit\Framework\TestCase;
-use Go\ParserReflection\Stub\Foo;
-use Go\ParserReflection\Stub\SubFoo;
-use TestParametersForRootNsClass;
 use Go\ParserReflection\Stub\ClassWithPhp71Features;
 
 class ReflectionClassConstantTest extends TestCase
@@ -79,6 +76,7 @@ class ReflectionClassConstantTest extends TestCase
 
     public function testCoverAllMethods()
     {
+        $className = ReflectionClassConstant::class;
         $allInternalMethods = get_class_methods(\ReflectionClassConstant::class);
         $allMissedMethods = [];
 
@@ -86,7 +84,7 @@ class ReflectionClassConstantTest extends TestCase
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod = new \ReflectionMethod(ReflectionClassConstant::class, $internalMethodName);
+            $refMethod = new \ReflectionMethod($className, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
@@ -94,7 +92,11 @@ class ReflectionClassConstantTest extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . implode(', ', $allMissedMethods) . ' are not implemented');
+            $this->markTestIncomplete(
+                'Methods ' . implode(', ', $allMissedMethods) . " for class $className are not implemented"
+            );
+        } else {
+            $this->assertEmpty($allMissedMethods);
         }
     }
 

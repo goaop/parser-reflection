@@ -3,16 +3,18 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Closure;
+
 class ReflectionMethodTest extends AbstractTestCase
 {
-    protected static $reflectionClassToTest = \ReflectionMethod::class;
+    protected static string $reflectionClassToTest = \ReflectionMethod::class;
 
     public function testGetClosureMethod()
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithDocAndBody');
-        $closure   = $refMethod->getClosure(null);
+        $closure   = $refMethod->getClosure();
 
-        $this->assertInstanceOf(\Closure::class, $closure);
+        $this->assertInstanceOf(Closure::class, $closure);
         $retValue = $closure();
         $this->assertEquals('hello', $retValue);
     }
@@ -66,13 +68,13 @@ class ReflectionMethodTest extends AbstractTestCase
      * @dataProvider caseProvider
      *
      * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param \ReflectionMethod $refMethod   Method to analyze
+     * @param string            $getterName  Name of the reflection method to test
      */
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
         \ReflectionMethod $refMethod,
-        $getterName
+        string $getterName
     ) {
         $methodName   = $refMethod->getName();
         $className    = $parsedClass->getName();
@@ -82,6 +84,7 @@ class ReflectionMethodTest extends AbstractTestCase
             return;
         }
 
+        $before = '';
         $expectedValue = $refMethod->$getterName();
         $actualValue   = $parsedMethod->$getterName();
         $this->assertSame(
@@ -96,7 +99,7 @@ class ReflectionMethodTest extends AbstractTestCase
      *
      * @return array
      */
-    public function caseProvider()
+    public function caseProvider(): array
     {
         $allNameGetters = $this->getGettersToCheck();
 
@@ -136,7 +139,7 @@ class ReflectionMethodTest extends AbstractTestCase
      *
      * @return array
      */
-    protected function getGettersToCheck()
+    protected function getGettersToCheck(): array
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName', 'getName',

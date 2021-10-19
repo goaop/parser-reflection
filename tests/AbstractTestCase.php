@@ -12,6 +12,7 @@ namespace Go\ParserReflection;
 
 use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\AbstractClassWithMethods;
+use Reflection;
 
 abstract class AbstractTestCase extends TestCase
 {
@@ -20,10 +21,10 @@ abstract class AbstractTestCase extends TestCase
     /**
      * @var ReflectionFileNamespace
      */
-    protected $parsedRefFileNamespace;
+    protected ReflectionFileNamespace $parsedRefFileNamespace;
 
     /**
-     * @var ReflectionClass
+     * @var ReflectionClass|bool
      */
     protected $parsedRefClass;
 
@@ -32,17 +33,18 @@ abstract class AbstractTestCase extends TestCase
      *
      * @var string
      */
-    protected static $reflectionClassToTest = \Reflection::class;
+    protected static string $reflectionClassToTest = Reflection::class;
 
     /**
      * Name of the class to load for default tests
      *
      * @var string
      */
-    protected static $defaultClassToLoad = AbstractClassWithMethods::class;
+    protected static string $defaultClassToLoad = AbstractClassWithMethods::class;
 
     public function testCoverAllMethods()
     {
+        $className = __NAMESPACE__ . '\\' . static::$reflectionClassToTest;
         $allInternalMethods = get_class_methods(static::$reflectionClassToTest);
         $allMissedMethods   = [];
 
@@ -50,7 +52,7 @@ abstract class AbstractTestCase extends TestCase
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(__NAMESPACE__ . '\\' . static::$reflectionClassToTest, $internalMethodName);
+            $refMethod    = new \ReflectionMethod($className, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, __NAMESPACE__) !== 0) {
                 $allMissedMethods[] = $internalMethodName;
@@ -58,7 +60,11 @@ abstract class AbstractTestCase extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join(', ', $allMissedMethods) . ' are not implemented');
+            $this->markTestIncomplete(
+                'Methods ' . implode(', ', $allMissedMethods) . " for class $className are not implemented"
+            );
+        } else {
+            $this->assertEmpty($allMissedMethods);
         }
     }
 
@@ -68,7 +74,7 @@ abstract class AbstractTestCase extends TestCase
      *
      * @return array
      */
-    public function getFilesToAnalyze()
+    public function getFilesToAnalyze(): array
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php']];
 
@@ -82,6 +88,8 @@ abstract class AbstractTestCase extends TestCase
             $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
         }
 
+        // todo 7.4
+
         return $files;
     }
 
@@ -90,14 +98,14 @@ abstract class AbstractTestCase extends TestCase
      *
      * @return array
      */
-    abstract protected function getGettersToCheck();
+    abstract protected function getGettersToCheck(): array;
 
     /**
      * Setups file for parsing
      *
      * @param string $fileName File to use
      */
-    protected function setUpFile($fileName)
+    protected function setUpFile(string $fileName)
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

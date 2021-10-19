@@ -77,7 +77,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function invoke($args = null)
+    public function invoke(...$args)
     {
         $this->initializeInternalReflection();
 

@@ -6,14 +6,16 @@ namespace Go\ParserReflection;
 use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\Foo;
 use Go\ParserReflection\Stub\SubFoo;
+use stdClass;
 use TestParametersForRootNsClass;
+use Traversable;
 
 class ReflectionParameterTest extends TestCase
 {
     /**
      * @var ReflectionFile
      */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -59,7 +61,7 @@ class ReflectionParameterTest extends TestCase
                         $this->assertSame(
                             $expectedValue,
                             $actualValue,
-                            "{$getterName}() for parameter {$functionName}:{$parameterName} should be equal"
+                            "$getterName() for parameter $functionName:$parameterName should be equal"
                         );
                     }
                 }
@@ -72,7 +74,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @return array
      */
-    public function fileProvider()
+    public function fileProvider(): array
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
 
@@ -97,7 +99,7 @@ class ReflectionParameterTest extends TestCase
 
         $objectParam = $parameters[5 /* \stdClass $objectParam */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $objectParam);
-        $this->assertSame(\stdClass::class, $objectParam->getName());
+        $this->assertSame(stdClass::class, $objectParam->getName());
 
         $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
@@ -105,7 +107,7 @@ class ReflectionParameterTest extends TestCase
 
         $internalInterfaceParam = $parameters[12 /* \Traversable $traversable */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $internalInterfaceParam);
-        $this->assertSame(\Traversable::class, $internalInterfaceParam->getName());
+        $this->assertSame(Traversable::class, $internalInterfaceParam->getName());
     }
 
     public function testGetClassMethodReturnsSelfAndParent()
@@ -200,7 +202,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @param string $getterName Name of the getter to call
      */
-    public function testGetDefaultValueThrowsAnException($getterName)
+    public function testGetDefaultValueThrowsAnException(string $getterName)
     {
         $originalException = null;
         $parsedException   = null;
@@ -228,7 +230,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame($originalException->getMessage(), $parsedException->getMessage());
     }
 
-    public function listOfDefaultGetters()
+    public function listOfDefaultGetters(): array
     {
         return [
             ['getDefaultValue'],
@@ -238,6 +240,7 @@ class ReflectionParameterTest extends TestCase
 
     public function testCoverAllMethods()
     {
+        $className = ReflectionParameter::class;
         $allInternalMethods = get_class_methods(\ReflectionParameter::class);
         $allMissedMethods   = [];
 
@@ -245,7 +248,7 @@ class ReflectionParameterTest extends TestCase
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionParameter::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod($className, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
@@ -253,7 +256,11 @@ class ReflectionParameterTest extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete(
+                'Methods ' . implode(', ', $allMissedMethods) . " for class $className are not implemented"
+            );
+        } else {
+            $this->assertEmpty($allMissedMethods);
         }
     }
 
@@ -274,7 +281,7 @@ class ReflectionParameterTest extends TestCase
                     $this->assertSame(
                         $originalRefParameter->hasType(),
                         $hasType,
-                        "Presence of type for parameter {$functionName}:{$parameterName} should be equal"
+                        "Presence of type for parameter $functionName:$parameterName should be equal"
                     );
                     $message= "Parameter $functionName:$parameterName not equals to the original reflection";
                     if ($hasType) {
@@ -305,7 +312,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @param string $fileName File name to use
      */
-    private function setUpFile($fileName)
+    private function setUpFile(string $fileName)
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
 
 class ReflectionFunctionTest extends TestCase
@@ -13,7 +14,7 @@ class ReflectionFunctionTest extends TestCase
     /**
      * @var ReflectionFile
      */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -48,7 +49,7 @@ class ReflectionFunctionTest extends TestCase
                     $this->assertSame(
                         $expectedValue,
                         $actualValue,
-                        "{$getterName}() for function {$functionName} should be equal"
+                        "$getterName() for function $functionName should be equal"
                     );
                 }
             }
@@ -57,6 +58,7 @@ class ReflectionFunctionTest extends TestCase
 
     public function testCoverAllMethods()
     {
+        $className = ReflectionFunction::class;
         $allInternalMethods = get_class_methods(\ReflectionFunction::class);
         $allMissedMethods   = [];
 
@@ -64,7 +66,7 @@ class ReflectionFunctionTest extends TestCase
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod    = new \ReflectionMethod(ReflectionFunction::class, $internalMethodName);
+            $refMethod    = new \ReflectionMethod($className, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
                 $allMissedMethods[] = $internalMethodName;
@@ -72,7 +74,11 @@ class ReflectionFunctionTest extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete(
+                'Methods ' . implode(', ', $allMissedMethods) . " for class $className are not implemented"
+            );
+        } else {
+            $this->assertEmpty($allMissedMethods);
         }
     }
 
@@ -82,7 +88,7 @@ class ReflectionFunctionTest extends TestCase
         $refFunc       = $fileNamespace->getFunction('noGeneratorFunc');
         $closure       = $refFunc->getClosure();
 
-        $this->assertInstanceOf(\Closure::class, $closure);
+        $this->assertInstanceOf(Closure::class, $closure);
         $retValue = $closure();
         $this->assertEquals(100, $retValue);
     }
@@ -122,7 +128,7 @@ class ReflectionFunctionTest extends TestCase
                 $this->assertSame(
                     $originalRefFunction->hasReturnType(),
                     $hasReturnType,
-                    "Presence of return type for function {$functionName} should be equal"
+                    "Presence of return type for function $functionName should be equal"
                 );
                 if ($hasReturnType) {
                     $parsedReturnType   = $refFunction->getReturnType();

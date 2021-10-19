@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Exception;
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
 use Go\ParserReflection\Stub\ClassWithMagicConstants;
 use Go\ParserReflection\Stub\ClassWithMethodsAndProperties;
@@ -18,7 +19,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @var string
      */
-    protected static $reflectionClassToTest = \ReflectionClass::class;
+    protected static string $reflectionClassToTest = \ReflectionClass::class;
 
     /**
      * Tests getModifier() method
@@ -28,11 +29,8 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @param string $fileName File name to test
      */
-    public function testGetModifiers($fileName)
+    public function testGetModifiers(string $fileName)
     {
-        if (PHP_VERSION_ID >= 70400) {
-            $this->markTestSkipped('TODO: Fix mapping and logic of modifiers');
-        }
         $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
             + \ReflectionClass::IS_FINAL
@@ -54,13 +52,12 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @dataProvider caseProvider
      *
-     * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param ReflectionClass $parsedClass Parsed class
+     * @param string          $getterName  Name of the reflection method to test
      */
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
-        $getterName
+        string $getterName
     ) {
         $className = $parsedClass->getName();
         $refClass  = new \ReflectionClass($className);
@@ -70,7 +67,7 @@ class ReflectionClassTest extends AbstractTestCase
         $this->assertSame(
             $expectedValue,
             $actualValue,
-            "{$getterName}() for class {$className} should be equal"
+            "$getterName() for class $className should be equal"
         );
     }
 
@@ -79,7 +76,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @return array
      */
-    public function caseProvider()
+    public function caseProvider(): array
     {
         $allNameGetters = $this->getGettersToCheck();
 
@@ -116,7 +113,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @param string $fileName File name to test
      */
-    public function testGetMethodCount($fileName)
+    public function testGetMethodCount(string $fileName)
     {
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
@@ -126,7 +123,7 @@ class ReflectionClassTest extends AbstractTestCase
             $parsedMethods     = $parsedRefClass->getMethods();
             $originalMethods   = $originalRefClass->getMethods();
             if ($parsedRefClass->getTraitAliases()) {
-                $this->markTestIncomplete("Adoptation methods for traits are not supported yet");
+                $this->markTestIncomplete("Adaptation methods for traits are not supported yet");
             }
             $this->assertCount(count($originalMethods), $parsedMethods);
         }
@@ -139,7 +136,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @param string $fileName File name to test
      */
-    public function testGetReflectionConstantCount($fileName)
+    public function testGetReflectionConstantCount(string $fileName)
     {
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
@@ -161,7 +158,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @param string $fileName File name to test
      */
-    public function testGetProperties($fileName)
+    public function testGetProperties(string $fileName)
     {
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
@@ -212,8 +209,8 @@ class ReflectionClassTest extends AbstractTestCase
         $defaultProp2Value = $originalRefClass2->getStaticPropertyValue('a');
         $ex = null;
         try {
-            $this->assertEquals(M_PI, $parsedRefClass1->getStaticPropertyValue('h'), 'Close to expected value of M_PI', 0.0001);
-            $this->assertEquals(M_PI, $originalRefClass1->getStaticPropertyValue('h'), 'Close to expected value of M_PI', 0.0001);
+            $this->assertEqualsWithDelta(M_PI, $parsedRefClass1->getStaticPropertyValue('h'), 0.0001, 'Close to expected value of M_PI');
+            $this->assertEqualsWithDelta(M_PI, $originalRefClass1->getStaticPropertyValue('h'), 0.0001, 'Close to expected value of M_PI');
             $this->assertEquals(
                 realpath(dirname(__DIR__ . parent::DEFAULT_STUB_FILENAME)),
                 realpath($parsedRefClass2->getStaticPropertyValue('a')),
@@ -231,7 +228,7 @@ class ReflectionClassTest extends AbstractTestCase
             $this->assertSame('different value', $parsedRefClass2->getStaticPropertyValue('a'));
             $this->assertSame('different value', $originalRefClass2->getStaticPropertyValue('a'));
         }
-        catch (\Exception $e) {
+        catch (Exception $e) {
             $ex = $e;
         }
         // I didn't want to write a tearDown() for one test.
@@ -273,8 +270,6 @@ class ReflectionClassTest extends AbstractTestCase
 
     public function testInheritedMethods()
     {
-        $this->markTestIncomplete("See https://github.com/goaop/parser-reflection/issues/55");
-
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(SimpleAbstractInheritance::class);
         $originalRefClass = new \ReflectionClass(SimpleAbstractInheritance::class);
 
@@ -320,9 +315,9 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @return array
      */
-    protected function getGettersToCheck()
+    protected function getGettersToCheck(): array
     {
-        $allNameGetters = [
+        return [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable',
@@ -330,7 +325,5 @@ class ReflectionClassTest extends AbstractTestCase
             'getConstants', 'getTraitNames', 'getInterfaceNames', 'getStaticProperties',
             'getDefaultProperties', 'getTraitAliases'
         ];
-
-        return $allNameGetters;
     }
 }

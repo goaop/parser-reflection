@@ -51,6 +51,7 @@ class ReflectionClass extends InternalReflectionClass
      * Parses interfaces from the concrete class node
      *
      * @return InternalReflectionClass[] List of reflections of interfaces
+     * @throws \ReflectionException
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
@@ -82,6 +83,7 @@ class ReflectionClass extends InternalReflectionClass
      * @param array $traitAdaptations List of method adaptations
      *
      * @return InternalReflectionClass[] List of reflections of traits
+     * @throws \ReflectionException
      */
     public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations): array
     {
@@ -129,10 +131,19 @@ class ReflectionClass extends InternalReflectionClass
      * Implementation of internal reflection initialization
      *
      * @return void
+     * @throws \ReflectionException
      */
     protected function __initialize(): void
     {
         parent::__construct($this->getName());
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isIterable(): bool
+    {
+        return $this->implementsInterface('Traversable');
     }
 
     /**
@@ -142,8 +153,9 @@ class ReflectionClass extends InternalReflectionClass
      *     The name of the class to create a reflection for.
      *
      * @return InternalReflectionClass The appropriate reflection object.
+     * @throws \ReflectionException
      */
-    protected function createReflectionForClass(string $className)
+    protected function createReflectionForClass(string $className): InternalReflectionClass
     {
         return class_exists($className, false) ? new parent($className) : new static($className);
     }

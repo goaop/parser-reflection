@@ -13,6 +13,13 @@ abstract class ImplicitAbstractClass
     abstract function test();
 }
 
+abstract class SimpleAbstractInheritance extends ImplicitAbstractClass
+{
+    public $b = 'bar1';
+    public $d = 'foobar';
+    private $e = 'foobaz';
+}
+
 /**
  * Some docblock for the class
  */
@@ -136,7 +143,7 @@ abstract class ClassWithMethodsAndProperties
 
     final public function publicFinalMethod() {}
     final protected function protectedFinalMethod() {}
-    final private function privateFinalMethod() {}
+    // final private function privateFinalMethod() {}
 }
 
 interface SimpleInterface {}
