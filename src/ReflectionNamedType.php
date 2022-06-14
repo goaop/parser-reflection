@@ -51,7 +51,7 @@ class ReflectionNamedType extends BaseReflectionNamedType
     /**
      * @inheritDoc
      */
-    public function allowsNull()
+    public function allowsNull(): bool
     {
         return $this->allowsNull;
     }
@@ -59,7 +59,7 @@ class ReflectionNamedType extends BaseReflectionNamedType
     /**
      * @inheritDoc
      */
-    public function isBuiltin()
+    public function isBuiltin(): bool
     {
         return $this->isBuiltin;
     }
@@ -75,7 +75,7 @@ class ReflectionNamedType extends BaseReflectionNamedType
     /**
      * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->type;
     }
