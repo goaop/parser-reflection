@@ -53,7 +53,8 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getClosureScopeClass(): ?\ReflectionClass
+    #[\ReturnTypeWillChange]
+    public function getClosureScopeClass()
     {
         $this->initializeInternalReflection();
 
@@ -63,36 +64,42 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getClosureThis(): ?object
+    #[\ReturnTypeWillChange]
+    public function getClosureThis()
     {
         $this->initializeInternalReflection();
 
         return parent::getClosureThis();
     }
 
-    public function getDocComment(): string|false
+    #[\ReturnTypeWillChange]
+    public function getDocComment()
     {
         $docComment = $this->functionLikeNode->getDocComment();
 
         return $docComment ? $docComment->getText() : false;
     }
 
-    public function getEndLine(): int|false
+    #[\ReturnTypeWillChange]
+    public function getEndLine()
     {
         return $this->functionLikeNode->getAttribute('endLine');
     }
 
-    public function getExtension(): ?\ReflectionExtension
+    #[\ReturnTypeWillChange]
+    public function getExtension()
     {
         return null;
     }
 
-    public function getExtensionName(): string|false
+    #[\ReturnTypeWillChange]
+    public function getExtensionName()
     {
         return false;
     }
 
-    public function getFileName(): string|false
+    #[\ReturnTypeWillChange]
+    public function getFileName()
     {
         return $this->functionLikeNode->getAttribute('fileName');
     }
@@ -183,7 +190,8 @@ trait ReflectionFunctionLikeTrait
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.getreturntype.php
      */
-    public function getReturnType(): ?\ReflectionType
+    #[\ReturnTypeWillChange]
+    public function getReturnType()
     {
         $isBuiltin  = false;
         $returnType = $this->functionLikeNode->getReturnType();
@@ -220,7 +228,8 @@ trait ReflectionFunctionLikeTrait
         return false;
     }
 
-    public function getStartLine(): int|false
+    #[\ReturnTypeWillChange]
+    public function getStartLine()
     {
         return $this->functionLikeNode->getAttribute('startLine');
     }

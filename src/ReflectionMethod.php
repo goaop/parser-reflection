@@ -139,7 +139,8 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getClosure(?object $object = null): \Closure
+    #[\ReturnTypeWillChange]
+    public function getClosure($object = null)
     {
         $this->initializeInternalReflection();
 
@@ -203,7 +204,8 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function invoke(?object $object, mixed ...$args): mixed
+    #[\ReturnTypeWillChange]
+    public function invoke($object, $arg = null, ...$args)
     {
         $this->initializeInternalReflection();
 
@@ -213,7 +215,8 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function invokeArgs(?object $object, array $args): mixed
+    #[\ReturnTypeWillChange]
+    public function invokeArgs($object, array $args)
     {
         $this->initializeInternalReflection();
 
@@ -287,7 +290,8 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function setAccessible(bool $accessible): void
+    #[\ReturnTypeWillChange]
+    public function setAccessible($accessible)
     {
         $this->initializeInternalReflection();
 

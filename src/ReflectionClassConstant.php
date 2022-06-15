@@ -111,7 +111,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getDeclaringClass(): ReflectionClass
+    #[\ReturnTypeWillChange]
+    public function getDeclaringClass()
     {
         return new ReflectionClass($this->className);
     }
@@ -119,7 +120,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getDocComment(): string|false
+    #[\ReturnTypeWillChange]
+    public function getDocComment()
     {
         $docBlock = $this->classConstantNode->getDocComment();
 
@@ -129,7 +131,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getModifiers(): int
+    #[\ReturnTypeWillChange]
+    public function getModifiers()
     {
         $modifiers = 0;
         if ($this->isPublic()) {
@@ -156,7 +159,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getValue(): mixed
+    #[\ReturnTypeWillChange]
+    public function getValue()
     {
         $solver = new NodeExpressionResolver($this->getDeclaringClass());
         $solver->process($this->constNode->value);

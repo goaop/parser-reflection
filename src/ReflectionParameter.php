@@ -192,7 +192,8 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getClass(): ?\ReflectionClass
+    #[\ReturnTypeWillChange]
+    public function getClass()
     {
         $parameterType = $this->parameterNode->type;
         if ($parameterType instanceof Name) {
@@ -222,7 +223,8 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDeclaringClass(): ?\ReflectionClass
+    #[\ReturnTypeWillChange]
+    public function getDeclaringClass()
     {
         if ($this->declaringFunction instanceof \ReflectionMethod) {
             return $this->declaringFunction->getDeclaringClass();
@@ -242,7 +244,8 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDefaultValue(): mixed
+    #[\ReturnTypeWillChange]
+    public function getDefaultValue()
     {
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');
@@ -254,7 +257,8 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDefaultValueConstantName(): ?string
+    #[\ReturnTypeWillChange]
+    public function getDefaultValueConstantName()
     {
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');
@@ -282,7 +286,8 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getType(): ?\ReflectionType
+    #[\ReturnTypeWillChange]
+    public function getType()
     {
         $isBuiltin     = false;
         $parameterType = $this->parameterNode->type;

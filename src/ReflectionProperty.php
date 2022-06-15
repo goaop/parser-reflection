@@ -132,7 +132,8 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function getDocComment(): string|false
+    #[\ReturnTypeWillChange]
+    public function getDocComment()
     {
         $docBlock = $this->propertyTypeNode->getDocComment();
 
@@ -172,7 +173,8 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function getValue(?object $object = null): mixed
+    #[\ReturnTypeWillChange]
+    public function getValue(object $object = null)
     {
         if (!isset($object)) {
             $solver = new NodeExpressionResolver($this->getDeclaringClass());
@@ -234,7 +236,8 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function setAccessible(bool $accessible): void
+    #[\ReturnTypeWillChange]
+    public function setAccessible(bool $accessible)
     {
         $this->initializeInternalReflection();
 
@@ -244,7 +247,8 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function setValue(mixed $object, mixed $value = null): void
+    #[\ReturnTypeWillChange]
+    public function setValue($object, $value = null)
     {
         $this->initializeInternalReflection();
 
