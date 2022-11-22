@@ -1,5 +1,14 @@
 <?php
-
+/**
+ * @noinspection PhpMissingReturnTypeInspection
+ * @noinspection PhpUnusedPrivateFieldInspection
+ * @noinspection PhpMissingFieldTypeInspection
+ * @noinspection PhpIllegalPsrClassPathInspection
+ * @noinspection PhpUnusedPrivateMethodInspection
+ * @noinspection PhpUnusedLocalVariableInspection
+ * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpSameParameterValueInspection
+ */
 namespace Go\ParserReflection\Stub;
 
 abstract class ExplicitAbstractClass {}
@@ -136,7 +145,7 @@ abstract class ClassWithMethodsAndProperties
 
     final public function publicFinalMethod() {}
     final protected function protectedFinalMethod() {}
-    final private function privateFinalMethod() {}
+    private function privateFinalMethod() {}
 }
 
 interface SimpleInterface {}

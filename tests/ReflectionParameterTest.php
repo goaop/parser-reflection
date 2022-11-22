@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
 declare(strict_types=1);
 
 namespace Go\ParserReflection;
@@ -6,14 +7,18 @@ namespace Go\ParserReflection;
 use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\Foo;
 use Go\ParserReflection\Stub\SubFoo;
+use ReflectionClass as BaseReflectionClass;
+use ReflectionParameter as BaseReflectionParameter;
+use stdClass;
 use TestParametersForRootNsClass;
+use Traversable;
 
 class ReflectionParameterTest extends TestCase
 {
     /**
      * @var ReflectionFile
      */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -46,7 +51,7 @@ class ReflectionParameterTest extends TestCase
                 $functionName = $refFunction->getName();
                 foreach ($refFunction->getParameters() as $refParameter) {
                     $parameterName        = $refParameter->getName();
-                    $originalRefParameter = new \ReflectionParameter($functionName, $parameterName);
+                    $originalRefParameter = new BaseReflectionParameter($functionName, $parameterName);
                     foreach ($allNameGetters as $getterName) {
 
                         // skip some methods if there is no default value
@@ -59,7 +64,7 @@ class ReflectionParameterTest extends TestCase
                         $this->assertSame(
                             $expectedValue,
                             $actualValue,
-                            "{$getterName}() for parameter {$functionName}:{$parameterName} should be equal"
+                            "$getterName() for parameter $functionName:$parameterName should be equal"
                         );
                     }
                 }
@@ -72,7 +77,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @return array
      */
-    public function fileProvider()
+    public function fileProvider(): array
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
 
@@ -96,16 +101,16 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame(null, $parameters[3 /* callable $callableParam */]->getClass());
 
         $objectParam = $parameters[5 /* \stdClass $objectParam */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $objectParam);
-        $this->assertSame(\stdClass::class, $objectParam->getName());
+        $this->assertInstanceOf(BaseReflectionClass::class, $objectParam);
+        $this->assertSame(stdClass::class, $objectParam->getName());
 
         $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
+        $this->assertInstanceOf(BaseReflectionClass::class, $typehintedParamWithNs);
         $this->assertSame(ReflectionParameter::class, $typehintedParamWithNs->getName());
 
         $internalInterfaceParam = $parameters[12 /* \Traversable $traversable */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $internalInterfaceParam);
-        $this->assertSame(\Traversable::class, $internalInterfaceParam->getName());
+        $this->assertInstanceOf(BaseReflectionClass::class, $internalInterfaceParam);
+        $this->assertSame(Traversable::class, $internalInterfaceParam->getName());
     }
 
     public function testGetClassMethodReturnsSelfAndParent()
@@ -116,11 +121,11 @@ class ReflectionParameterTest extends TestCase
 
         $parameters = $parsedFunction->getParameters();
         $selfParam = $parameters[0 /* self $selfParam */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $selfParam);
+        $this->assertInstanceOf(BaseReflectionClass::class, $selfParam);
         $this->assertSame(SubFoo::class, $selfParam->getName());
 
         $parentParam = $parameters[1 /* parent $parentParam */]->getClass();
-        $this->assertInstanceOf(\ReflectionClass::class, $parentParam);
+        $this->assertInstanceOf(BaseReflectionClass::class, $parentParam);
         $this->assertSame(Foo::class, $parentParam->getName());
     }
 
@@ -190,7 +195,7 @@ class ReflectionParameterTest extends TestCase
 
         $parsedRefParameters  = $parsedFunction->getParameters();
         $parsedRefParameter   = $parsedRefParameters[0];
-        $originalRefParameter = new \ReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
+        $originalRefParameter = new BaseReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
         $expectedValue        = (array) $originalRefParameter;
         $this->assertSame($expectedValue, $parsedRefParameter->__debugInfo());
     }
@@ -200,13 +205,13 @@ class ReflectionParameterTest extends TestCase
      *
      * @param string $getterName Name of the getter to call
      */
-    public function testGetDefaultValueThrowsAnException($getterName)
+    public function testGetDefaultValueThrowsAnException(string $getterName)
     {
         $originalException = null;
         $parsedException   = null;
 
         try {
-            $originalRefParameter = new \ReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
+            $originalRefParameter = new BaseReflectionParameter('Go\ParserReflection\Stub\miscParameters', 'arrayParam');
             $originalRefParameter->$getterName();
         } catch (\ReflectionException $e) {
             $originalException = $e;
@@ -228,7 +233,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame($originalException->getMessage(), $parsedException->getMessage());
     }
 
-    public function listOfDefaultGetters()
+    public function listOfDefaultGetters(): array
     {
         return [
             ['getDefaultValue'],
@@ -238,7 +243,7 @@ class ReflectionParameterTest extends TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionParameter::class);
+        $allInternalMethods = get_class_methods(BaseReflectionParameter::class);
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
@@ -247,13 +252,15 @@ class ReflectionParameterTest extends TestCase
             }
             $refMethod    = new \ReflectionMethod(ReflectionParameter::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
+            if (!str_starts_with($definerClass, 'Go\\ParserReflection')) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . join(', ', $allMissedMethods) . ' are not implemented');
+        } else {
+            $this->assertTrue(true);
         }
     }
 
@@ -269,12 +276,12 @@ class ReflectionParameterTest extends TestCase
                 $functionName = $refFunction->getName();
                 foreach ($refFunction->getParameters() as $refParameter) {
                     $parameterName        = $refParameter->getName();
-                    $originalRefParameter = new \ReflectionParameter($functionName, $parameterName);
+                    $originalRefParameter = new BaseReflectionParameter($functionName, $parameterName);
                     $hasType              = $refParameter->hasType();
                     $this->assertSame(
                         $originalRefParameter->hasType(),
                         $hasType,
-                        "Presence of type for parameter {$functionName}:{$parameterName} should be equal"
+                        "Presence of type for parameter $functionName:$parameterName should be equal"
                     );
                     $message= "Parameter $functionName:$parameterName not equals to the original reflection";
                     if ($hasType) {
@@ -305,7 +312,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @param string $fileName File name to use
      */
-    private function setUpFile($fileName)
+    private function setUpFile(string $fileName)
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

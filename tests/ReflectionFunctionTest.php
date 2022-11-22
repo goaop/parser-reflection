@@ -1,9 +1,12 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
 declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Closure;
 use PHPUnit\Framework\TestCase;
+use ReflectionFunction as BaseReflectionFunction;
 
 class ReflectionFunctionTest extends TestCase
 {
@@ -13,7 +16,7 @@ class ReflectionFunctionTest extends TestCase
     /**
      * @var ReflectionFile
      */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -41,14 +44,14 @@ class ReflectionFunctionTest extends TestCase
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
                 $functionName        = $refFunction->getName();
-                $originalRefFunction = new \ReflectionFunction($functionName);
+                $originalRefFunction = new BaseReflectionFunction($functionName);
                 foreach ($allNameGetters as $getterName) {
                     $expectedValue = $originalRefFunction->$getterName();
                     $actualValue   = $refFunction->$getterName();
                     $this->assertSame(
                         $expectedValue,
                         $actualValue,
-                        "{$getterName}() for function {$functionName} should be equal"
+                        "$getterName() for function $functionName should be equal"
                     );
                 }
             }
@@ -57,7 +60,7 @@ class ReflectionFunctionTest extends TestCase
 
     public function testCoverAllMethods()
     {
-        $allInternalMethods = get_class_methods(\ReflectionFunction::class);
+        $allInternalMethods = get_class_methods(BaseReflectionFunction::class);
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
@@ -66,13 +69,15 @@ class ReflectionFunctionTest extends TestCase
             }
             $refMethod    = new \ReflectionMethod(ReflectionFunction::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
+            if (!str_starts_with($definerClass, 'Go\\ParserReflection')) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . join(', ', $allMissedMethods) . ' are not implemented');
+        } else {
+            $this->assertTrue(true);
         }
     }
 
@@ -82,7 +87,7 @@ class ReflectionFunctionTest extends TestCase
         $refFunc       = $fileNamespace->getFunction('noGeneratorFunc');
         $closure       = $refFunc->getClosure();
 
-        $this->assertInstanceOf(\Closure::class, $closure);
+        $this->assertInstanceOf(Closure::class, $closure);
         $retValue = $closure();
         $this->assertEquals(100, $retValue);
     }
@@ -117,12 +122,12 @@ class ReflectionFunctionTest extends TestCase
         foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
                 $functionName        = $refFunction->getName();
-                $originalRefFunction = new \ReflectionFunction($functionName);
+                $originalRefFunction = new BaseReflectionFunction($functionName);
                 $hasReturnType       = $refFunction->hasReturnType();
                 $this->assertSame(
                     $originalRefFunction->hasReturnType(),
                     $hasReturnType,
-                    "Presence of return type for function {$functionName} should be equal"
+                    "Presence of return type for function $functionName should be equal"
                 );
                 if ($hasReturnType) {
                     $parsedReturnType   = $refFunction->getReturnType();

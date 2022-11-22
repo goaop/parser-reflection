@@ -1,4 +1,9 @@
 <?php
+/**
+ * @noinspection PhpMissingReturnTypeInspection
+ * @noinspection PhpFullyQualifiedNameUsageInspection
+ * @noinspection PhpInconsistentReturnPointsInspection
+ */
 declare(strict_types=1);
 
 namespace Go\ParserReflection\Stub {
@@ -16,5 +21,5 @@ namespace Go\ParserReflection\Stub {
     {
     }
 
-    function builtInArgs(int $a, float $b, bool $c, string $d, object $e) : integer {}
+    function builtInArgs(int $a, float $b, bool $c, string $d, object $e) : int {}
 }

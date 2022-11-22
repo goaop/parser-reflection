@@ -1,4 +1,9 @@
 <?php
+/**
+ * @noinspection PhpOptionalBeforeRequiredParametersInspection
+ * @noinspection PhpMissingReturnTypeInspection
+ * @noinspection PhpFullyQualifiedNameUsageInspection
+ */
 declare(strict_types=1);
 /**
  * Parser Reflection API
@@ -15,7 +20,7 @@ function miscScalarParameters(
     int $acceptsInteger,
     string $acceptsString,
     float $acceptsFloat = \INF,
-    boolean $acceptsBool,
+    bool $acceptsBool,
     int $acceptsVariadicInteger,
     string ...$acceptsDefaultString
 ) {

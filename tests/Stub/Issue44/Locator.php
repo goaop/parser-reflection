@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpIllegalPsrClassPathInspection */
 declare(strict_types=1);
 
 namespace Stub\Issue44;
@@ -10,7 +11,7 @@ class Locator implements LocatorInterface
     /**
      * {@inheritDoc}
      */
-    public function locateClass(string $className)
+    public function locateClass(string $className): bool|string
     {
         if (ltrim($className, '\\') === ClassWithNamespace::class) {
             return __DIR__ . '/ClassWithNamespace.php';

@@ -1,20 +1,19 @@
 <?php
+/** @noinspection PhpUnhandledExceptionInspection */
 declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
 use PHPUnit\Framework\TestCase;
-use Go\ParserReflection\Stub\Foo;
-use Go\ParserReflection\Stub\SubFoo;
-use TestParametersForRootNsClass;
 use Go\ParserReflection\Stub\ClassWithPhp71Features;
+use ReflectionMethod as BaseReflectionMethod;
 
 class ReflectionClassConstantTest extends TestCase
 {
     /**
      * @var ReflectionFile
      */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -46,7 +45,7 @@ class ReflectionClassConstantTest extends TestCase
                         $this->assertSame(
                             $expectedValue,
                             $actualValue,
-                            "{$getterName}() for parameter {$className}::{$classConstantName} should be equal"
+                            "$getterName() for parameter $className::$classConstantName should be equal"
                         );
                     }
                 }
@@ -86,15 +85,17 @@ class ReflectionClassConstantTest extends TestCase
             if ('export' === $internalMethodName) {
                 continue;
             }
-            $refMethod = new \ReflectionMethod(ReflectionClassConstant::class, $internalMethodName);
+            $refMethod = new BaseReflectionMethod(ReflectionClassConstant::class, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, 'Go\\ParserReflection') !== 0) {
+            if (!str_starts_with($definerClass, 'Go\\ParserReflection')) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }
 
         if ($allMissedMethods) {
             $this->markTestIncomplete('Methods ' . implode(', ', $allMissedMethods) . ' are not implemented');
+        } else {
+            $this->assertTrue(true);
         }
     }
 
@@ -103,7 +104,7 @@ class ReflectionClassConstantTest extends TestCase
      *
      * @param string $fileName File name to use
      */
-    private function setUpFile($fileName)
+    private function setUpFile(string $fileName)
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

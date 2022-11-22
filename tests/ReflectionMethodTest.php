@@ -5,7 +5,7 @@ namespace Go\ParserReflection;
 
 class ReflectionMethodTest extends AbstractTestCase
 {
-    protected static $reflectionClassToTest = \ReflectionMethod::class;
+    protected static string $reflectionClassToTest = \ReflectionMethod::class;
 
     public function testGetClosureMethod()
     {
@@ -136,7 +136,7 @@ class ReflectionMethodTest extends AbstractTestCase
      *
      * @return array
      */
-    protected function getGettersToCheck()
+    protected function getGettersToCheck(): array
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName', 'getName',
