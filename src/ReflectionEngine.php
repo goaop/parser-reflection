@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -34,32 +34,32 @@ class ReflectionEngine
     /**
      * @var null|LocatorInterface
      */
-    protected static $locator;
+    protected static ?LocatorInterface $locator;
 
     /**
      * @var array|Node[]
      */
-    protected static $parsedFiles = [];
+    protected static array $parsedFiles = [];
 
     /**
      * @var null|int
      */
-    protected static $maximumCachedFiles;
+    protected static ?int $maximumCachedFiles;
 
     /**
      * @var null|Parser
      */
-    protected static $parser;
+    protected static ?Parser $parser;
 
     /**
      * @var null|NodeTraverser
      */
-    protected static $traverser;
+    protected static ?NodeTraverser $traverser;
 
     /**
      * @var null|Lexer
      */
-    protected static $lexer;
+    protected static ?Lexer $lexer;
 
     private function __construct() {}
 
@@ -97,6 +97,12 @@ class ReflectionEngine
 
     /**
      * Locates a file name for class
+     *
+     * @param string $fullClassName
+     *
+     * @return string
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     public static function locateClassFile(string $fullClassName): string
     {
@@ -104,6 +110,7 @@ class ReflectionEngine
             || interface_exists($fullClassName, false)
             || trait_exists($fullClassName, false)
         ) {
+            /** @noinspection PhpUnhandledExceptionInspection */
             $refClass      = new \ReflectionClass($fullClassName);
             $classFileName = $refClass->getFileName();
         } else {
@@ -119,6 +126,14 @@ class ReflectionEngine
 
     /**
      * Tries to parse a class by name using LocatorInterface
+     *
+     * @param string $fullClassName
+     *
+     * @return ClassLike
+     *
+     * @throws InvalidArgumentException
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     public static function parseClass(string $fullClassName): ClassLike
     {
@@ -128,6 +143,7 @@ class ReflectionEngine
         $namespaceName  = implode('\\', $namespaceParts);
 
         // we have a namespace node somewhere
+        /** @noinspection PhpUnhandledExceptionInspection */
         $namespace      = self::parseFileNamespace($classFileName, $namespaceName);
         $namespaceNodes = $namespace->stmts;
 
@@ -144,7 +160,7 @@ class ReflectionEngine
     /**
      * Loop through an array and find a ClassLike statement by the given class name.
      *
-     * If an if statement like `if (false) {` is found, the class will also be search inside that if statement.
+     * If an `if` statement like `if (false) {` is found, the class will also be search inside that if statement.
      * This relies on the guide of greg0ire on how to deprecate a type.
      *
      * @see https://dev.to/greg0ire/how-to-deprecate-a-type-in-php-48cf
@@ -243,7 +259,7 @@ class ReflectionEngine
      *
      * @return Node[]
      */
-    public static function parseFile(string $fileName, ?string $fileContent = null)
+    public static function parseFile(string $fileName, ?string $fileContent = null): array
     {
         $fileName = PathResolver::realpath($fileName);
         if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
@@ -290,7 +306,7 @@ class ReflectionEngine
     /**
      * @return Lexer
      */
-    public static function getLexer(): ?Lexer
+    public static function getLexer(): Lexer
     {
         return self::$lexer;
     }

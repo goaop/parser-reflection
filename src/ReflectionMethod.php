@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -11,11 +11,13 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Closure;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use Reflection;
+use ReflectionException as BaseReflectionException;
 use ReflectionMethod as BaseReflectionMethod;
 
 /**
@@ -31,14 +33,14 @@ class ReflectionMethod extends BaseReflectionMethod
      *
      * @var string
      */
-    private $className;
+    private string $className;
 
     /**
      * Optional declaring class reference
      *
      * @var ReflectionClass
      */
-    private $declaringClass;
+    private ReflectionClass $declaringClass;
 
     /**
      * Initializes reflection instance for the method node
@@ -47,6 +49,7 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param string           $methodName      Name of the method
      * @param ?ClassMethod     $classMethodNode AST-node for method
      * @param ?ReflectionClass $declaringClass  Optional declaring class
+     * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct(
         $className,
@@ -100,7 +103,7 @@ class ReflectionMethod extends BaseReflectionMethod
         $methodParameters = $this->getParameters();
         try {
             $prototype = $this->getPrototype();
-        } catch (\ReflectionException $e) {
+        } catch (BaseReflectionException) {
             $prototype = null;
         }
         $prototypeClass = $prototype ? $prototype->getDeclaringClass()->name : '';
@@ -108,15 +111,17 @@ class ReflectionMethod extends BaseReflectionMethod
         $paramString = '';
         $indentation = str_repeat(' ', 4);
         foreach ($methodParameters as $methodParameter) {
-            $paramString .= "\n{$indentation}" . $methodParameter;
+            $paramString .= "\n$indentation" . $methodParameter;
         }
 
+        /** @noinspection PhpFormatFunctionParametersMismatchInspection */
         return sprintf(
-            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}{$returnFormat}\n}\n",
+            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d$paramFormat$returnFormat\n}\n",
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
-            $prototype ? ", overwrites {$prototypeClass}, prototype {$prototypeClass}" : '',
+            $prototype ? ", overwrites $prototypeClass, prototype $prototypeClass" : '',
             $this->isConstructor() ? ', ctor' : '',
-            $this->isDestructor() ? ', dtor' : '',
+            // $this->isDestructor() ? ', dtor' : '',
+            $this->isDestructor() ? '' : '',
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
@@ -139,7 +144,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getClosure($object = null)
+    public function getClosure($object = null): ?Closure
     {
         $this->initializeInternalReflection();
 
@@ -149,7 +154,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getDeclaringClass()
+    public function getDeclaringClass(): \ReflectionClass|ReflectionClass
     {
         return $this->declaringClass ?? new ReflectionClass($this->className);
     }
@@ -157,7 +162,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getModifiers()
+    public function getModifiers(): int
     {
         $modifiers = 0;
         if ($this->isPublic()) {
@@ -185,7 +190,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getPrototype()
+    public function getPrototype(): BaseReflectionMethod|ReflectionMethod
     {
         $parent = $this->getDeclaringClass()->getParentClass();
         if (!$parent) {
@@ -203,11 +208,11 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function invoke($object, $args = null)
+    public function invoke($object, ...$args)
     {
         $this->initializeInternalReflection();
 
-        return parent::invoke(...func_get_args());
+        return parent::invoke($object, ...$args);
     }
 
     /**
@@ -223,7 +228,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isAbstract()
+    public function isAbstract(): bool
     {
         return $this->getDeclaringClass()->isInterface() || $this->getClassMethodNode()->isAbstract();
     }
@@ -231,7 +236,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isConstructor()
+    public function isConstructor(): bool
     {
         return $this->getClassMethodNode()->name->toLowerString() === '__construct';
     }
@@ -239,7 +244,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isDestructor()
+    public function isDestructor(): bool
     {
         return $this->getClassMethodNode()->name->toLowerString() === '__destruct';
     }
@@ -247,7 +252,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isFinal()
+    public function isFinal(): bool
     {
         return $this->getClassMethodNode()->isFinal();
     }
@@ -255,7 +260,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPrivate()
+    public function isPrivate(): bool
     {
         return $this->getClassMethodNode()->isPrivate();
     }
@@ -263,7 +268,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->getClassMethodNode()->isProtected();
     }
@@ -271,7 +276,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->getClassMethodNode()->isPublic();
     }
@@ -279,7 +284,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isStatic()
+    public function isStatic(): bool
     {
         return $this->getClassMethodNode()->isStatic();
     }
@@ -325,9 +330,14 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * Implementation of internal reflection initialization
+     *
+     * @return void
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     protected function __initialize(): void
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         parent::__construct($this->className, $this->getName());
     }
 

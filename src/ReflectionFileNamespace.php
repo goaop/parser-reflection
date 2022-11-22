@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -33,49 +33,49 @@ class ReflectionFileNamespace
      *
      * @var array|ReflectionClass[]
      */
-    protected $fileClasses;
+    protected array $fileClasses;
 
     /**
      * List of functions in the namespace
      *
      * @var array|ReflectionFunction[]
      */
-    protected $fileFunctions;
+    protected array $fileFunctions;
 
     /**
      * List of constants in the namespace
      *
      * @var array
      */
-    protected $fileConstants;
+    protected array $fileConstants;
 
     /**
      * List of constants in the namespace including defined via "define(...)"
      *
      * @var array
      */
-    protected $fileConstantsWithDefined;
+    protected array $fileConstantsWithDefined;
 
     /**
      * List of imported namespaces (aliases)
      *
      * @var array
      */
-    protected $fileNamespaceAliases;
+    protected array $fileNamespaceAliases;
 
     /**
      * Namespace node
      *
      * @var Namespace_
      */
-    private $namespaceNode;
+    private Namespace_ $namespaceNode;
 
     /**
      * Name of the file
      *
      * @var string
      */
-    private $fileName;
+    private string $fileName;
 
     /**
      * File namespace constructor
@@ -83,6 +83,8 @@ class ReflectionFileNamespace
      * @param string          $fileName      Name of the file
      * @param string          $namespaceName Name of the namespace
      * @param Namespace_|null $namespaceNode Optional AST-node for this namespace block
+     *
+     * @throws ReflectionException
      */
     public function __construct(string $fileName, string $namespaceName, ?Namespace_ $namespaceNode = null)
     {
@@ -97,9 +99,11 @@ class ReflectionFileNamespace
     /**
      * Returns the concrete class from the file namespace or false if there is no class
      *
+     * @param string $className
+     *
      * @return bool|ReflectionClass
      */
-    public function getClass(string $className)
+    public function getClass(string $className): bool|ReflectionClass
     {
         if ($this->hasClass($className)) {
             return $this->fileClasses[$className];
@@ -127,7 +131,7 @@ class ReflectionFileNamespace
      *
      * @return bool|mixed
      */
-    public function getConstant(string $constantName)
+    public function getConstant(string $constantName): mixed
     {
         if ($this->hasConstant($constantName)) {
             return $this->fileConstants[$constantName];
@@ -165,7 +169,7 @@ class ReflectionFileNamespace
      *
      * @return string|false The doc comment if it exists, otherwise "false"
      */
-    public function getDocComment()
+    public function getDocComment(): bool|string
     {
         $docComment = false;
         $comments   = $this->namespaceNode->getAttribute('comments');
@@ -196,9 +200,11 @@ class ReflectionFileNamespace
     /**
      * Returns the concrete function from the file namespace or false if there is no function
      *
+     * @param string $functionName
+     *
      * @return bool|ReflectionFunction
      */
-    public function getFunction(string $functionName)
+    public function getFunction(string $functionName): bool|ReflectionFunction
     {
         if ($this->hasFunction($functionName)) {
             return $this->fileFunctions[$functionName];

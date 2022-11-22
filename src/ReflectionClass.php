@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -18,12 +18,12 @@ use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\TraitUse;
-use ReflectionClass as InternalReflectionClass;
+use ReflectionClass as BaseReflectionClass;
 
 /**
  * AST-based reflection class
  */
-class ReflectionClass extends InternalReflectionClass
+class ReflectionClass extends BaseReflectionClass
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionClassLikeTrait;
@@ -31,10 +31,11 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Initializes reflection instance
      *
-     * @param string|object $argument      Class name or instance of object
+     * @param object|string $argument      Class name or instance of object
      * @param ?ClassLike    $classLikeNode AST node for class
-     */
-    public function __construct($argument, ClassLike $classLikeNode = null)
+     *
+     * @noinspection PhpMissingParentConstructorInspection*/
+    public function __construct(object|string $argument, ClassLike $classLikeNode = null)
     {
         $fullClassName   = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts  = explode('\\', $fullClassName);
@@ -48,9 +49,26 @@ class ReflectionClass extends InternalReflectionClass
     }
 
     /**
+     * Magic getter
+     *
+     * @param string $propertyName
+     *
+     * @return string|null
+     */
+    public function __get(string $propertyName)
+    {
+        if ($propertyName === 'name') {
+            return $this->getName();
+        }
+        return $this->$propertyName();
+    }
+
+    /**
      * Parses interfaces from the concrete class node
      *
-     * @return InternalReflectionClass[] List of reflections of interfaces
+     * @return BaseReflectionClass[] List of reflections of interfaces
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
@@ -64,6 +82,7 @@ class ReflectionClass extends InternalReflectionClass
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
                     $implementName = $implementNode->toString();
+                    /** @noinspection PhpUnhandledExceptionInspection */
                     $interface     = interface_exists($implementName, false)
                         ? new parent($implementName)
                         : new static($implementName);
@@ -81,7 +100,9 @@ class ReflectionClass extends InternalReflectionClass
      *
      * @param array $traitAdaptations List of method adaptations
      *
-     * @return InternalReflectionClass[] List of reflections of traits
+     * @return BaseReflectionClass[] List of reflections of traits
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations): array
     {
@@ -93,6 +114,7 @@ class ReflectionClass extends InternalReflectionClass
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
                             $traitName          = $classTraitName->toString();
+                            /** @noinspection PhpUnhandledExceptionInspection */
                             $trait              = trait_exists($traitName, false)
                                 ? new parent($traitName)
                                 : new static($traitName);
@@ -112,9 +134,7 @@ class ReflectionClass extends InternalReflectionClass
      */
     public function __debugInfo(): array
     {
-        return [
-            'name' => $this->getName()
-        ];
+        return [];
     }
 
     /**
@@ -129,22 +149,27 @@ class ReflectionClass extends InternalReflectionClass
      * Implementation of internal reflection initialization
      *
      * @return void
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     protected function __initialize(): void
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         parent::__construct($this->getName());
     }
 
     /**
      * Create a ReflectionClass for a given class name.
      *
-     * @param string $className
-     *     The name of the class to create a reflection for.
+     * @param string $className The name of the class to create a reflection for.
      *
-     * @return InternalReflectionClass The appropriate reflection object.
+     * @return BaseReflectionClass The appropriate reflection object.
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
-    protected function createReflectionForClass(string $className)
+    protected function createReflectionForClass(string $className): BaseReflectionClass
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         return class_exists($className, false) ? new parent($className) : new static($className);
     }
 }

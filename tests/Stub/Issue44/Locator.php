@@ -8,7 +8,7 @@ use Go\ParserReflection\LocatorInterface;
 class Locator implements LocatorInterface
 {
     /**
-     * @inheritdoc
+     * {@inheritDoc}
      */
     public function locateClass(string $className)
     {

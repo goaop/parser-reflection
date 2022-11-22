@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -25,8 +25,15 @@ class ComposerLocator implements LocatorInterface
     /**
      * @var ClassLoader
      */
-    private $loader;
+    private ClassLoader $loader;
 
+    /**
+     * ComposerLocator constructor
+     *
+     * @param ClassLoader|null $composerLoader
+     *
+     * @throws ReflectionException
+     */
     public function __construct(ClassLoader $composerLoader = null)
     {
         if ($composerLoader === null) {
@@ -51,7 +58,7 @@ class ComposerLocator implements LocatorInterface
      *
      * @return string|false Path to the file with given class or false if not found
      */
-    public function locateClass(string $className)
+    public function locateClass(string $className): bool|string
     {
         $filePath = $this->loader->findFile(ltrim($className, '\\'));
         if (!empty($filePath)) {

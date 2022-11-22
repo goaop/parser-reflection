@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2016, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2016-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -24,9 +24,9 @@ use PhpParser\NodeVisitorAbstract;
 class RootNamespaceNormalizer extends NodeVisitorAbstract
 {
     /**
-     * {@inheritdoc}
+     * {@inheritDoc}
      */
-    public function beforeTraverse(array $nodes)
+    public function beforeTraverse(array $nodes): ?array
     {
         // namespaces can be only top-level nodes, so we can scan them directly
         foreach ($nodes as $topLevelNode) {

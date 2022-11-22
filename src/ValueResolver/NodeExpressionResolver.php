@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -36,7 +36,7 @@ class NodeExpressionResolver
      *
      * @var array
      */
-    private static $notConstants = [
+    private static array $notConstants = [
         'true'  => true,
         'false' => true,
         'null'  => true,
@@ -47,33 +47,33 @@ class NodeExpressionResolver
      *
      * @var ?string
      */
-    private $constantName;
+    private ?string $constantName;
 
     /**
      * Current reflection context for parsing
      *
      * @var mixed|ReflectionClass
      */
-    private $context;
+    private mixed $context;
 
     /**
      * Flag if expression is constant
      *
      * @var bool
      */
-    private $isConstant = false;
+    private bool $isConstant = false;
 
     /**
      * Node resolving level, 1 = top-level
      *
      * @var int
      */
-    private $nodeLevel = 0;
+    private int $nodeLevel = 0;
 
     /**
      * @var mixed Value of expression/constant
      */
-    private $value;
+    private mixed $value;
 
     public function __construct($context)
     {
@@ -115,7 +115,7 @@ class NodeExpressionResolver
      *
      * @return mixed
      */
-    protected function resolve(Node $node)
+    protected function resolve(Node $node): mixed
     {
         $value = null;
         try {
@@ -227,7 +227,14 @@ class NodeExpressionResolver
         return '';
     }
 
-    protected function resolveExprConstFetch(Expr\ConstFetch $node)
+    /**
+     * @param Expr\ConstFetch $node
+     *
+     * @return bool|mixed|null
+     *
+     * @throws ReflectionException
+     */
+    protected function resolveExprConstFetch(Expr\ConstFetch $node): mixed
     {
         $constantValue = null;
         $isResolved    = false;
@@ -258,7 +265,14 @@ class NodeExpressionResolver
         return $constantValue;
     }
 
-    protected function resolveExprClassConstFetch(Expr\ClassConstFetch $node)
+    /**
+     * @param Expr\ClassConstFetch $node
+     *
+     * @return false|mixed|string
+     *
+     * @throws ReflectionException
+     */
+    protected function resolveExprClassConstFetch(Expr\ClassConstFetch $node): mixed
     {
         $classToReflect = $node->class;
         if (!($classToReflect instanceof Node\Name)) {
@@ -267,7 +281,7 @@ class NodeExpressionResolver
                 $reason = 'Unable';
                 if ($classToReflect instanceof Expr) {
                     $methodName = $this->getDispatchMethodFor($classToReflect);
-                    $reason     = "Method " . __CLASS__ . "::{$methodName}() not found trying";
+                    $reason     = "Method " . __CLASS__ . "::$methodName() not found trying";
                 }
                 throw new ReflectionException("$reason to resolve class constant.");
             }
@@ -311,7 +325,7 @@ class NodeExpressionResolver
         return $this->resolve($node->left) - $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpMul(Expr\BinaryOp\Mul $node)
+    protected function resolveExprBinaryOpMul(Expr\BinaryOp\Mul $node): float|int
     {
         return $this->resolve($node->left) * $this->resolve($node->right);
     }
@@ -321,7 +335,7 @@ class NodeExpressionResolver
         return $this->resolve($node->left) ** $this->resolve($node->right);
     }
 
-    protected function resolveExprBinaryOpDiv(Expr\BinaryOp\Div $node)
+    protected function resolveExprBinaryOpDiv(Expr\BinaryOp\Div $node): float|int
     {
         return $this->resolve($node->left) / $this->resolve($node->right);
     }
@@ -336,7 +350,7 @@ class NodeExpressionResolver
         return !$this->resolve($node->expr);
     }
 
-    protected function resolveExprBitwiseNot(Expr\BitwiseNot $node)
+    protected function resolveExprBitwiseNot(Expr\BitwiseNot $node): int|string
     {
         return ~$this->resolve($node->expr);
     }
@@ -466,9 +480,12 @@ class NodeExpressionResolver
      *
      * @param Node\Name $node Class name node
      *
-     * @return bool|\ReflectionClass
+     * @return bool|ReflectionClass
      *
      * @throws ReflectionException
+     *
+     * @noinspection PhpDocMissingThrowsInspection
+     * @noinspection PhpMissingReturnTypeInspection
      */
     private function fetchReflectionClass(Node\Name $node)
     {
@@ -478,8 +495,10 @@ class NodeExpressionResolver
             // check to see if the class is already loaded and is safe to use
             // PHP's ReflectionClass to determine if the class is user defined
             if (class_exists($className, false)) {
+                /** @noinspection PhpUnhandledExceptionInspection */
                 $refClass = new \ReflectionClass($className);
                 if (!$refClass->isUserDefined()) {
+                    /** @noinspection PhpIncompatibleReturnTypeInspection */
                     return $refClass;
                 }
             }
@@ -504,8 +523,7 @@ class NodeExpressionResolver
 
             if (method_exists($this->context, 'getDeclaringClass')) {
                 return $this->context->getDeclaringClass()
-                                     ->getParentClass()
-                    ;
+                                     ->getParentClass();
             }
         }
 

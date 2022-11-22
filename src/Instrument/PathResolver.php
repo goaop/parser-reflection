@@ -4,7 +4,7 @@ declare(strict_types=1);
 /*
  * Go! AOP framework
  *
- * @copyright Copyright 2014, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2014-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -26,12 +26,12 @@ class PathResolver
     /**
      * Custom replacement for realpath() and stream_resolve_include_path()
      *
-     * @param string|array $somePath             Path without normalization or array of paths
+     * @param array|string $somePath             Path without normalization or array of paths
      * @param bool         $shouldCheckExistence Flag for checking existence of resolved filename
      *
      * @return array|bool|string
      */
-    public static function realpath($somePath, $shouldCheckExistence = false)
+    public static function realpath(array|string $somePath, bool $shouldCheckExistence = false): bool|array|string
     {
         // Do not resolve empty string/false/arrays into the current path
         if (!$somePath) {
@@ -45,7 +45,7 @@ class PathResolver
         $components = explode('://', $somePath, 2);
         [$pathScheme, $path] = isset($components[1]) ? $components : [null, $components[0]];
 
-        // Optimization to bypass complex logic for simple paths (eg. not in phar archives)
+        // Optimization to bypass complex logic for simple paths (e.g. not in phar archives)
         if (!$pathScheme && ($fastPath = stream_resolve_include_path($somePath))) {
             return $fastPath;
         }
@@ -57,7 +57,7 @@ class PathResolver
 
         // resolve path parts (single dot, double dot and double delimiters)
         $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
-        if (strpos($path, '.') !== false) {
+        if (str_contains($path, '.')) {
             $parts     = explode(DIRECTORY_SEPARATOR, $path);
             $absolutes = [];
             foreach ($parts as $part) {
@@ -75,7 +75,7 @@ class PathResolver
         }
 
         if ($pathScheme) {
-            $path = "{$pathScheme}://{$path}";
+            $path = "$pathScheme://$path";
         }
 
         if ($shouldCheckExistence && !file_exists($path)) {

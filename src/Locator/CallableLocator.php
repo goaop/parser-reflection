@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -36,7 +36,7 @@ class CallableLocator implements LocatorInterface
      *
      * @return string|false Path to the file with given class or false if not found
      */
-    public function locateClass(string $className)
+    public function locateClass(string $className): bool|string
     {
         return call_user_func($this->callable, ltrim($className, '\\'));
     }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -21,12 +21,12 @@ use PhpParser\NodeVisitorAbstract;
  */
 class GeneratorDetector extends NodeVisitorAbstract
 {
-    private $isGenerator = false;
+    private bool $isGenerator = false;
 
     /**
      * {@inheritDoc}
      */
-    public function enterNode(Node $node)
+    public function enterNode(Node $node): ?int
     {
         // There may be internal generators in closures, we do not need to look at them
         if ($node instanceof Node\Expr\Closure) {

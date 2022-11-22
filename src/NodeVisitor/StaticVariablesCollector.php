@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -27,16 +27,16 @@ class StaticVariablesCollector extends NodeVisitorAbstract
      *
      * @var mixed
      */
-    private $context;
+    private mixed $context;
 
-    private $staticVariables = [];
+    private array $staticVariables = [];
 
     /**
      * Default constructor
      *
      * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      */
-    public function __construct($context)
+    public function __construct(mixed $context)
     {
         $this->context = $context;
     }
@@ -44,7 +44,7 @@ class StaticVariablesCollector extends NodeVisitorAbstract
     /**
      * {@inheritDoc}
      */
-    public function enterNode(Node $node)
+    public function enterNode(Node $node): ?int
     {
         // There may be internal closures, we do not need to look at them
         if ($node instanceof Node\Expr\Closure) {

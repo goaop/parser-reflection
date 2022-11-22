@@ -2,7 +2,7 @@
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2019, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2019-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -28,19 +28,19 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      *
      * @var ClassConst
      */
-    private $classConstantNode;
+    private mixed $classConstantNode;
 
     /**
      * @var Const_
      */
-    private $constNode;
+    private mixed $constNode;
 
     /**
      * Name of the class
      *
      * @var string
      */
-    private $className;
+    private string $className;
 
     /**
      * Parses class constants from the concrete class node
@@ -78,7 +78,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      * @param string      $classConstantName Name of the class constant to reflect
      * @param ?ClassConst $classConstNode    ClassConstant definition node
      * @param Const_|null $constNode         Concrete const definition node
-     */
+     *
+     * @noinspection PhpMissingParentConstructorInspection*/
     public function __construct(
         string $className,
         string $classConstantName,
@@ -109,17 +110,17 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getDeclaringClass()
+    public function getDeclaringClass(): ReflectionClass
     {
         return new ReflectionClass($this->className);
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getDocComment()
+    public function getDocComment(): bool|string
     {
         $docBlock = $this->classConstantNode->getDocComment();
 
@@ -127,9 +128,9 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getModifiers()
+    public function getModifiers(): int
     {
         $modifiers = 0;
         if ($this->isPublic()) {
@@ -146,15 +147,15 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->constNode->name->toString();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getValue()
     {
@@ -164,33 +165,41 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function isPrivate()
+    public function isPrivate(): bool
     {
         return $this->classConstantNode->isPrivate();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->classConstantNode->isProtected();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->classConstantNode->isPublic();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function __toString()
+    public function getAttributes(?string $name = null, int $flags = 0): array
+    {
+        return parent::getAttributes($name, $flags);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function __toString(): string
     {
         # Starting from PHP7.3 gettype returns different names, need to remap them
         static $typeMap = [
@@ -203,14 +212,14 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         if (PHP_VERSION_ID >= 70300 && isset($typeMap[$type])) {
             $type = $typeMap[$type];
         }
-        $valueType = new ReflectionType($type, null, true);
+        $valueType = new ReflectionType($type, false, true);
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
-            strtolower((string) ReflectionType::convertToDisplayType($valueType)),
+            strtolower(ReflectionType::convertToDisplayType($valueType)),
             $this->getName(),
-            (string) $value
+            $value
         );
     }
 }

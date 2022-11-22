@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -16,6 +16,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Instrument\PathResolver;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Namespace_;
+use ReflectionException as BaseReflectionException;
 
 /**
  * AST-based reflector for the source file
@@ -28,21 +29,21 @@ class ReflectionFile
      *
      * @var string
      */
-    protected $fileName;
+    protected string $fileName;
 
     /**
      * List of namespaces in the file
      *
      * @var ReflectionFileNamespace[]|array
      */
-    protected $fileNamespaces;
+    protected array $fileNamespaces;
 
     /**
      * Top-level nodes for the file
      *
      * @var Node[]
      */
-    private $topLevelNodes;
+    private Node|array $topLevelNodes;
 
     /**
      * ReflectionFile constructor.
@@ -64,7 +65,7 @@ class ReflectionFile
      *
      * @return bool|ReflectionFileNamespace
      */
-    public function getFileNamespace(string $namespaceName)
+    public function getFileNamespace(string $namespaceName): ReflectionFileNamespace|bool
     {
         if ($this->hasFileNamespace($namespaceName)) {
             return $this->fileNamespaces[$namespaceName];
@@ -76,7 +77,7 @@ class ReflectionFile
     /**
      * Gets the list of namespaces in the file
      *
-     * @return array|ReflectionFileNamespace[]
+     * @return ReflectionFileNamespace[]
      */
     public function getFileNamespaces(): array
     {
@@ -100,13 +101,17 @@ class ReflectionFile
      *
      * @return Node[]
      */
-    public function getNodes(): ?array
+    public function getNodes(): array
     {
         return $this->topLevelNodes;
     }
 
     /**
      * Returns the presence of namespace in the file
+     *
+     * @param string $namespaceName
+     *
+     * @return bool
      */
     public function hasFileNamespace(string $namespaceName): bool
     {
@@ -148,11 +153,15 @@ class ReflectionFile
             if ($topLevelNode instanceof Namespace_) {
                 $namespaceName = $topLevelNode->name ? $topLevelNode->name->toString() : '';
 
-                $namespaces[$namespaceName] = new ReflectionFileNamespace(
-                    $this->fileName,
-                    $namespaceName,
-                    $topLevelNode
-                );
+                try {
+                    $namespaces[$namespaceName] = new ReflectionFileNamespace(
+                        $this->fileName,
+                        $namespaceName,
+                        $topLevelNode
+                    );
+                } catch (BaseReflectionException) {
+                    // Could not be reflected, so we skip it
+                }
             }
         }
 

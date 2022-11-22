@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2021, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2021-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -24,24 +24,30 @@ class ReflectionNamedType extends BaseReflectionNamedType
      *
      * @var bool
      */
-    private $allowsNull;
+    private bool $allowsNull;
 
     /**
      * Is type built-in or not
      *
-     * @var
+     * @var bool
      */
-    private $isBuiltin;
+    private bool $isBuiltin;
 
     /**
-     * @var string Type name
+     * Type name
+     *
+     * @var string
      */
-    private $type;
+    private string $type;
 
     /**
      * Initializes reflection data
+     *
+     * @param string $type
+     * @param bool   $allowsNull
+     * @param bool   $isBuiltin
      */
-    public function __construct($type, $allowsNull, $isBuiltin)
+    public function __construct(string $type, bool $allowsNull, bool $isBuiltin)
     {
         $this->type       = $type;
         $this->allowsNull = $allowsNull;
@@ -49,33 +55,33 @@ class ReflectionNamedType extends BaseReflectionNamedType
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function allowsNull()
+    public function allowsNull(): bool
     {
         return $this->allowsNull;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function isBuiltin()
+    public function isBuiltin(): bool
     {
         return $this->isBuiltin;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->type;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->type;
     }

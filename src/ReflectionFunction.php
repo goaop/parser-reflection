@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2015, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -30,6 +30,7 @@ class ReflectionFunction extends BaseReflectionFunction
      *
      * @param string|Closure $functionName The name of the function to reflect or a closure.
      * @param Function_ $functionNode Function node AST
+     * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct($functionName, Function_ $functionNode)
     {
@@ -67,7 +68,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function getClosure()
+    public function getClosure(): ?Closure
     {
         $this->initializeInternalReflection();
 
@@ -76,12 +77,13 @@ class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * {@inheritDoc}
+     * @noinspection PhpHierarchyChecksInspection
      */
-    public function invoke($args = null)
+    public function invoke(mixed ...$args): mixed
     {
         $this->initializeInternalReflection();
 
-        return parent::invoke(...func_get_args());
+        return parent::invoke(...$args);
     }
 
     /**
@@ -100,7 +102,7 @@ class ReflectionFunction extends BaseReflectionFunction
      * Only internal functions can be disabled using disable_functions directive.
      * User-defined functions are unaffected.
      */
-    public function isDisabled()
+    public function isDisabled(): bool
     {
         return false;
     }
@@ -113,7 +115,7 @@ class ReflectionFunction extends BaseReflectionFunction
     public function __toString()
     {
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
-        $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";
+        $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d$paramFormat\n}\n";
 
         return sprintf(
             $reflectionFormat,
@@ -132,9 +134,14 @@ class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * Implementation of internal reflection initialization
+     *
+     * @return void
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
     protected function __initialize(): void
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         parent::__construct($this->getName());
     }
 }
