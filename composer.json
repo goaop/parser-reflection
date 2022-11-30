@@ -26,7 +26,7 @@
     "nikic/php-parser": "^4.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^9.0"
+    "phpunit/phpunit": "^9.5"
   },
   "extra": {
     "branch-alias": {
