@@ -18,7 +18,9 @@ namespace Go\ParserReflection\Traits;
 trait InternalPropertiesEmulationTrait
 {
     /**
-     * Magic method that should be defined to provide an info about internal properties
+     * Magic method that should be defined to provide an info about internal properties.
+     *
+     * Called when invoking {@link var_dump()} on an object
      *
      * @return array
      */

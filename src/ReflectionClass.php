@@ -130,7 +130,11 @@ class ReflectionClass extends BaseReflectionClass
     }
 
     /**
-     * Emulating original behaviour of reflection
+     * Emulating original behaviour of reflection.
+     *
+     * Called when invoking {@link var_dump()} on an object
+     *
+     * @return array{name: string}
      */
     public function __debugInfo(): array
     {
