@@ -10,6 +10,8 @@ use Go\ParserReflection\Stub\ClassWithScalarConstants;
 use Go\ParserReflection\Stub\FinalClass;
 use Go\ParserReflection\Stub\ImplicitAbstractClass;
 use Go\ParserReflection\Stub\SimpleAbstractInheritance;
+use ReflectionClass as BaseReflectionClass;
+use ReflectionException as BaseReflectionException;
 
 class ReflectionClassTest extends AbstractTestCase
 {
@@ -18,7 +20,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @var string
      */
-    protected static string $reflectionClassToTest = \ReflectionClass::class;
+    protected static string $reflectionClassToTest = BaseReflectionClass::class;
 
     /**
      * Tests getModifier() method
@@ -27,21 +29,20 @@ class ReflectionClassTest extends AbstractTestCase
      * @dataProvider getFilesToAnalyze
      *
      * @param string $fileName File name to test
+     *
+     * @throws BaseReflectionException
      */
-    public function testGetModifiers($fileName)
+    public function testGetModifiers(string $fileName)
     {
-        if (PHP_VERSION_ID >= 70400) {
-            $this->markTestSkipped('TODO: Fix mapping and logic of modifiers');
-        }
         $mask =
-            \ReflectionClass::IS_EXPLICIT_ABSTRACT
-            + \ReflectionClass::IS_FINAL
-            + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
+            BaseReflectionClass::IS_EXPLICIT_ABSTRACT
+            + BaseReflectionClass::IS_FINAL
+            + BaseReflectionClass::IS_IMPLICIT_ABSTRACT;
 
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
         foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+            $originalRefClass  = new BaseReflectionClass($parsedRefClass->getName());
             $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
             $originalModifiers = $originalRefClass->getModifiers() & $mask;
 
@@ -63,7 +64,7 @@ class ReflectionClassTest extends AbstractTestCase
         $getterName
     ) {
         $className = $parsedClass->getName();
-        $refClass  = new \ReflectionClass($className);
+        $refClass  = new BaseReflectionClass($className);
 
         $expectedValue = $refClass->$getterName();
         $actualValue   = $parsedClass->$getterName();
@@ -122,7 +123,7 @@ class ReflectionClassTest extends AbstractTestCase
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
 
         foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+            $originalRefClass  = new BaseReflectionClass($parsedRefClass->getName());
             $parsedMethods     = $parsedRefClass->getMethods();
             $originalMethods   = $originalRefClass->getMethods();
             if ($parsedRefClass->getTraitAliases()) {
@@ -145,7 +146,7 @@ class ReflectionClassTest extends AbstractTestCase
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
 
         foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+            $originalRefClass  = new BaseReflectionClass($parsedRefClass->getName());
             $parsedReflectionConstants     = $parsedRefClass->getReflectionConstants();
             $originalReflectionConstants   = $originalRefClass->getReflectionConstants();
             $this->assertCount(count($originalReflectionConstants), $parsedReflectionConstants);
@@ -167,7 +168,7 @@ class ReflectionClassTest extends AbstractTestCase
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
 
         foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new \ReflectionClass($parsedRefClass->getName());
+            $originalRefClass  = new BaseReflectionClass($parsedRefClass->getName());
             $parsedProperties   = $parsedRefClass->getProperties();
             $originalProperties = $originalRefClass->getProperties();
 
@@ -205,9 +206,9 @@ class ReflectionClassTest extends AbstractTestCase
     public function testSetStaticPropertyValueMethod()
     {
         $parsedRefClass1 = $this->parsedRefFileNamespace->getClass(ClassWithConstantsAndInheritance::class);
-        $originalRefClass1 = new \ReflectionClass(ClassWithConstantsAndInheritance::class);
+        $originalRefClass1 = new BaseReflectionClass(ClassWithConstantsAndInheritance::class);
         $parsedRefClass2 = $this->parsedRefFileNamespace->getClass(ClassWithMagicConstants::class);
-        $originalRefClass2 = new \ReflectionClass(ClassWithMagicConstants::class);
+        $originalRefClass2 = new BaseReflectionClass(ClassWithMagicConstants::class);
         $defaultProp1Value = $originalRefClass1->getStaticPropertyValue('h');
         $defaultProp2Value = $originalRefClass2->getStaticPropertyValue('a');
         $ex = null;
@@ -245,7 +246,7 @@ class ReflectionClassTest extends AbstractTestCase
     public function testGetMethodsFiltering()
     {
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithMethodsAndProperties::class);
-        $originalRefClass = new \ReflectionClass(ClassWithMethodsAndProperties::class);
+        $originalRefClass = new BaseReflectionClass(ClassWithMethodsAndProperties::class);
 
         $parsedMethods   = $parsedRefClass->getMethods(\ReflectionMethod::IS_PUBLIC);
         $originalMethods = $originalRefClass->getMethods(\ReflectionMethod::IS_PUBLIC);
@@ -261,7 +262,7 @@ class ReflectionClassTest extends AbstractTestCase
     public function testDirectMethods()
     {
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ImplicitAbstractClass::class);
-        $originalRefClass = new \ReflectionClass(ImplicitAbstractClass::class);
+        $originalRefClass = new BaseReflectionClass(ImplicitAbstractClass::class);
 
         $this->assertEquals($originalRefClass->hasMethod('test'), $parsedRefClass->hasMethod('test'));
         $this->assertCount(count($originalRefClass->getMethods()), $parsedRefClass->getMethods());
@@ -276,7 +277,7 @@ class ReflectionClassTest extends AbstractTestCase
         $this->markTestIncomplete("See https://github.com/goaop/parser-reflection/issues/55");
 
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(SimpleAbstractInheritance::class);
-        $originalRefClass = new \ReflectionClass(SimpleAbstractInheritance::class);
+        $originalRefClass = new BaseReflectionClass(SimpleAbstractInheritance::class);
 
         $this->assertEquals($originalRefClass->hasMethod('test'), $parsedRefClass->hasMethod('test'));
     }
@@ -284,7 +285,7 @@ class ReflectionClassTest extends AbstractTestCase
     public function testHasConstant()
     {
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
-        $originalRefClass = new \ReflectionClass(ClassWithScalarConstants::class);
+        $originalRefClass = new BaseReflectionClass(ClassWithScalarConstants::class);
 
         $this->assertSame($originalRefClass->hasConstant('D'), $parsedRefClass->hasConstant('D'));
         $this->assertSame($originalRefClass->hasConstant('E'), $parsedRefClass->hasConstant('E'));
@@ -293,7 +294,7 @@ class ReflectionClassTest extends AbstractTestCase
     public function testGetConstant()
     {
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
-        $originalRefClass = new \ReflectionClass(ClassWithScalarConstants::class);
+        $originalRefClass = new BaseReflectionClass(ClassWithScalarConstants::class);
 
         $this->assertSame($originalRefClass->getConstant('D'), $parsedRefClass->getConstant('D'));
         $this->assertSame($originalRefClass->getConstant('E'), $parsedRefClass->getConstant('E'));
@@ -302,7 +303,7 @@ class ReflectionClassTest extends AbstractTestCase
     public function testGetReflectionConstant()
     {
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(ClassWithScalarConstants::class);
-        $originalRefClass = new \ReflectionClass(ClassWithScalarConstants::class);
+        $originalRefClass = new BaseReflectionClass(ClassWithScalarConstants::class);
 
         $this->assertFalse($parsedRefClass->getReflectionConstant('NOT_EXISTING'));
         $this->assertSame(

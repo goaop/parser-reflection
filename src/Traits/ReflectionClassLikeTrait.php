@@ -429,9 +429,18 @@ trait ReflectionClassLikeTrait
      */
     public function getModifiers(): int
     {
-        $this->initializeInternalReflection();
+        /** @see https://github.com/php/php-src/blob/PHP-8.0.25/ext/reflection/php_reflection.c#L4674-L4687 */
+        $modifiers = 0;
 
-        return parent::getModifiers();
+        if ($this->isFinal()) {
+            $modifiers += BaseReflectionClass::IS_FINAL;
+        }
+
+        if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
+            $modifiers += BaseReflectionClass::IS_EXPLICIT_ABSTRACT;
+        }
+
+        return $modifiers;
     }
 
     /**
