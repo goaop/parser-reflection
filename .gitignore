@@ -1,3 +1,7 @@
+# IDEs
+/.idea/
+/.vscode/
+
 # Composer
 /vendor/
 /composer.lock
