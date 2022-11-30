@@ -134,7 +134,9 @@ class ReflectionClass extends BaseReflectionClass
      */
     public function __debugInfo(): array
     {
-        return [];
+        return [
+            'name' => $this->getName(),
+        ];
     }
 
     /**
