@@ -124,8 +124,6 @@ class ReflectionMethod extends BaseReflectionMethod
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
             $prototype ? ", overwrites $prototypeClass, prototype $prototypeClass" : '',
             $this->isConstructor() ? ', ctor' : '',
-            // $this->isDestructor() ? ', dtor' : '',
-            $this->isDestructor() ? '' : '',
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
