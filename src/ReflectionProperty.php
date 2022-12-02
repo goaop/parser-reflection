@@ -1,5 +1,4 @@
 <?php
-/** @noinspection PhpUnusedFieldDefaultValueInspection */
 declare(strict_types=1);
 /**
  * Parser Reflection API
@@ -9,7 +8,6 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
-
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\InitializationTrait;
@@ -47,7 +45,7 @@ class ReflectionProperty extends BaseReflectionProperty
      *
      * @var string
      */
-    private string $className = '';
+    private string $className;
 
     /**
      * Initializes a reflection for the property
@@ -122,7 +120,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function getDocComment(): bool|string
+    public function getDocComment(): string|false
     {
         $docBlock = $this->propertyTypeNode->getDocComment();
 
@@ -162,7 +160,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function getValue($object = null)
+    public function getValue(?object $object = null): mixed
     {
         if (!isset($object)) {
             $solver = new NodeExpressionResolver($this->getDeclaringClass());
@@ -234,7 +232,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function setAccessible($accessible)
+    public function setAccessible(bool $accessible): void
     {
         $this->initializeInternalReflection();
 
@@ -244,7 +242,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function setValue(mixed $objectOrValue, mixed $value = null)
+    public function setValue(mixed $objectOrValue, mixed $value = null): void
     {
         $this->initializeInternalReflection();
 
