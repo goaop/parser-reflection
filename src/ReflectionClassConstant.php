@@ -124,7 +124,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * {@inheritDoc}
      */
-    public function getDocComment(): bool|string
+    public function getDocComment(): string|false
     {
         $docBlock = $this->classConstantNode->getDocComment();
 
@@ -161,7 +161,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * {@inheritDoc}
      */
-    public function getValue()
+    public function getValue(): mixed
     {
         $solver = new NodeExpressionResolver($this->getDeclaringClass());
         $solver->process($this->constNode->value);
