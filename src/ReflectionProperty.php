@@ -13,9 +13,13 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Scalar\MagicConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
+use Reflection as BaseReflection;
 use ReflectionProperty as BaseReflectionProperty;
 
 /**
@@ -72,6 +76,138 @@ class ReflectionProperty extends BaseReflectionProperty
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
+    }
+
+    /**
+     * Return string representation of this little old property.
+     *
+     * @return string
+     */
+    public function __toString(): string
+    {
+        $modifiers = implode(' ', BaseReflection::getModifierNames($this->getModifiers()));
+        $name      = $this->getName();
+        $default   = null;
+        if ($this->isDefault()) {
+            $quoteString = null;
+            $checkType   = true;
+
+            $default          = $this->getDefaultValue();
+            $defaultValueType = gettype($default);
+            $defaultNode      = $this->getNode()->default;
+            $declaringClass   = $this->getDeclaringClass();
+            $namespaceName    = $declaringClass->getNamespaceName();
+
+            // PHP >= 8.1 has changed the way how default values are represented
+            if (PHP_VERSION_ID >= 80100) {
+                // TODO: Outside constants are printed as "self::CONSTANT"
+
+                // Constants are displayed with namespace prefix and without quotes
+                if ($defaultNode instanceof ConstFetch) {
+                    if ($namespaceName) {
+                        $namespaceName .= '\\';
+                    }
+
+                    $default   = $namespaceName . $defaultNode->name->toString();
+                    $checkType = false;
+                }
+
+                // Class constants are escaped with backslashes
+                if ($defaultNode instanceof ClassConstFetch
+                    || $defaultNode instanceof MagicConst
+                ) {
+                    // __CLASS__ inside a trait returns __CLASS__
+                    // TODO: Not declaring class, but the class where the trait is used
+                    if ($declaringClass->isTrait()
+                        && $defaultNode instanceof MagicConst\Class_
+                    ) {
+                        $default = '__CLASS__';
+                        $quoteString = false;
+                    }
+
+                    // Escape backslashes in strings
+                    else if ($defaultValueType === 'string') {
+                        $default = str_replace('\\', '\\\\', $default);
+                        $quoteString = true;
+                    }
+                }
+            }
+
+            // Resolve by type
+            if ($checkType) {
+                switch ($defaultValueType) {
+                    // String
+                    case 'string':
+                        /** @var string $default */
+                        // PHP >= 8.1 shows the full string
+                        // PHP < 8.1 truncates the string
+                        if (PHP_VERSION_ID < 80100) {
+                            // If longer than 15 characters, truncate it
+                            if (strlen($default) > 15) {
+                                $default = substr($default, 0, 15) . '...';
+                            }
+                        }
+
+                        if ($quoteString === null) $quoteString = true;
+                        break;
+
+                    case 'boolean':
+                        /** @var boolean $default */
+                        $default = $default ? 'true' : 'false';
+                        break;
+
+                    case 'double':
+                        /** @var double $default */
+                        // PHP >= 8.1 shows the full float
+                        // PHP < 8.1 truncates the float
+                        if (PHP_VERSION_ID >= 80100) {
+                            $afterPoint = strlen(substr((string) strrchr((string) $default, "."), 1));
+                            $default = (string) round($default, 15);
+                            if (!str_contains((string) $default, '.')) {
+                                $default .= '.' . $afterPoint;
+                            }
+                        }
+                        break;
+
+                    // Array
+                    case 'array':
+                        /** @var array $default */
+                        // PHP >= 8.1 shows the full array
+                        if (PHP_VERSION_ID >= 80100) {
+                            // TODO: Show the full array
+                            // TODO: Outside constants inside arrays replaces the array with "self::CONSTANT"
+
+                            $default = '[]';
+                        }
+
+                        // PHP < 8.1 shows "Array"
+                        else {
+                            $default = 'Array';
+                        }
+                        break;
+
+                    // NULL
+                    case 'NULL':
+                        /** @var null $default */
+                        $default = 'NULL';
+                        break;
+                }
+            }
+
+            if ($quoteString) {
+                $default = sprintf("'%s'", $default);
+            }
+        }
+
+        // Add assignment sign if there is a default value
+        $default = $default ? sprintf('= %s', $default) : '';
+
+        return sprintf(
+            "Property [ %s $%s %s ]\n",
+            $modifiers,
+            $name,
+            $default,
+        );
     }
 
     /**
