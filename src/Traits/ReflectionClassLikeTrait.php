@@ -280,7 +280,7 @@ trait ReflectionClassLikeTrait
                 } else {
                     // Internal reflection and dynamic property
                     $classProperties = $property->getDeclaringClass()
-                                                ->getDefaultProperties();
+                        ->getDefaultProperties();
 
                     $defaultValues[$propertyName] = $classProperties[$propertyName];
                 }
@@ -489,6 +489,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return BaseReflectionProperty[]
      */
     public function getProperties(?int $filter = null): array
     {
@@ -505,7 +507,7 @@ trait ReflectionClassLikeTrait
                     $result += $reflectionProperties;
                 }
             );
-            $properties       = $directProperties + $parentProperties;
+            $properties = $directProperties + $parentProperties;
 
             $this->properties = $properties;
         }
