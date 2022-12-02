@@ -15,9 +15,9 @@ abstract class ExplicitAbstractClass {}
 
 abstract class ImplicitAbstractClass
 {
-    private $a = 'foo';
+    private $a   = 'foo';
     protected $b = 'bar';
-    public $c = 'baz';
+    public $c    = 'baz';
 
     abstract function test();
 }
@@ -28,6 +28,7 @@ abstract class ImplicitAbstractClass
 final class FinalClass
 {
     public $args = [];
+
     public function __construct($a = null, &$b = null)
     {
         $this->args = array_slice(array($a, &$b), 0, func_num_args());
@@ -65,7 +66,7 @@ abstract class AbstractClassWithMethods extends BaseClass
      */
     public static function funcWithDocAndBody()
     {
-        static $a =5, $test = '1234';
+        static $a = 5, $test = '1234';
 
         return 'hello';
     }
@@ -108,18 +109,21 @@ abstract class AbstractClassWithMethods extends BaseClass
 
 class ClassWithProperties
 {
-    private $privateProperty = 123;
+    private $privateProperty     = 123;
     protected $protectedProperty = 'a';
-    public $publicProperty = 42.0;
+    public $publicProperty       = 42.0;
 
     /**
      * Some message to test docBlock
      *
      * @var int
      */
-    private static $privateStaticProperty = 1;
+    private static $privateStaticProperty     = 1;
     protected static $protectedStaticProperty = 'foo';
-    public static $publicStaticProperty = M_PI;
+    public static $publicStaticProperty       = M_PI;
+
+    public $propertyWithDefaultValue     = 'default';
+    public $propertyWithLongDefaultValue = 'pretty long default value';
 }
 
 abstract class ClassWithMethodsAndProperties
@@ -166,16 +170,12 @@ trait ConflictedSimpleTrait
 
 class SimpleInheritance extends ExplicitAbstractClass {}
 
-/*
- * Current implementation returns wrong __toString description for the parent methods
- * @see https://github.com/goaop/parser-reflection/issues/55
 abstract class SimpleAbstractInheritance extends ImplicitAbstractClass
 {
-    public $b = 'bar1';
-    public $d = 'foobar';
+    public $b  = 'bar1';
+    public $d  = 'foobar';
     private $e = 'foobaz';
 }
-*/
 
 class ClassWithInterface implements SimpleInterface {}
 
@@ -184,10 +184,6 @@ class ClassWithTrait
     use SimpleTrait;
 }
 
-/*
- * Current implementation doesn't support trait adaptation,
- * @see https://github.com/goaop/parser-reflection/issues/54
- *
 class ClassWithTraitAndAdaptation
 {
     use SimpleTrait {
@@ -199,20 +195,15 @@ class ClassWithTraitAndAdaptation
 class ClassWithTraitAndConflict
 {
     use SimpleTrait, ConflictedSimpleTrait {
-        foo as protected fooBar;
+        SimpleTrait::foo as protected fooBar;
         ConflictedSimpleTrait::foo insteadof SimpleTrait;
     }
 }
-*/
 
-/*
- * Logic of prototype methods for interface and traits was changed since 7.0.6
- * @see https://github.com/goaop/parser-reflection/issues/56
 class ClassWithTraitAndInterface implements InterfaceWithMethod
 {
     use SimpleTrait;
 }
-*/
 
 class NoCloneable
 {
@@ -250,9 +241,25 @@ class ClassWithMagicConstants
     public static $a    = self::A;
     protected static $b = self::B;
     private static $c   = self::C;
+    public $d           = self::D;
+    protected $e        = self::E;
+
+    public $f    = __DIR__;
+    protected $g = __FILE__;
+    private $h   = __NAMESPACE__;
+    public $i    = __CLASS__;
+    protected $j = __LINE__;
+    private $k   = __TRAIT__;
+    public $l    = __FUNCTION__;
+    protected $m = __METHOD__;
 }
 
 const NS_CONST = 'test';
+
+class SomeOtherClass
+{
+    const A = M_PI;
+}
 
 class ClassWithConstantsAndInheritance extends ClassWithMagicConstants
 {
@@ -265,11 +272,66 @@ class ClassWithConstantsAndInheritance extends ClassWithMagicConstants
 
 trait TraitWithProperties
 {
-    private $a = 'foo';
+    private $a   = 'foo';
     protected $b = 'bar';
-    public $c = 'baz';
+    public $c    = 'baz';
 
-    private static $as = 1;
+    private static $as   = 1;
     protected static $bs = __TRAIT__;
-    public static $cs = 'foo';
+    public static $cs    = 'foo';
+}
+
+trait TraitWithMagicConstants
+{
+    public $a = __DIR__;
+    public $b = __FILE__;
+    public $c = __NAMESPACE__;
+    public $d = __CLASS__;
+    public $e = __LINE__;
+    public $f = __TRAIT__;
+    public $g = __FUNCTION__;
+    public $h = __METHOD__;
+}
+
+class ClassWithTraitMagicConstants
+{
+    use TraitWithMagicConstants;
+}
+
+class ClassWithArrays
+{
+    const A = [1, 2, 3];
+    const B = self::A;
+    const C = [M_PI];
+
+    public static $basicArray = [1, '2', 3.0, true, null];
+    public $assocArray              = ['a' => 1];
+    public $nestedArray             = [['foo' => 'bar'], 'baz'];
+    public $arrayWithConstants      = [self::A, self::B, self::C];
+    public $arrayWithConstants2     = [M_PI];
+    public $arrayWithClassConstants = [ClassWithArrays::A, ClassWithArrays::B, ClassWithArrays::C];
+}
+
+class ClassWithDifferentConstantTypes
+{
+    const NUMBER = 13;
+    const STRING = 'foo';
+    const FOREIGN = SomeOtherClass::A;
+    const FLOAT  = 3.14;
+    const LONG   = 12345678901234567890;
+    const BOOL   = true;
+    const NULL   = null;
+    const MAGIC  = __CLASS__;
+    const CONST  = M_PI;
+    const ARRAY  = [13, 'foo', 3.14, 12345678901234567890, true, null, __CLASS__, M_PI];
+
+    public $refNumber = self::NUMBER;
+    public $refString = self::STRING;
+    public $refFloat  = self::FLOAT;
+    public $refLong   = self::LONG;
+    public $refBool   = self::BOOL;
+    public $refNull   = self::NULL;
+    public $refMagic  = self::MAGIC;
+    public $refConst  = self::CONST;
+    public $refArray  = self::ARRAY;
 }
