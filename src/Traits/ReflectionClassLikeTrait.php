@@ -1,5 +1,5 @@
 <?php
-
+/** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection */
 declare(strict_types=1);
 /**
  * Parser Reflection API
@@ -9,7 +9,6 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
-
 namespace Go\ParserReflection\Traits;
 
 use Closure;
@@ -33,6 +32,7 @@ use ReflectionExtension as BaseReflectionExtension;
 use ReflectionMethod as BaseReflectionMethod;
 use ReflectionObject as BaseReflectionObject;
 use ReflectionProperty as BaseReflectionProperty;
+use ReturnTypeWillChange;
 
 /**
  * General class-like reflection
@@ -60,7 +60,7 @@ trait ReflectionClassLikeTrait
      *
      * @var array|null
      */
-    protected ?array $constants = null;
+    public ?array $constants = null;
 
     /**
      * Interfaces, empty array or null if not initialized yet
@@ -950,6 +950,7 @@ trait ReflectionClassLikeTrait
      *                             cannot be instantiated without invoking the constructor. In PHP 5.6.0
      *                             onwards, this exception is limited only to internal classes that are final.
      */
+    #[ReturnTypeWillChange]
     public function newInstance(...$args)
     {
         $this->initializeInternalReflection();
@@ -1019,6 +1020,13 @@ trait ReflectionClassLikeTrait
         parent::setStaticPropertyValue($name, $value);
     }
 
+    /**
+     * Recursively gets all traits, parent classes and interfaces used by this class
+     *
+     * @param Closure $collector
+     *
+     * @return array
+     */
     private function recursiveCollect(Closure $collector): array
     {
         $result   = [];
