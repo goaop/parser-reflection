@@ -19,6 +19,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\TraitUse;
 use ReflectionClass as BaseReflectionClass;
+use TypeError;
 
 /**
  * AST-based reflection class
@@ -138,8 +139,15 @@ class ReflectionClass extends BaseReflectionClass
      */
     public function __debugInfo(): array
     {
+        try {
+            $name = $this->getName();
+        } catch (TypeError) {
+            // If we are here, then we are in the middle of the object creation
+            $name = null;
+        }
+
         return [
-            'name' => $this->getName(),
+            'name' => $name,
         ];
     }
 
