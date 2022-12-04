@@ -40,6 +40,13 @@ class ClassWithConstructorPropertyPromotion
 #[Attribute]
 class ClassWithAttributes {}
 
+#[
+Attribute
+] class
+ClassWithAttributes2
+{
+}
+
 #[Attribute]
 class CustomAttribute {}
 

@@ -153,8 +153,10 @@ class ReflectionClass extends BaseReflectionClass
 
     /**
      * Returns an AST-node for class
+     *
+     * @return ClassLike
      */
-    public function getNode(): ?ClassLike
+    public function getNode(): ClassLike
     {
         return $this->classLikeNode;
     }
