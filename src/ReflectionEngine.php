@@ -218,7 +218,19 @@ class ReflectionEngine
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classProperty) {
                     if ($classProperty->name->toString() === $propertyName) {
-                        return [$classLevelNode, $classProperty];
+                        return [$classLevelNode, $classProperty, null];
+                    }
+                }
+            }
+
+            else if ($classLevelNode instanceof ClassMethod
+                && $classLevelNode->name->toString() === '__construct'
+            ) {
+                foreach ($classLevelNode->getParams() as $param) {
+                    if ($param->flags !== 0) {
+                        if ($param->var->name === $propertyName) {
+                            return [null, null, $param];
+                        }
                     }
                 }
             }

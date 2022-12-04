@@ -1,7 +1,17 @@
 <?php
 /**
+ * Parser Reflection API
+ *
+ * @copyright Copyright 2022, Lisachenko Alexander <lisachenko.it@gmail.com>
+ *
+ * This source file is subject to the license that is bundled
+ * with this source code in the file LICENSE.
+ *
  * @noinspection PhpDocMissingThrowsInspection
  * @noinspection PhpUnhandledExceptionInspection
+ *
+ *
+ *
  */
 declare(strict_types=1);
 
@@ -186,13 +196,13 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @param string $fileName File name to test
      */
-    public function testGetProperties($fileName)
+    public function testGetProperties(string $fileName)
     {
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
 
         foreach ($parsedClasses as $parsedRefClass) {
-            $originalRefClass  = new BaseReflectionClass($parsedRefClass->getName());
+            $originalRefClass   = new BaseReflectionClass($parsedRefClass->getName());
             $parsedProperties   = $parsedRefClass->getProperties();
             $originalProperties = $originalRefClass->getProperties();
 

@@ -297,14 +297,16 @@ trait ReflectionClassLikeTrait
                 $propertyName         = $property->getName();
                 $isInternalReflection = get_class($property) === BaseReflectionProperty::class;
 
-                if (!$isInternalReflection || $isStaticProperty) {
-                    $defaultValues[$propertyName] = $property->getValue();
-                } else {
-                    // Internal reflection and dynamic property
-                    $classProperties = $property->getDeclaringClass()
-                        ->getDefaultProperties();
+                if (!$property->isPromoted()) {
+                    if ((!$isInternalReflection || $isStaticProperty)) {
+                        $defaultValues[$propertyName] = $property->getValue();
+                    } else {
+                        // Internal reflection and dynamic property
+                        $classProperties = $property->getDeclaringClass()
+                            ->getDefaultProperties();
 
-                    $defaultValues[$propertyName] = $classProperties[$propertyName];
+                        $defaultValues[$propertyName] = $classProperties[$propertyName];
+                    }
                 }
             }
         }

@@ -10,13 +10,19 @@ declare(strict_types=1);
  */
 namespace Go\ParserReflection;
 
+use Error;
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\MagicConst;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use Reflection as BaseReflection;
@@ -33,16 +39,23 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Type of property node
      *
-     * @var Property
+     * @var Property|null
      */
-    private mixed $propertyTypeNode;
+    private ?Property $propertyTypeNode;
 
     /**
      * Concrete property node
      *
-     * @var PropertyProperty
+     * @var PropertyProperty|null
      */
-    private mixed $propertyNode;
+    private ?PropertyProperty $propertyNode;
+
+    /**
+     * Property promotion constructor parameter
+     *
+     * @var Param|null
+     */
+    private ?Param $paramNode;
 
     /**
      * Name of the class
@@ -58,21 +71,28 @@ class ReflectionProperty extends BaseReflectionProperty
      * @param string            $propertyName Name of the property to reflect
      * @param ?Property         $propertyType Property type definition node
      * @param ?PropertyProperty $propertyNode Concrete property definition (value, name)
+     * @param ?Param            $paramNode    Property promotion constructor parameter
      *
-     * @noinspection PhpMissingParentConstructorInspection*/
+     * @noinspection PhpMissingParentConstructorInspection
+     */
     public function __construct(
         string $className,
         string $propertyName,
         Property $propertyType = null,
-        PropertyProperty $propertyNode = null
+        PropertyProperty $propertyNode = null,
+        Param $paramNode = null
     ) {
         $this->className = ltrim($className, '\\');
-        if (!$propertyType || !$propertyNode) {
-            [$propertyType, $propertyNode] = ReflectionEngine::parseClassProperty($className, $propertyName);
+
+        if (!($propertyType && $propertyNode) && !$paramNode) {
+            [$propertyType, $propertyNode, $paramNode] = ReflectionEngine::parseClassProperty(
+                $className, $propertyName
+            );
         }
 
         $this->propertyTypeNode = $propertyType;
         $this->propertyNode     = $propertyNode;
+        $this->paramNode        = $paramNode;
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
@@ -213,11 +233,15 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Returns an AST-node for property
      *
-     * @return PropertyProperty
+     * @return PropertyProperty|Param
      */
-    public function getNode(): PropertyProperty
+    public function getNode(): PropertyProperty|Param
     {
-        return $this->propertyNode;
+        if ($this->isPromoted()) {
+            return $this->paramNode;
+        } else {
+            return $this->propertyNode;
+        }
     }
 
     /**
@@ -239,9 +263,27 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function __debugInfo(): array
     {
+        try {
+            if ($this->propertyNode) {
+                $name = $this->propertyNode->name->toString();
+            } else {
+                $paramName = $this->paramNode->var->name;
+                if ($paramName instanceof Identifier) {
+                    $name = $paramName->toString();
+                } else {
+                    $name = $paramName;
+                }
+            }
+            $class = $this->className;
+        } catch (Error) {
+            // If we are here, then we are in the middle of the object creation
+            $name  = null;
+            $class = null;
+        }
+
         return [
-            'name'  => isset($this->propertyNode) ? $this->propertyNode->name->toString() : 'unknown',
-            'class' => $this->className
+            'name'  => $name,
+            'class' => $class,
         ];
     }
 
@@ -258,7 +300,11 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getDocComment(): string|false
     {
-        $docBlock = $this->propertyTypeNode->getDocComment();
+        if ($this->isPromoted()) {
+            $docBlock = $this->paramNode->getDocComment();
+        } else {
+            $docBlock = $this->propertyTypeNode->getDocComment();
+        }
 
         return $docBlock ? $docBlock->getText() : false;
     }
@@ -286,11 +332,22 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
-     * {@inheritDoc}
+     * Gets property name
+     *
+     * @link https://php.net/manual/en/reflectionproperty.getname.php
+     *
+     * @return string The name of the reflected property.
      */
     public function getName(): string
     {
-        return $this->propertyNode->name->toString();
+        if ($this->isPromoted()) {
+            $name = $this->paramNode->var->name;
+            return $name instanceof Expr
+                ? $name->name->toString()
+                : $name;
+        } else {
+            return $this->propertyNode->name->toString();
+        }
     }
 
     /**
@@ -338,7 +395,9 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isPrivate(): bool
     {
-        return $this->propertyTypeNode->isPrivate();
+        return $this->isPromoted()
+            ? ($this->paramNode->flags & Class_::MODIFIER_PRIVATE) > 0
+            : $this->propertyTypeNode->isPrivate();
     }
 
     /**
@@ -346,7 +405,9 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isProtected(): bool
     {
-        return $this->propertyTypeNode->isProtected();
+        return $this->isPromoted()
+            ? ($this->paramNode->flags & Class_::MODIFIER_PROTECTED) > 0
+            : $this->propertyTypeNode->isProtected();
     }
 
     /**
@@ -354,7 +415,9 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isPublic(): bool
     {
-        return $this->propertyTypeNode->isPublic();
+        return $this->isPromoted()
+            ? ($this->paramNode->flags & Class_::MODIFIER_PUBLIC) > 0
+            : $this->propertyTypeNode->isPublic();
     }
 
     /**
@@ -362,7 +425,9 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isStatic(): bool
     {
-        return $this->propertyTypeNode->isStatic();
+        return $this->isPromoted()
+            ? ($this->paramNode->flags & Class_::MODIFIER_STATIC) > 0
+            : $this->propertyTypeNode->isStatic();
     }
 
     /**
@@ -383,6 +448,16 @@ class ReflectionProperty extends BaseReflectionProperty
         $this->initializeInternalReflection();
 
         parent::setValue($objectOrValue, $value);
+    }
+
+    /**
+     * Returns information about whether the property was promoted.
+     *
+     * @return bool Returns {@see true} if the property was promoted or {@see false} instead.
+     */
+    public function isPromoted(): bool
+    {
+        return $this->paramNode !== null;
     }
 
     /**
@@ -407,6 +482,22 @@ class ReflectionProperty extends BaseReflectionProperty
                         $classLevelNode,
                         $classPropertyNode
                     );
+                }
+            }
+
+            // Also collect properties from constructor with property promotion
+            elseif ($classLevelNode instanceof ClassMethod
+                && $classLevelNode->name->toString() === '__construct'
+            ) {
+                foreach ($classLevelNode->getParams() as $param) {
+                    if ($param->flags !== 0) {
+                        $propertyName = $param->var->name;
+                        $properties[$propertyName] = new static(
+                            $fullClassName,
+                            $propertyName,
+                            paramNode: $param
+                        );
+                    }
                 }
             }
         }
