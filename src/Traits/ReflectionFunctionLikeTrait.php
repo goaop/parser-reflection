@@ -156,7 +156,11 @@ trait ReflectionFunctionLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets parameters
+     *
+     * @link https://php.net/manual/en/reflectionfunctionabstract.getparameters.php
+     *
+     * @return ReflectionParameter[] The parameters, as a ReflectionParameter objects.
      */
     public function getParameters(): array
     {

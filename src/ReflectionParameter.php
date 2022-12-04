@@ -17,9 +17,11 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
+use PhpParser\Node\UnionType;
 use ReflectionClass as BaseReflectionClass;
 use ReflectionFunctionAbstract;
 use ReflectionParameter as BaseReflectionParameter;
+use ReflectionType as BaseReflectionType;
 
 /**
  * AST-based reflection for method/function parameter
@@ -292,17 +294,45 @@ class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
-     * {@inheritDoc}
+     * Gets a parameter's type
+     *
+     * @link https://php.net/manual/en/reflectionparameter.gettype.php
+     *
+     * @return BaseReflectionType|null Returns a {@see BaseReflectionType} object if a
+     *                                 parameter type is specified, {@see null} otherwise.
      */
-    public function getType(): \ReflectionType|ReflectionNamedType|null
+    public function getType(): BaseReflectionType|null
     {
-        $isBuiltin     = false;
         $parameterType = $this->parameterNode->type;
         if ($parameterType instanceof NullableType) {
             $parameterType = $parameterType->type;
         }
 
+        elseif ($parameterType instanceof UnionType) {
+            $types = [];
+            foreach ($parameterType->types as $type) {
+                $types[] = $this->resolveReflectionNamedType($type);
+            }
+
+            $allowsNull = $this->allowsNull();
+            return new ReflectionUnionType($types, $allowsNull);
+        }
+
+        return $this->resolveReflectionNamedType($parameterType);
+    }
+
+    /**
+     * Resolve a ReflectionNamedType from a Node
+     *
+     * @param Identifier|Name|null $parameterType
+     *
+     * @return ReflectionNamedType|null
+     */
+    private function resolveReflectionNamedType(Identifier|Name|null $parameterType): ReflectionNamedType|null
+    {
+        $isBuiltin = false;
         $allowsNull = $this->allowsNull();
+
         if ($parameterType instanceof Identifier) {
             $isBuiltin = true;
             $parameterType = $parameterType->toString();
