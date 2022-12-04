@@ -479,8 +479,8 @@ trait ReflectionClassLikeTrait
                                             if ($adaptation->method->toString() === $reflectionMethod->getName()) {
                                                 // Alias
                                                 if (isset($adaptation->newName)
-                                                    && $adaptation->newName->toString() === $newMethodName)
-                                                {
+                                                    && $adaptation->newName->toString() === $newMethodName
+                                                ) {
                                                     $reflectionMethodAlias = new ReflectionMethod(
                                                         $this->getName(),
                                                         $reflectionMethodName,
