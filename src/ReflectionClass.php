@@ -35,7 +35,8 @@ class ReflectionClass extends BaseReflectionClass
      * @param object|string $argument      Class name or instance of object
      * @param ?ClassLike    $classLikeNode AST node for class
      *
-     * @noinspection PhpMissingParentConstructorInspection*/
+     * @noinspection PhpMissingParentConstructorInspection
+     */
     public function __construct(object|string $argument, ClassLike $classLikeNode = null)
     {
         $fullClassName   = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
@@ -67,9 +68,7 @@ class ReflectionClass extends BaseReflectionClass
     /**
      * Parses interfaces from the concrete class node
      *
-     * @return BaseReflectionClass[] List of reflections of interfaces
-     *
-     * @noinspection PhpDocMissingThrowsInspection
+     * @return ReflectionClass[] List of reflections of interfaces
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
@@ -83,10 +82,7 @@ class ReflectionClass extends BaseReflectionClass
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
                     $implementName = $implementNode->toString();
-                    /** @noinspection PhpUnhandledExceptionInspection */
-                    $interface     = interface_exists($implementName, false)
-                        ? new parent($implementName)
-                        : new static($implementName);
+                    $interface     = new static($implementName);
 
                     $interfaces[$implementName] = $interface;
                 }
@@ -101,9 +97,7 @@ class ReflectionClass extends BaseReflectionClass
      *
      * @param array $traitAdaptations List of method adaptations
      *
-     * @return BaseReflectionClass[] List of reflections of traits
-     *
-     * @noinspection PhpDocMissingThrowsInspection
+     * @return ReflectionClass[] List of reflections of traits
      */
     public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations): array
     {
@@ -114,11 +108,8 @@ class ReflectionClass extends BaseReflectionClass
                 if ($classLevelNode instanceof TraitUse) {
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
-                            $traitName          = $classTraitName->toString();
-                            /** @noinspection PhpUnhandledExceptionInspection */
-                            $trait              = trait_exists($traitName, false)
-                                ? new parent($traitName)
-                                : new static($traitName);
+                            $traitName = $classTraitName->toString();
+                            $trait     = new static($traitName);
                             $traits[$traitName] = $trait;
                         }
                     }
@@ -179,13 +170,10 @@ class ReflectionClass extends BaseReflectionClass
      *
      * @param string $className The name of the class to create a reflection for.
      *
-     * @return BaseReflectionClass The appropriate reflection object.
-     *
-     * @noinspection PhpDocMissingThrowsInspection
+     * @return ReflectionClass The appropriate reflection object.
      */
-    protected function createReflectionForClass(string $className): BaseReflectionClass
+    protected function createReflectionForClass(string $className): ReflectionClass
     {
-        /** @noinspection PhpUnhandledExceptionInspection */
-        return class_exists($className, false) ? new parent($className) : new static($className);
+        return new static($className);
     }
 }

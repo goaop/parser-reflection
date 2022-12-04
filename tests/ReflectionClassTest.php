@@ -9,9 +9,6 @@
  *
  * @noinspection PhpDocMissingThrowsInspection
  * @noinspection PhpUnhandledExceptionInspection
- *
- *
- *
  */
 declare(strict_types=1);
 
@@ -151,7 +148,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @param string $fileName File name to test
      */
-    public function testGetMethodCount($fileName)
+    public function testGetMethodCount(string $fileName)
     {
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
@@ -160,9 +157,6 @@ class ReflectionClassTest extends AbstractTestCase
             $originalRefClass  = new BaseReflectionClass($parsedRefClass->getName());
             $parsedMethods     = $parsedRefClass->getMethods();
             $originalMethods   = $originalRefClass->getMethods();
-            if ($parsedRefClass->getTraitAliases()) {
-                $this->markTestIncomplete("Adoptation methods for traits are not supported yet");
-            }
             $this->assertCount(count($originalMethods), $parsedMethods);
         }
     }

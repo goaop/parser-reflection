@@ -102,10 +102,18 @@ trait ReflectionFunctionLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets function name
+     *
+     * @link https://php.net/manual/en/reflectionfunctionabstract.getname.php
+     *
+     * @return string The name of the function.
      */
     public function getName(): string
     {
+        if (isset($this->aliasName)) {
+            return $this->aliasName;
+        }
+
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
             $functionName = $this->functionLikeNode->name->toString();
 
@@ -212,10 +220,18 @@ trait ReflectionFunctionLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets function short name
+     *
+     * @link https://php.net/manual/en/reflectionfunctionabstract.getshortname.php
+     *
+     * @return string The short name of the function.
      */
     public function getShortName(): string
     {
+        if (isset($this->aliasName)) {
+            return $this->aliasName;
+        }
+
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
             return $this->functionLikeNode->name->toString();
         }
@@ -226,7 +242,7 @@ trait ReflectionFunctionLikeTrait
 
     public function getStartLine(): int|false
     {
-        return $this->functionLikeNode->getAttribute('startLine');
+        return $this->functionLikeNode->name->getAttribute('startLine');
     }
 
     /**

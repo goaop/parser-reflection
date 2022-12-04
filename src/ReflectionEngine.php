@@ -189,6 +189,11 @@ class ReflectionEngine
 
     /**
      * Parses class method
+     *
+     * @param string $fullClassName
+     * @param string $methodName
+     *
+     * @return ClassMethod
      */
     public static function parseClassMethod(string $fullClassName, string $methodName): ClassMethod
     {

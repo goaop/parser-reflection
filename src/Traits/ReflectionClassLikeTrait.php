@@ -79,7 +79,7 @@ trait ReflectionClassLikeTrait
     /**
      * Additional list of trait adaptations
      *
-     * @var TraitUseAdaptation[]|array
+     * @var TraitUseAdaptation[]
      */
     protected array $traitAdaptations;
 
@@ -424,11 +424,11 @@ trait ReflectionClassLikeTrait
      *
      * @param string $name The method name to reflect.
      *
-     * @return BaseReflectionMethod A {@see BaseReflectionMethod}
+     * @return ReflectionMethod A {@see ReflectionMethod}
      *
      * @throws ReflectionException if the method does not exist.
      */
-    public function getMethod(string $name): BaseReflectionMethod
+    public function getMethod(string $name): ReflectionMethod
     {
         $methods = $this->getMethods();
         foreach ($methods as $method) {
@@ -448,7 +448,7 @@ trait ReflectionClassLikeTrait
      * @param int|null $filter Filter the results to include only methods
      *                         with certain attributes. Defaults to no filtering.
      *
-     * @return BaseReflectionMethod[] An array of {@see BaseReflectionMethod} objects
+     * @return ReflectionMethod[] An array of {@see ReflectionMethod} objects
      *                                reflecting each method.
      */
     public function getMethods(?int $filter = null): array
@@ -456,11 +456,80 @@ trait ReflectionClassLikeTrait
         if (!isset($this->methods)) {
             $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this);
             $parentMethods = $this->recursiveCollect(
-                function (array &$result, BaseReflectionClass $instance, $isParent) {
+                function (array &$result, ReflectionClass $instance, $isParent) {
                     $reflectionMethods = [];
                     foreach ($instance->getMethods() as $reflectionMethod) {
                         if (!$isParent || !$reflectionMethod->isPrivate()) {
-                            $reflectionMethods[$reflectionMethod->name] = $reflectionMethod;
+                            $reflectionMethodName = $reflectionMethod->getName();
+
+                            if ($instance->isTrait()) {
+                                $insteadOfSkipped = [];
+
+                                // Collect by trait aliases
+                                foreach ($this->getTraitAliases() as $newMethodName => $traitAlias) {
+                                    $traitAliasParts = explode('::', $traitAlias);
+                                    $traitName = $traitAliasParts[0];
+                                    $traitMethodName = $traitAliasParts[1];
+                                    if ($traitName === $instance->getName()
+                                        && $traitMethodName === $reflectionMethodName
+                                    ) {
+                                        foreach ($this->traitAdaptations as $adaptation) {
+                                            if ($adaptation->method->toString() === $reflectionMethod->getName()) {
+                                                // Alias
+                                                if (isset($adaptation->newName)
+                                                    && $adaptation->newName->toString() === $newMethodName)
+                                                {
+                                                    $reflectionMethodAlias = new ReflectionMethod(
+                                                        $this->getName(),
+                                                        $reflectionMethodName,
+                                                        clone $reflectionMethod->getNode(),
+                                                        $this
+                                                    );
+                                                    $reflectionMethodAlias->setAliasName($newMethodName);
+                                                    $reflectionMethodAlias->setAliasClass($this);
+                                                    if (!is_null($adaptation->newModifier)) {
+                                                        $reflectionMethodAlias->setModifiers($adaptation->newModifier);
+                                                    }
+                                                    $reflectionMethods[$newMethodName] = $reflectionMethodAlias;
+                                                }
+
+                                                // Override
+                                                elseif (isset($adaptation->insteadof)) {
+                                                    foreach ($adaptation->insteadof as $insteadOf) {
+                                                        $insteadOfSkipped[] = $insteadOf->toString();
+                                                    }
+
+                                                    $reflectionMethodInsteadOf = new ReflectionMethod(
+                                                        $adaptation->trait->toString(),
+                                                        $reflectionMethodName,
+                                                        null,
+                                                        $this
+                                                    );
+
+                                                    $reflectionMethods[$reflectionMethodName] = $reflectionMethodInsteadOf;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Collect base traits
+                                foreach ($this->getTraitNames() as $traitName) {
+                                    if ($traitName === $instance->getName()
+                                        && !in_array($traitName, $insteadOfSkipped, true)
+                                    ) {
+                                        $reflectionMethodAlias = new ReflectionMethod(
+                                            $this->getName(),
+                                            $reflectionMethodName,
+                                            $reflectionMethod->getNode(),
+                                            $this
+                                        );
+                                        $reflectionMethods[$reflectionMethodName] = $reflectionMethodAlias;
+                                    }
+                                }
+                            } else {
+                                $reflectionMethods[$reflectionMethodName] = $reflectionMethod;
+                            }
                         }
                     }
                     $result += $reflectionMethods;
@@ -539,10 +608,10 @@ trait ReflectionClassLikeTrait
      *
      * @link https://php.net/manual/en/reflectionclass.getparentclass.php
      *
-     * @return BaseReflectionClass|false A {@see BaseReflectionClass} or {@see false}
+     * @return ReflectionClass|false A {@see ReflectionClass} or {@see false}
      *                                   if there's no parent.
      */
-    public function getParentClass(): BaseReflectionClass|false
+    public function getParentClass(): ReflectionClass|false
     {
         if (!isset($this->parentClass)) {
             static $extendsField = 'extends';
@@ -760,8 +829,8 @@ trait ReflectionClassLikeTrait
      *
      * @link https://php.net/manual/en/reflectionclass.gettraits.php
      *
-     * @return BaseReflectionClass[] An array with trait names in keys and
-     *                               instances of trait's {@see BaseReflectionClass} in values.
+     * @return ReflectionClass[] An array with trait names in keys and
+     *                               instances of trait's {@see ReflectionClass} in values.
      */
     public function getTraits(): array
     {

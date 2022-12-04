@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection;
 
 use Closure;
+use Error;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
@@ -29,18 +30,18 @@ class ReflectionMethod extends BaseReflectionMethod
     use ReflectionFunctionLikeTrait;
 
     /**
-     * Name of the class
+     * Name of the alias for the method
      *
-     * @var string
+     * @var string|null
      */
-    private string $className;
+    private ?string $aliasName = null;
 
     /**
-     * Optional declaring class reference
+     * Reference to the alias class
      *
-     * @var ReflectionClass
+     * @var ReflectionClass|null
      */
-    private ReflectionClass $declaringClass;
+    private ?ReflectionClass $aliasClass = null;
 
     /**
      * Initializes reflection instance for the method node
@@ -49,17 +50,17 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param string           $methodName      Name of the method
      * @param ?ClassMethod     $classMethodNode AST-node for method
      * @param ?ReflectionClass $declaringClass  Optional declaring class
+     *
      * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct(
-        $className,
-        $methodName,
+        private string $className,
+        string $methodName,
         ClassMethod $classMethodNode = null,
-        ReflectionClass $declaringClass = null
+        private ?ReflectionClass $declaringClass = null
     ) {
-        //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
+        // For some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = ltrim($className, '\\');
-        $this->declaringClass   = $declaringClass;
         $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
 
         // Let's unset original read-only properties to have a control over them via __get
@@ -83,9 +84,18 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function __debugInfo(): array
     {
+        try {
+            $name  = $this->aliasName  ?? $this->getClassMethodNode()->name->toString();
+            $class = $this->aliasClass ? $this->aliasClass->getName() : $this->className;
+        } catch (Error) {
+            // If we are here, then we are in the middle of the object creation
+            $name  = null;
+            $class = null;
+        }
+
         return [
-            'name'  => $this->getClassMethodNode()->name->toString(),
-            'class' => $this->className
+            'name'  => $name,
+            'class' => $class,
         ];
     }
 
@@ -141,6 +151,23 @@ class ReflectionMethod extends BaseReflectionMethod
             $paramString,
             $returnType ? ReflectionType::convertToDisplayType($returnType) : ''
         );
+    }
+
+    /**
+     * @param string $name
+     * @param array  $arguments
+     *
+     * @return void
+     */
+    public function __call(string $name, array $arguments): void
+    {
+        if ($name === 'setAliasName') {
+            $this->setAliasName(...$arguments);
+        } elseif ($name === 'setAliasClass') {
+            $this->setAliasClass(...$arguments);
+        } elseif ($name === 'setModifiers') {
+            $this->setModifiers(...$arguments);
+        }
     }
 
     /**
@@ -341,6 +368,42 @@ class ReflectionMethod extends BaseReflectionMethod
     {
         /** @noinspection PhpUnhandledExceptionInspection */
         parent::__construct($this->className, $this->getName());
+    }
+
+    /**
+     * Sets the alias for the method
+     *
+     * @param string $aliasName
+     *
+     * @return void
+     */
+    protected function setAliasName(string $aliasName): void
+    {
+        $this->aliasName = $aliasName;
+    }
+
+    /**
+     * Sets the alias class
+     *
+     * @param ReflectionClass $aliasClass
+     *
+     * @return void
+     */
+    protected function setAliasClass(ReflectionClass $aliasClass): void
+    {
+        $this->aliasClass = $aliasClass;
+    }
+
+    /**
+     * Set new modifiers
+     *
+     * @param int $modifiers
+     *
+     * @return void
+     */
+    protected function setModifiers(int $modifiers): void
+    {
+        $this->getClassMethodNode()->flags = $modifiers;
     }
 
     /**
