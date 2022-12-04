@@ -113,7 +113,11 @@ trait ReflectionClassLikeTrait
     protected array $classConstants;
 
     /**
-     * {@inheritDoc}
+     * Returns the string representation of the ReflectionClass object.
+     *
+     * @link https://php.net/manual/en/reflectionclass.tostring.php
+     *
+     * @return string A string representation of this {@see BaseReflectionClass} instance.
      */
     public function __toString(): string
     {
@@ -209,7 +213,14 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets defined constant
+     *
+     * @link https://php.net/manual/en/reflectionclass.getconstant.php
+     *
+     * @param string $name Name of the constant.
+     *
+     * @return mixed|false Value of the constant with the name.
+     *                     Returns {@see false} if the constant was not found in the class.
      */
     public function getConstant(string $name): mixed
     {
@@ -221,7 +232,14 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets constants
+     *
+     * @link https://php.net/manual/en/reflectionclass.getconstants.php
+     *
+     * @param int|null $filter [optional] allows the filtering of constants defined in a class by their visibility.
+     *
+     * @return array An array of constants, where the keys hold the name and
+     *               the values the value of the constants.
      */
     public function getConstants(
         ?int $filter = ReflectionClassConstant::IS_PUBLIC
@@ -241,12 +259,16 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the constructor of the class
+     *
+     * @link https://php.net/manual/en/reflectionclass.getconstructor.php
+     *
+     * @return BaseReflectionMethod|null A {@see BaseReflectionMethod} object reflecting the class' constructor,
+     *                                   or {@see null} if the class has no constructor.
      */
     public function getConstructor(): ?BaseReflectionMethod
     {
         try {
-            /** @noinspection PhpUnhandledExceptionInspection */
             return $this->getMethod('__construct');
         } catch (ReflectionException) {
             return null;
@@ -259,7 +281,7 @@ trait ReflectionClassLikeTrait
      * @link http://php.net/manual/en/reflectionclass.getdefaultproperties.php
      *
      * @return array An array of default properties, with the key being the name of the property and the value being
-     * the default value of the property or NULL if the property doesn't have a default value
+     *               the default value of the property or NULL if the property doesn't have a default value
      */
     public function getDefaultProperties(): array
     {
@@ -291,7 +313,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets doc comments
+     *
+     * @link https://php.net/manual/en/reflectionclass.getdoccomment.php
+     *
+     * @return string|false The doc comment if it exists, otherwise {@see false}
      */
     public function getDocComment(): string|false
     {
@@ -301,7 +327,12 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets end line
+     *
+     * @link https://php.net/manual/en/reflectionclass.getendline.php
+     *
+     * @return int|false The ending line number of the user defined class, or
+     *                   {@see false} if unknown.
      */
     public function getEndLine(): int|false
     {
@@ -322,7 +353,12 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the name of the extension which defined the class
+     *
+     * @link https://php.net/manual/en/reflectionclass.getextensionname.php
+     *
+     * @return string|false The name of the extension which defined the class,
+     *                      or {@see false} for user-defined classes.
      */
     public function getExtensionName(): string|false
     {
@@ -330,7 +366,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the filename of the file in which the class has been defined
+     *
+     * @link https://php.net/manual/en/reflectionclass.getfilename.php
+     *
+     * @return string|false the filename of the file in which the class has been defined.
+     *                      If the class is defined in the PHP core or in a PHP extension, {@see false}
+     *                      is returned.
      */
     public function getFileName(): string|false
     {
@@ -338,7 +380,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the interface names
+     *
+     * @link https://php.net/manual/en/reflectionclass.getinterfacenames.php
+     *
+     * @return string[] A numerical array with interface names as the values.
      */
     public function getInterfaceNames(): array
     {
@@ -346,7 +392,12 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets the interfaces
+     *
+     * @link https://php.net/manual/en/reflectionclass.getinterfaces.php
+     *
+     * @return BaseReflectionClass[] An associative array of interfaces, with keys as interface
+     *                               names and the array values as {@see BaseReflectionClass} objects.
      */
     public function getInterfaces(): array
     {
@@ -371,7 +422,7 @@ trait ReflectionClassLikeTrait
      *
      * @param string $name The method name to reflect.
      *
-     * @return ReflectionMethod A {@see ReflectionMethod}
+     * @return BaseReflectionMethod A {@see BaseReflectionMethod}
      *
      * @throws ReflectionException if the method does not exist.
      */
@@ -388,7 +439,15 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets an array of methods for the class.
+     *
+     * @link https://php.net/manual/en/reflectionclass.getmethods.php
+     *
+     * @param int|null $filter Filter the results to include only methods
+     *                         with certain attributes. Defaults to no filtering.
+     *
+     * @return BaseReflectionMethod[] An array of {@see BaseReflectionMethod} objects
+     *                                reflecting each method.
      */
     public function getMethods(?int $filter = null): array
     {
@@ -405,7 +464,7 @@ trait ReflectionClassLikeTrait
                     $result += $reflectionMethods;
                 }
             );
-            $methods       = $directMethods + $parentMethods;
+            $methods = $directMethods + $parentMethods;
 
             $this->methods = $methods;
         }
@@ -425,7 +484,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets modifiers
+     *
+     * @link https://php.net/manual/en/reflectionclass.getmodifiers.php
+     *
+     * @return int bitmask of modifier constants.
      */
     public function getModifiers(): int
     {
@@ -444,7 +507,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets class name
+     *
+     * @link https://php.net/manual/en/reflectionclass.getname.php
+     *
+     * @return string The class name.
      */
     public function getName(): string
     {
@@ -454,7 +521,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets namespace name
+     *
+     * @link https://php.net/manual/en/reflectionclass.getnamespacename.php
+     *
+     * @return string The namespace name.
      */
     public function getNamespaceName(): string
     {
@@ -466,8 +537,8 @@ trait ReflectionClassLikeTrait
      *
      * @link https://php.net/manual/en/reflectionclass.getparentclass.php
      *
-     * @return ReflectionClass|false A {@see ReflectionClass} or {@see false}
-     *                               if there's no parent.
+     * @return BaseReflectionClass|false A {@see BaseReflectionClass} or {@see false}
+     *                                   if there's no parent.
      */
     public function getParentClass(): BaseReflectionClass|false
     {
@@ -488,7 +559,12 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets properties
+     *
+     * @link https://php.net/manual/en/reflectionclass.getproperties.php
+     *
+     * @param int|null $filter The optional filter, for filtering desired property types. It's configured using
+     *                         the {@see BaseReflectionProperty} constants, and defaults to all property types.
      *
      * @return BaseReflectionProperty[]
      */
@@ -535,7 +611,7 @@ trait ReflectionClassLikeTrait
      *
      * @param string $name The property name.
      *
-     * @return ReflectionProperty A {@see ReflectionProperty}
+     * @return BaseReflectionProperty A {@see BaseReflectionProperty}
      *
      * @throws ReflectionException If no property exists by that name.
      */
@@ -558,7 +634,7 @@ trait ReflectionClassLikeTrait
      *
      * @param string $name The class constant name.
      *
-     * @return ReflectionClassConstant|false A {@see ReflectionClassConstant}.
+     * @return BaseReflectionClassConstant|false A {@see BaseReflectionClassConstant}.
      */
     public function getReflectionConstant(string $name): BaseReflectionClassConstant|false
     {
@@ -573,7 +649,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets class constants
+     *
+     * @link https://php.net/manual/en/reflectionclass.getreflectionconstants.php
+     *
+     * @param int|null $filter Allows the filtering of constants defined in a class by their visibility.
+     *
+     * @return BaseReflectionClassConstant[] An array of ReflectionClassConstant objects.
      */
     public function getReflectionConstants(
         ?int $filter = ReflectionClassConstant::IS_PUBLIC
@@ -596,7 +678,7 @@ trait ReflectionClassLikeTrait
                     $result += $reflectionClassConstants;
                 }
             );
-            $classConstants       = $directClassConstants + $parentClassConstants;
+            $classConstants = $directClassConstants + $parentClassConstants;
 
             $this->classConstants = $classConstants;
         }
@@ -605,7 +687,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets short name
+     *
+     * @link https://php.net/manual/en/reflectionclass.getshortname.php
+     *
+     * @return string The class short name.
      */
     public function getShortName(): string
     {
@@ -613,7 +699,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Gets starting line number
+     *
+     * @link https://php.net/manual/en/reflectionclass.getstartline.php
+     *
+     * @return int|false The starting line number, as an integer.
      */
     public function getStartLine(): int|false
     {
@@ -621,7 +711,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Returns an array of trait aliases
+     *
+     * @link https://php.net/manual/en/reflectionclass.gettraitaliases.php
+     *
+     * @return string[] An array with new method names in keys and original
+     *                  names (in the format "TraitName::original") in values.
+     *                  Returns {@see null} in case of an error.
      */
     public function getTraitAliases(): array
     {
@@ -645,7 +741,12 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Returns an array of names of traits used by this class
+     *
+     * @link https://php.net/manual/en/reflectionclass.gettraitnames.php
+     *
+     * @return string[] An array with trait names in values.
+     *                  Returns {@see null} in case of an error.
      */
     public function getTraitNames(): array
     {
@@ -653,15 +754,18 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Returns an array of traits used by this class
      *
-     * @return BaseReflectionClass[]
+     * @link https://php.net/manual/en/reflectionclass.gettraits.php
+     *
+     * @return BaseReflectionClass[] An array with trait names in keys and
+     *                               instances of trait's {@see BaseReflectionClass} in values.
      */
     public function getTraits(): array
     {
         if (!isset($this->traits)) {
-            $traitAdaptations       = [];
-            $this->traits           = ReflectionClass::collectTraitsFromClassNode(
+            $traitAdaptations = [];
+            $this->traits     = ReflectionClass::collectTraitsFromClassNode(
                 $this->classLikeNode,
                 $traitAdaptations
             );
@@ -672,7 +776,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if constant is defined
+     *
+     * @link https://php.net/manual/en/reflectionclass.hasconstant.php
+     *
+     * @param string $name The name of the constant being checked for.
+     *
+     * @return bool Returns {@see true} if the constant is defined, otherwise {@see false}
      */
     public function hasConstant(string $name): bool
     {
@@ -683,7 +793,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if method is defined
+     *
+     * @link https://php.net/manual/en/reflectionclass.hasmethod.php
+     *
+     * @param string $name Name of the method being checked for.
+     *
+     * @return bool Returns {@see true} if it has the method, otherwise {@see false}
      */
     public function hasMethod(string $name): bool
     {
@@ -698,7 +814,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if property is defined
+     *
+     * @link https://php.net/manual/en/reflectionclass.hasproperty.php
+     *
+     * @param string $name Name of the property being checked for.
+     *
+     * @return bool Returns {@see true} if it has the property, otherwise {@see false}
      */
     public function hasProperty(string $name): bool
     {
@@ -717,7 +839,7 @@ trait ReflectionClassLikeTrait
      *
      * @link https://php.net/manual/en/reflectionclass.implementsinterface.php
      *
-     * @param ReflectionClass|string $interface The interface name.
+     * @param BaseReflectionClass|string $interface The interface name.
      *
      * @return bool Returns {@see true} on success or {@see false} on failure.
      */
@@ -733,7 +855,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if in namespace
+     *
+     * @link https://php.net/manual/en/reflectionclass.innamespace.php
+     *
+     * @return bool {@see true} on success or {@see false} on failure.
      */
     public function inNamespace(): bool
     {
@@ -741,7 +867,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if class is abstract
+     *
+     * @link https://php.net/manual/en/reflectionclass.isabstract.php
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
      */
     public function isAbstract(): bool
     {
@@ -765,7 +895,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Returns whether this class is cloneable
+     *
+     * @link https://php.net/manual/en/reflectionclass.iscloneable.php
+     *
+     * @return bool Returns {@see true} if the class is cloneable, {@see false} otherwise.
      */
     public function isCloneable(): bool
     {
@@ -774,16 +908,23 @@ trait ReflectionClassLikeTrait
         }
 
         if ($this->hasMethod('__clone')) {
-            /** @noinspection PhpUnhandledExceptionInspection */
-            return $this->getMethod('__clone')
-                        ->isPublic();
+            try {
+                return $this->getMethod('__clone')
+                    ->isPublic();
+            } catch (ReflectionException) {
+                return false;
+            }
         }
 
         return true;
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if class is final
+     *
+     * @link https://php.net/manual/en/reflectionclass.isfinal.php
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
      */
     public function isFinal(): bool
     {
@@ -793,7 +934,13 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks class for instance
+     *
+     * @link https://php.net/manual/en/reflectionclass.isinstance.php
+     *
+     * @param object $object The object being compared to.
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
      */
     public function isInstance(object $object): bool
     {
@@ -803,7 +950,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if the class is instantiable
+     *
+     * @link https://php.net/manual/en/reflectionclass.isinstantiable.php
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
      */
     public function isInstantiable(): bool
     {
@@ -819,7 +970,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if the class is an interface
+     *
+     * @link https://php.net/manual/en/reflectionclass.isinterface.php
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
      */
     public function isInterface(): bool
     {
@@ -827,16 +982,25 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if class is defined internally by an extension, or the core
+     *
+     * @link https://php.net/manual/en/reflectionclass.isinternal.php
+     *
+     * @return bool Returns {@see false} as it can never be an internal method.
      */
     public function isInternal(): bool
     {
         // never can be an internal method
+        // @todo why method?
         return false;
     }
 
     /**
-     * {@inheritDoc}
+     * An alias of {@see ReflectionClass::isIterable} method.
+     *
+     * @link https://php.net/manual/en/reflectionclass.isiterateable.php
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
      */
     public function isIterateable(): bool
     {
@@ -848,8 +1012,8 @@ trait ReflectionClassLikeTrait
      *
      * @link https://php.net/manual/en/reflectionclass.issubclassof.php
      *
-     * @param string|ReflectionClass $class Either the name of the class as string or a {@see ReflectionClass}
-     *                                      object of the class to check against.
+     * @param string|BaseReflectionClass $class Either the name of the class as string or a {@see BaseReflectionClass}
+     *                                          object of the class to check against.
      *
      * @return bool {@see true} on success or {@see false} on failure.
      */
@@ -877,7 +1041,11 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Returns whether this is a trait
+     *
+     * @link https://php.net/manual/en/reflectionclass.istrait.php
+     *
+     * @return bool Returns {@see true} if this is a trait, {@see false} otherwise.
      */
     public function isTrait(): bool
     {
@@ -885,16 +1053,24 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Checks if user defined
+     *
+     * @link https://php.net/manual/en/reflectionclass.isuserdefined.php
+     *
+     * @return true Returns {@see true}. Always defined by user, because we are parsing the source code.
      */
     public function isUserDefined(): bool
     {
-        // always defined by user, because we parse the source code
         return true;
     }
 
     /**
-     * {@inheritDoc}
+     * Gets static properties
+     *
+     * @link https://php.net/manual/en/reflectionclass.getstaticproperties.php
+     *
+     * @return array|null The static properties, as an array where the keys hold
+     *                    the name and the values the value of the properties.
      */
     public function getStaticProperties(): ?array
     {
@@ -1015,7 +1191,14 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * {@inheritDoc}
+     * Sets static property value
+     *
+     * @link https://php.net/manual/en/reflectionclass.setstaticpropertyvalue.php
+     *
+     * @param string $name  Property name.
+     * @param mixed  $value New property value.
+     *
+     * @return void No value is returned.
      */
     public function setStaticPropertyValue(string $name, mixed $value): void
     {
