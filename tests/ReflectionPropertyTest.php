@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Stub\AttributeWithParams;
 use Go\ParserReflection\Stub\ClassWithArrays;
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
+use Go\ParserReflection\Stub\ClassWithConstructorPropertyPromotion;
 use Go\ParserReflection\Stub\ClassWithDifferentConstantTypes;
 use Go\ParserReflection\Stub\ClassWithProperties;
 use ReflectionProperty as BaseReflectionProperty;
@@ -64,6 +66,14 @@ class ReflectionPropertyTest extends AbstractTestCase
             && preg_match('/[aA]rray.*/', $propertyName)
         ) {
             $this->markTestIncomplete('Arrays must be fully parsed');
+        }
+
+        // TODO
+        if (($className === ClassWithConstructorPropertyPromotion::class
+            || $className === AttributeWithParams::class)
+            && $getterName === '__toString'
+        ) {
+            $this->markTestIncomplete('Constructor property promotion for __toString() is not supported');
         }
 
         $parsedProperty = $parsedClass->getProperty($propertyName);
