@@ -33,6 +33,7 @@ use ReflectionMethod as BaseReflectionMethod;
 use ReflectionObject as BaseReflectionObject;
 use ReflectionProperty as BaseReflectionProperty;
 use ReturnTypeWillChange;
+use Traversable;
 
 /**
  * General class-like reflection
@@ -1276,6 +1277,18 @@ trait ReflectionClassLikeTrait
         $this->initializeInternalReflection();
 
         parent::setStaticPropertyValue($name, $value);
+    }
+
+    /**
+     * Check whether this class is iterable
+     *
+     * @link https://php.net/manual/en/reflectionclass.isiterable.php
+     *
+     * @return bool Returns {@see true} on success or {@see false} on failure.
+     */
+    public function isIterable(): bool
+    {
+        return $this->implementsInterface(Traversable::class);
     }
 
     /**
