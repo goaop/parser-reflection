@@ -1,6 +1,4 @@
 <?php
-
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -9,14 +7,16 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection\Traits;
 
-
 use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
+use Go\ParserReflection\ReflectionAttribute;
 use Go\ParserReflection\ReflectionNamedType;
 use Go\ParserReflection\ReflectionParameter;
+use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
@@ -36,6 +36,8 @@ trait ReflectionFunctionLikeTrait
     use InitializationTrait;
 
     /**
+     * Function-like node
+     *
      * @var FunctionLike
      */
     protected FunctionLike $functionLikeNode;
@@ -48,9 +50,18 @@ trait ReflectionFunctionLikeTrait
     protected string $namespaceName = '';
 
     /**
-     * @var array|ReflectionParameter[]
+     * Parameters list
+     *
+     * @var ReflectionParameter[]
      */
     protected array $parameters;
+
+    /**
+     * Attributes for the function
+     *
+     * @var ReflectionAttribute[]
+     */
+    protected array $attributes;
 
     /**
      * {@inheritDoc}
@@ -352,5 +363,33 @@ trait ReflectionFunctionLikeTrait
     public function returnsReference(): bool
     {
         return $this->functionLikeNode->returnsByRef();
+    }
+
+    /**
+     * Returns an array of function attributes.
+     *
+     * @template T
+     *
+     * @param class-string<T>|null $name  Name of an attribute class
+     * @param int                  $flags Criteria by which the attribute is searched.
+     *
+     * @return ReflectionAttribute<T>[]
+     */
+    public function getAttributes(?string $name = null, int $flags = 0): array
+    {
+        if (!isset($this->attributes)) {
+            $attributes = [];
+
+            foreach ($this->functionLikeNode->attrGroups as $attributeGroup) {
+                /** @var AttributeGroup $attributeGroup */
+                foreach ($attributeGroup->attrs as $attribute) {
+                    $attributes[] = new ReflectionAttribute($attribute->name->toString(), $attribute);
+                }
+            }
+
+            $this->attributes = $attributes;
+        }
+
+        return $this->attributes;
     }
 }

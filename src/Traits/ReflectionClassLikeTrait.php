@@ -25,6 +25,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUseAdaptation;
+use ReflectionAttribute as BaseReflectionAttribute;
 use ReflectionClass as BaseReflectionClass;
 use ReflectionClassConstant as BaseReflectionClassConstant;
 use ReflectionException as BaseReflectionException;
@@ -1289,6 +1290,22 @@ trait ReflectionClassLikeTrait
     public function isIterable(): bool
     {
         return $this->implementsInterface(Traversable::class);
+    }
+
+    /**
+     * Returns an array of class attributes.
+     *
+     * @template T
+     *
+     * @param class-string<T>|null $name  Name of an attribute class
+     * @param int                  $flags Criteria by which the attribute is searched.
+     *
+     * @return BaseReflectionAttribute<T>[]
+     */
+    public function getAttributes(?string $name = null, int $flags = 0): array
+    {
+        // @todo: implement
+        throw new ReflectionException("Not implemented");
     }
 
     /**

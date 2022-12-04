@@ -30,6 +30,7 @@ class ReflectionFunction extends BaseReflectionFunction
      *
      * @param string|Closure $functionName The name of the function to reflect or a closure.
      * @param Function_ $functionNode Function node AST
+     *
      * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct($functionName, Function_ $functionNode)
