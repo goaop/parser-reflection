@@ -1,6 +1,4 @@
 <?php
-
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -9,9 +7,9 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection;
-
 
 use Go\ParserReflection\Instrument\PathResolver;
 use PhpParser\Node;
@@ -43,13 +41,13 @@ class ReflectionFile
      *
      * @var Node[]
      */
-    private Node|array $topLevelNodes;
+    private array $topLevelNodes;
 
     /**
      * ReflectionFile constructor.
      *
-     * @param string            $fileName      Name of the file to reflect
-     * @param null|array|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
+     * @param string      $fileName      Name of the file to reflect
+     * @param Node[]|null $topLevelNodes Optional corresponding list of AST nodes for that file
      */
     public function __construct(string $fileName, ?array $topLevelNodes = null)
     {
