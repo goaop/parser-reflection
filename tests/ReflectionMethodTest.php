@@ -1,11 +1,24 @@
 <?php
+/**
+ * Parser Reflection API
+ *
+ * @copyright Copyright 2022, Lisachenko Alexander <lisachenko.it@gmail.com>
+ *
+ * This source file is subject to the license that is bundled
+ * with this source code in the file LICENSE.
+ *
+ * @noinspection PhpUnhandledExceptionInspection
+ * @noinspection PhpDocMissingThrowsInspection
+ */
 declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use ReflectionMethod as BaseReflectionMethod;
+
 class ReflectionMethodTest extends AbstractTestCase
 {
-    protected static string $reflectionClassToTest = \ReflectionMethod::class;
+    protected static string $reflectionClassToTest = BaseReflectionMethod::class;
 
     public function testGetClosureMethod()
     {
@@ -34,7 +47,7 @@ class ReflectionMethodTest extends AbstractTestCase
     public function testDebugInfoMethod()
     {
         $parsedRefMethod   = $this->parsedRefClass->getMethod('funcWithDocAndBody');
-        $originalRefMethod = new \ReflectionMethod($this->parsedRefClass->getName(), 'funcWithDocAndBody');
+        $originalRefMethod = new BaseReflectionMethod($this->parsedRefClass->getName(), 'funcWithDocAndBody');
         $expectedValue     = (array) $originalRefMethod;
         $this->assertSame($expectedValue, $parsedRefMethod->__debugInfo());
     }
@@ -54,7 +67,7 @@ class ReflectionMethodTest extends AbstractTestCase
         $this->assertEquals($this->parsedRefClass->getName(), $retValue);
 
         $prototype = $refMethod->getPrototype();
-        $this->assertInstanceOf(\ReflectionMethod::class, $prototype);
+        $this->assertInstanceOf(BaseReflectionMethod::class, $prototype);
         $prototype->setAccessible(true);
         $retValue  = $prototype->invokeArgs(null, []);
         $this->assertNotEquals($this->parsedRefClass->getName(), $retValue);
@@ -65,15 +78,19 @@ class ReflectionMethodTest extends AbstractTestCase
      *
      * @dataProvider caseProvider
      *
-     * @param ReflectionClass   $parsedClass Parsed class
-     * @param \ReflectionMethod $refMethod Method to analyze
-     * @param string                  $getterName Name of the reflection method to test
+     * @param ReflectionClass      $parsedClass Parsed class
+     * @param BaseReflectionMethod $refMethod   Method to analyze
+     * @param string               $getterName  Name of the reflection method to test
      */
     public function testReflectionMethodParity(
-        ReflectionClass $parsedClass,
-        \ReflectionMethod $refMethod,
-        $getterName
+        ReflectionClass      $parsedClass,
+        BaseReflectionMethod $refMethod,
+        string               $getterName
     ) {
+        if ($getterName === '__toString') {
+            $this->markTestIncomplete('Method __toString must be updated to support PHP 8');
+        }
+
         $methodName   = $refMethod->getName();
         $className    = $parsedClass->getName();
         $parsedMethod = $parsedClass->getMethod($methodName);

@@ -288,8 +288,6 @@ class ReflectionClassTest extends AbstractTestCase
 
     public function testInheritedMethods()
     {
-        $this->markTestIncomplete("See https://github.com/goaop/parser-reflection/issues/55");
-
         $parsedRefClass   = $this->parsedRefFileNamespace->getClass(SimpleAbstractInheritance::class);
         $originalRefClass = new BaseReflectionClass(SimpleAbstractInheritance::class);
 

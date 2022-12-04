@@ -7,11 +7,13 @@ namespace Go\ParserReflection;
 use Closure;
 use PHPUnit\Framework\TestCase;
 use ReflectionFunction as BaseReflectionFunction;
+use ReflectionUnionType as BaseReflectionUnionType;
 
 class ReflectionFunctionTest extends TestCase
 {
     const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
     const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
+    const STUB_FILE80 = '/Stub/FileWithFunctions80.php';
 
     /**
      * @var ReflectionFile
@@ -144,6 +146,43 @@ class ReflectionFunctionTest extends TestCase
                     $this->assertSame(
                         $originalRefFunction->getReturnType(),
                         $refFunction->getReturnType()
+                    );
+                }
+            }
+        }
+    }
+
+    public function testGetUnionParameters()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->markTestSkipped('Test available only for PHP8.0 and newer');
+        }
+
+        $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE80);
+
+        $reflectionFile = new ReflectionFile($fileName);
+        include $fileName;
+
+        foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+            foreach ($fileNamespace->getFunctions() as $refFunction) {
+                $functionName        = $refFunction->getName();
+                $originalRefFunction = new BaseReflectionFunction($functionName);
+                $this->assertSame(
+                    $originalRefFunction->getNumberOfParameters(),
+                    $refFunction->getNumberOfParameters(),
+                    "Number of parameters for function $functionName should be equal"
+                );
+                $this->assertSame(
+                    $originalRefFunction->getNumberOfRequiredParameters(),
+                    $refFunction->getNumberOfRequiredParameters(),
+                    "Number of required parameters for function $functionName should be equal"
+                );
+                foreach ($refFunction->getParameters() as $parameter) {
+                    $originalParameter = $originalRefFunction->getParameters()[$parameter->getPosition()];
+                    $this->assertSame(
+                        $originalParameter->getType() instanceof BaseReflectionUnionType,
+                        $parameter->getType() instanceof BaseReflectionUnionType,
+                        "Presence of union type for parameter {$parameter->getName()} of function $functionName should be equal"
                     );
                 }
             }

@@ -89,6 +89,9 @@ abstract class AbstractTestCase extends TestCase
         if (PHP_VERSION_ID >= 70100) {
             $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
         }
+        if (PHP_VERSION_ID >= 80000) {
+            $files['PHP8.0'] = [__DIR__ . '/Stub/FileWithClasses80.php'];
+        }
 
         return $files;
     }

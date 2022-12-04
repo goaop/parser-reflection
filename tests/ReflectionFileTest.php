@@ -81,12 +81,13 @@ class ReflectionFileTest extends TestCase
         $this->assertSame($shouldBeStrict, $reflectionFile->isStrictMode());
     }
 
-    public function fileNameProvider()
+    public function fileNameProvider(): array
     {
         return [
             '/Stub/FileWithClasses56.php'       => ['/Stub/FileWithClasses56.php', false],
             '/Stub/FileWithClasses70.php'       => ['/Stub/FileWithClasses70.php', false],
             '/Stub/FileWithClasses71.php'       => ['/Stub/FileWithClasses71.php', true],
+            '/Stub/FileWithClasses80.php'       => ['/Stub/FileWithClasses80.php', true],
             '/Stub/FileWithGlobalNamespace.php' => ['/Stub/FileWithGlobalNamespace.php', true],
         ];
     }
