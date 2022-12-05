@@ -1,14 +1,24 @@
 <?php
+/**
+ * Parser Reflection API
+ *
+ * @copyright Copyright 2015-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
+ *
+ * This source file is subject to the license that is bundled
+ * with this source code in the file LICENSE.
+ *
+ * @noinspection PhpDocMissingThrowsInspection
+ * @noinspection PhpUnhandledExceptionInspection
+ */
 declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Stub\AttributeWithParams;
 use Go\ParserReflection\Stub\ClassWithArrays;
 use Go\ParserReflection\Stub\ClassWithConstantsAndInheritance;
-use Go\ParserReflection\Stub\ClassWithConstructorPropertyPromotion;
 use Go\ParserReflection\Stub\ClassWithDifferentConstantTypes;
 use Go\ParserReflection\Stub\ClassWithProperties;
+use ReflectionClass as BaseReflectionClass;
 use ReflectionProperty as BaseReflectionProperty;
 
 class ReflectionPropertyTest extends AbstractTestCase
@@ -69,10 +79,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         }
 
         // TODO
-        if (($className === ClassWithConstructorPropertyPromotion::class
-            || $className === AttributeWithParams::class)
-            && $getterName === '__toString'
-        ) {
+        if ($getterName === '__toString') {
             $this->markTestIncomplete('Constructor property promotion for __toString() is not supported');
         }
 
@@ -91,7 +98,7 @@ class ReflectionPropertyTest extends AbstractTestCase
      *
      * @return array
      */
-    public function caseProvider()
+    public function caseProvider(): array
     {
         $allNameGetters = $this->getGettersToCheck();
 
@@ -106,7 +113,7 @@ class ReflectionPropertyTest extends AbstractTestCase
                 include_once $fileName;
                 foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
                     foreach ($fileNamespace->getClasses() as $parsedClass) {
-                        $refClass = new \ReflectionClass($parsedClass->getName());
+                        $refClass = new BaseReflectionClass($parsedClass->getName());
                         foreach ($refClass->getProperties() as $classProperty) {
                             $caseName = $parsedClass->getName() . '->' . $classProperty->getName();
                             foreach ($allNameGetters as $getterName) {

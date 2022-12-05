@@ -1,17 +1,17 @@
 <?php
 /**
- * @noinspection PhpUnhandledExceptionInspection
- * @noinspection PhpMissingFieldTypeInspection
- */
-declare(strict_types=1);
-/**
  * Parser Reflection API
  *
  * @copyright Copyright 2016-2022, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
+ *
+ * @noinspection PhpUnhandledExceptionInspection
+ * @noinspection PhpMissingFieldTypeInspection
  */
+declare(strict_types=1);
+
 namespace Go\ParserReflection;
 
 use PHPUnit\Framework\TestCase;
@@ -90,7 +90,10 @@ abstract class AbstractTestCase extends TestCase
             $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
         }
         if (PHP_VERSION_ID >= 80000) {
-            $files['PHP8.0'] = [__DIR__ . '/Stub/FileWithClasses80.php'];
+            $files['PHP8.0'] = [
+                __DIR__ . '/Stub/FileWithClasses80.php',
+                __DIR__ . '/Stub/FileWithAttributes80.php',
+            ];
         }
 
         return $files;
