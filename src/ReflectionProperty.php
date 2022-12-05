@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -8,9 +7,12 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
+
 namespace Go\ParserReflection;
 
 use Error;
+use Go\ParserReflection\Traits\CanHoldAttributesTrait;
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
@@ -30,11 +32,14 @@ use ReflectionProperty as BaseReflectionProperty;
 
 /**
  * AST-based reflection for class property
+ *
+ * @template T of object
  */
 class ReflectionProperty extends BaseReflectionProperty
 {
     use InitializationTrait;
     use InternalPropertiesEmulationTrait;
+    use CanHoldAttributesTrait;
 
     /**
      * Type of property node
@@ -72,6 +77,8 @@ class ReflectionProperty extends BaseReflectionProperty
      * @param ?Property         $propertyType Property type definition node
      * @param ?PropertyProperty $propertyNode Concrete property definition (value, name)
      * @param ?Param            $paramNode    Property promotion constructor parameter
+     *
+     * @throws ReflectionException
      *
      * @noinspection PhpMissingParentConstructorInspection
      */
@@ -288,10 +295,17 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
-     * {@inheritDoc}
+     * Gets declaring class
+     *
+     * @link https://php.net/manual/en/reflectionproperty.getdeclaringclass.php
+     *
+     * @return ReflectionClass A {@see ReflectionClass} object.
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
-    public function getDeclaringClass(): \ReflectionClass|ReflectionClass
+    public function getDeclaringClass(): ReflectionClass
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         return new ReflectionClass($this->className);
     }
 
@@ -461,6 +475,25 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
+     * Returns an array of property attributes.
+     *
+     * @template T
+     *
+     * @param class-string<T>|null $name  Name of an attribute class
+     * @param int                  $flags Criteria by which the attribute is searched.
+     *
+     * @return ReflectionAttribute<T>[]
+     */
+    public function getAttributes(?string $name = null, int $flags = 0): array
+    {
+        if (!isset($this->attributes)) {
+            $this->collectAttributes();
+        }
+
+        return $this->attributes;
+    }
+
+    /**
      * Parses properties from the concrete class node
      *
      * @param ClassLike $classLikeNode Class-like node
@@ -476,12 +509,16 @@ class ReflectionProperty extends BaseReflectionProperty
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classPropertyNode) {
                     $propertyName = $classPropertyNode->name->toString();
-                    $properties[$propertyName] = new static(
-                        $fullClassName,
-                        $propertyName,
-                        $classLevelNode,
-                        $classPropertyNode
-                    );
+                    try {
+                        $properties[$propertyName] = new static(
+                            $fullClassName,
+                            $propertyName,
+                            $classLevelNode,
+                            $classPropertyNode
+                        );
+                    } catch (ReflectionException) {
+                        // Ignore properties that cannot be parsed
+                    }
                 }
             }
 
@@ -492,11 +529,16 @@ class ReflectionProperty extends BaseReflectionProperty
                 foreach ($classLevelNode->getParams() as $param) {
                     if ($param->flags !== 0) {
                         $propertyName = $param->var->name;
-                        $properties[$propertyName] = new static(
-                            $fullClassName,
-                            $propertyName,
-                            paramNode: $param
-                        );
+
+                        try {
+                            $properties[$propertyName] = new static(
+                                $fullClassName,
+                                $propertyName,
+                                paramNode: $param
+                            );
+                        } catch (ReflectionException) {
+                            // Ignore promoted properties that cannot be parsed
+                        }
                     }
                 }
             }

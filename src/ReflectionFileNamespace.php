@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -8,6 +7,7 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
@@ -31,14 +31,14 @@ class ReflectionFileNamespace
     /**
      * List of classes in the namespace
      *
-     * @var array|ReflectionClass[]
+     * @var ReflectionClass[]
      */
     protected array $fileClasses;
 
     /**
      * List of functions in the namespace
      *
-     * @var array|ReflectionFunction[]
+     * @var ReflectionFunction[]
      */
     protected array $fileFunctions;
 
@@ -101,9 +101,9 @@ class ReflectionFileNamespace
      *
      * @param string $className
      *
-     * @return bool|ReflectionClass
+     * @return ReflectionClass|bool
      */
-    public function getClass(string $className): bool|ReflectionClass
+    public function getClass(string $className): ReflectionClass|bool
     {
         if ($this->hasClass($className)) {
             return $this->fileClasses[$className];
@@ -283,6 +283,10 @@ class ReflectionFileNamespace
 
     /**
      * Checks if the given class is present in this file namespace
+     *
+     * @param string $className
+     *
+     * @return bool
      */
     public function hasClass(string $className): bool
     {
@@ -327,7 +331,12 @@ class ReflectionFileNamespace
                 $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 
                 $namespaceLevelNode->setAttribute('fileName', $this->fileName);
-                $classes[$className] = new ReflectionClass($className, $namespaceLevelNode);
+
+                try {
+                    $classes[$className] = new ReflectionClass($className, $namespaceLevelNode);
+                } catch (ReflectionException) {
+                    // ignore classes that cannot be parsed
+                }
             }
         }
 

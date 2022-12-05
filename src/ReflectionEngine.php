@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -8,6 +7,7 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
@@ -131,19 +131,22 @@ class ReflectionEngine
      *
      * @return ClassLike
      *
-     * @throws InvalidArgumentException
-     *
-     * @noinspection PhpDocMissingThrowsInspection
+     * @throws ReflectionException
      */
     public static function parseClass(string $fullClassName): ClassLike
     {
+        if ($fullClassName === 'Attribute') {
+            return new Node\Stmt\Class_('Attribute', [
+                'flags' => Node\Stmt\Class_::MODIFIER_FINAL,
+            ]);
+        }
+
         $classFileName  = self::locateClassFile($fullClassName);
         $namespaceParts = explode('\\', $fullClassName);
         $className      = array_pop($namespaceParts);
         $namespaceName  = implode('\\', $namespaceParts);
 
         // we have a namespace node somewhere
-        /** @noinspection PhpUnhandledExceptionInspection */
         $namespace      = self::parseFileNamespace($classFileName, $namespaceName);
         $namespaceNodes = $namespace->stmts;
 
@@ -154,7 +157,7 @@ class ReflectionEngine
             return $namespaceNode;
         }
 
-        throw new InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
+        throw new ReflectionException("Class $fullClassName was not found in the $classFileName");
     }
 
     /**
@@ -194,6 +197,8 @@ class ReflectionEngine
      * @param string $methodName
      *
      * @return ClassMethod
+     *
+     * @throws ReflectionException
      */
     public static function parseClassMethod(string $fullClassName, string $methodName): ClassMethod
     {
@@ -206,13 +211,15 @@ class ReflectionEngine
             }
         }
 
-        throw new InvalidArgumentException("Method $methodName was not found in the $fullClassName");
+        throw new ReflectionException("Method $methodName was not found in the $fullClassName");
     }
 
     /**
      * Parses class property
      *
      * @return array Pair of [Property and PropertyProperty] nodes
+     *
+     * @throws ReflectionException
      */
     public static function parseClassProperty(string $fullClassName, string $propertyName): array
     {
@@ -241,7 +248,7 @@ class ReflectionEngine
             }
         }
 
-        throw new InvalidArgumentException("Property $propertyName was not found in the $fullClassName");
+        throw new ReflectionException("Property $propertyName was not found in the $fullClassName");
     }
 
     /**
@@ -249,7 +256,10 @@ class ReflectionEngine
      *
      * @param string $fullClassName
      * @param string $constantName
+     *
      * @return array Pair of [ClassConst and Const_] nodes
+     *
+     * @throws ReflectionException
      */
     public static function parseClassConstant(string $fullClassName, string $constantName): array
     {
@@ -266,7 +276,21 @@ class ReflectionEngine
             }
         }
 
-        throw new InvalidArgumentException("ClassConstant $constantName was not found in the $fullClassName");
+        throw new ReflectionException("ClassConstant $constantName was not found in the $fullClassName");
+    }
+
+    /**
+     * Tries to parse an attribute by name using LocatorInterface
+     *
+     * @param string $fullClassName
+     *
+     * @return Node\Attribute
+     *
+     * @throws ReflectionException
+     */
+    public static function parseAttribute(string $fullClassName): Node\Attribute
+    {
+        // TODO: Implement parseAttribute() method.
     }
 
     /**

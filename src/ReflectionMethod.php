@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -8,6 +7,7 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
@@ -51,6 +51,8 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param ?ClassMethod     $classMethodNode AST-node for method
      * @param ?ReflectionClass $declaringClass  Optional declaring class
      *
+     * @throws ReflectionException
+     *
      * @noinspection PhpMissingParentConstructorInspection
      */
     public function __construct(
@@ -69,6 +71,8 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * Returns an AST-node for method
+     *
+     * @return ClassMethod
      */
     public function getNode(): ClassMethod
     {
@@ -181,10 +185,18 @@ class ReflectionMethod extends BaseReflectionMethod
     }
 
     /**
-     * {@inheritDoc}
+     * Gets declaring class for the reflected method.
+     *
+     * @link https://php.net/manual/en/reflectionmethod.getdeclaringclass.php
+     *
+     * @return ReflectionClass A {@see ReflectionClass} object of the class that the
+     *                         reflected method is part of.
+     *
+     * @noinspection PhpDocMissingThrowsInspection
      */
-    public function getDeclaringClass(): \ReflectionClass|ReflectionClass
+    public function getDeclaringClass(): ReflectionClass
     {
+        /** @noinspection PhpUnhandledExceptionInspection */
         return $this->declaringClass ?? new ReflectionClass($this->className);
     }
 
@@ -226,8 +238,9 @@ class ReflectionMethod extends BaseReflectionMethod
             throw new ReflectionException("No prototype");
         }
 
-        $prototypeMethod = $parent->getMethod($this->getName());
-        if (!$prototypeMethod) {
+        try {
+            $prototypeMethod = $parent->getMethod($this->getName());
+        } catch (ReflectionException) {
             throw new ReflectionException("No prototype");
         }
 
@@ -345,12 +358,17 @@ class ReflectionMethod extends BaseReflectionMethod
                 $classLevelNode->setAttribute('fileName', $classLikeNode->getAttribute('fileName'));
 
                 $methodName = $classLevelNode->name->toString();
-                $methods[$methodName] = new ReflectionMethod(
-                    $reflectionClass->name,
-                    $methodName,
-                    $classLevelNode,
-                    $reflectionClass
-                );
+
+                try {
+                    $methods[$methodName] = new ReflectionMethod(
+                        $reflectionClass->name,
+                        $methodName,
+                        $classLevelNode,
+                        $reflectionClass
+                    );
+                } catch (ReflectionException) {
+                    // Ignore methods that cannot be parsed
+                }
             }
         }
 

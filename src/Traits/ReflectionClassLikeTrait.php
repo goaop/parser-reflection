@@ -1,6 +1,4 @@
 <?php
-/** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection */
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -8,10 +6,15 @@ declare(strict_types=1);
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
+ *
+ * @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection
  */
+declare(strict_types=1);
+
 namespace Go\ParserReflection\Traits;
 
 use Closure;
+use Go\ParserReflection\ReflectionAttribute;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionClassConstant;
 use Go\ParserReflection\ReflectionException;
@@ -25,7 +28,6 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUseAdaptation;
-use ReflectionAttribute as BaseReflectionAttribute;
 use ReflectionClass as BaseReflectionClass;
 use ReflectionClassConstant as BaseReflectionClassConstant;
 use ReflectionException as BaseReflectionException;
@@ -44,6 +46,7 @@ use Traversable;
 trait ReflectionClassLikeTrait
 {
     use InitializationTrait;
+    use CanHoldAttributesTrait;
 
     /**
      * @var ClassLike
@@ -67,14 +70,14 @@ trait ReflectionClassLikeTrait
     /**
      * Interfaces, empty array or null if not initialized yet
      *
-     * @var BaseReflectionClass[]|array|null
+     * @var BaseReflectionClass[]|null
      */
     protected ?array $interfaceClasses;
 
     /**
      * List of traits, empty array or null if not initialized yet
      *
-     * @var  BaseReflectionClass[]|array|null
+     * @var  BaseReflectionClass[]|null
      */
     protected ?array $traits;
 
@@ -86,7 +89,9 @@ trait ReflectionClassLikeTrait
     protected array $traitAdaptations;
 
     /**
-     * @var array|ReflectionMethod[]
+     * List of all methods from the class
+     *
+     * @var ReflectionMethod[]
      */
     protected array $methods;
 
@@ -481,18 +486,22 @@ trait ReflectionClassLikeTrait
                                                 if (isset($adaptation->newName)
                                                     && $adaptation->newName->toString() === $newMethodName
                                                 ) {
-                                                    $reflectionMethodAlias = new ReflectionMethod(
-                                                        $this->getName(),
-                                                        $reflectionMethodName,
-                                                        clone $reflectionMethod->getNode(),
-                                                        $this
-                                                    );
-                                                    $reflectionMethodAlias->setAliasName($newMethodName);
-                                                    $reflectionMethodAlias->setAliasClass($this);
-                                                    if (!is_null($adaptation->newModifier)) {
-                                                        $reflectionMethodAlias->setModifiers($adaptation->newModifier);
+                                                    try {
+                                                        $reflectionMethodAlias = new ReflectionMethod(
+                                                            $this->getName(),
+                                                            $reflectionMethodName,
+                                                            clone $reflectionMethod->getNode(),
+                                                            $this
+                                                        );
+                                                        $reflectionMethodAlias->setAliasName($newMethodName);
+                                                        $reflectionMethodAlias->setAliasClass($this);
+                                                        if (!is_null($adaptation->newModifier)) {
+                                                            $reflectionMethodAlias->setModifiers($adaptation->newModifier);
+                                                        }
+                                                        $reflectionMethods[$newMethodName] = $reflectionMethodAlias;
+                                                    } catch (ReflectionException) {
+                                                        // Skip
                                                     }
-                                                    $reflectionMethods[$newMethodName] = $reflectionMethodAlias;
                                                 }
 
                                                 // Override
@@ -501,14 +510,18 @@ trait ReflectionClassLikeTrait
                                                         $insteadOfSkipped[] = $insteadOf->toString();
                                                     }
 
-                                                    $reflectionMethodInsteadOf = new ReflectionMethod(
-                                                        $adaptation->trait->toString(),
-                                                        $reflectionMethodName,
-                                                        null,
-                                                        $this
-                                                    );
+                                                    try {
+                                                        $reflectionMethodInsteadOf = new ReflectionMethod(
+                                                            $adaptation->trait->toString(),
+                                                            $reflectionMethodName,
+                                                            null,
+                                                            $this
+                                                        );
 
-                                                    $reflectionMethods[$reflectionMethodName] = $reflectionMethodInsteadOf;
+                                                        $reflectionMethods[$reflectionMethodName] = $reflectionMethodInsteadOf;
+                                                    } catch (ReflectionException) {
+                                                        // Skip
+                                                    }
                                                 }
                                             }
                                         }
@@ -520,13 +533,17 @@ trait ReflectionClassLikeTrait
                                     if ($traitName === $instance->getName()
                                         && !in_array($traitName, $insteadOfSkipped, true)
                                     ) {
-                                        $reflectionMethodAlias = new ReflectionMethod(
-                                            $this->getName(),
-                                            $reflectionMethodName,
-                                            $reflectionMethod->getNode(),
-                                            $this
-                                        );
-                                        $reflectionMethods[$reflectionMethodName] = $reflectionMethodAlias;
+                                        try {
+                                            $reflectionMethodAlias = new ReflectionMethod(
+                                                $this->getName(),
+                                                $reflectionMethodName,
+                                                $reflectionMethod->getNode(),
+                                                $this
+                                            );
+                                            $reflectionMethods[$reflectionMethodName] = $reflectionMethodAlias;
+                                        } catch (ReflectionException) {
+                                            // Skip
+                                        }
                                     }
                                 }
                             } else {
@@ -623,7 +640,11 @@ trait ReflectionClassLikeTrait
             $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
             if ($extendsNode instanceof FullyQualified) {
                 $extendsName = $extendsNode->toString();
-                $parentClass = $this->createReflectionForClass($extendsName);
+                try {
+                    $parentClass = $this->createReflectionForClass($extendsName);
+                } catch (ReflectionException) {
+                    // Skip
+                }
             }
             $this->parentClass = $parentClass;
         }
@@ -637,16 +658,16 @@ trait ReflectionClassLikeTrait
      * @link https://php.net/manual/en/reflectionclass.getproperties.php
      *
      * @param int|null $filter The optional filter, for filtering desired property types. It's configured using
-     *                         the {@see BaseReflectionProperty} constants, and defaults to all property types.
+     *                         the {@see ReflectionProperty} constants, and defaults to all property types.
      *
-     * @return BaseReflectionProperty[]
+     * @return ReflectionProperty[]
      */
     public function getProperties(?int $filter = null): array
     {
         if (!isset($this->properties)) {
             $directProperties = ReflectionProperty::collectFromClassNode($this->classLikeNode, $this->getName());
             $parentProperties = $this->recursiveCollect(
-                function (array &$result, BaseReflectionClass $instance, $isParent) {
+                function (array &$result, ReflectionClass $instance, $isParent) {
                     $reflectionProperties = [];
                     foreach ($instance->getProperties() as $reflectionProperty) {
                         if (!$isParent || !$reflectionProperty->isPrivate()) {
@@ -728,7 +749,7 @@ trait ReflectionClassLikeTrait
      *
      * @param int|null $filter Allows the filtering of constants defined in a class by their visibility.
      *
-     * @return BaseReflectionClassConstant[] An array of ReflectionClassConstant objects.
+     * @return ReflectionClassConstant[] An array of ReflectionClassConstant objects.
      */
     public function getReflectionConstants(
         ?int $filter = ReflectionClassConstant::IS_PUBLIC
@@ -741,7 +762,7 @@ trait ReflectionClassLikeTrait
                 $this->getName()
             );
             $parentClassConstants = $this->recursiveCollect(
-                function (array &$result, BaseReflectionClass $instance, $isParent) {
+                function (array &$result, ReflectionClass $instance, $isParent) {
                     $reflectionClassConstants = [];
                     foreach ($instance->getReflectionConstants() as $reflectionClassConstant) {
                         if (!$isParent || !$reflectionClassConstant->isPrivate()) {
@@ -961,6 +982,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * Currently, anonymous classes aren't supported for parsed reflection
+     *
+     * @return false
      */
     public function isAnonymous(): bool
     {
@@ -1059,12 +1082,10 @@ trait ReflectionClassLikeTrait
      *
      * @link https://php.net/manual/en/reflectionclass.isinternal.php
      *
-     * @return bool Returns {@see false} as it can never be an internal method.
+     * @return false {@see false} as it can never be an internal class.
      */
     public function isInternal(): bool
     {
-        // never can be an internal method
-        // @todo why method?
         return false;
     }
 
@@ -1300,12 +1321,15 @@ trait ReflectionClassLikeTrait
      * @param class-string<T>|null $name  Name of an attribute class
      * @param int                  $flags Criteria by which the attribute is searched.
      *
-     * @return BaseReflectionAttribute<T>[]
+     * @return ReflectionAttribute<T>[]
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        // @todo: implement
-        throw new ReflectionException("Not implemented");
+        if (!isset($this->attributes)) {
+            $this->collectAttributes();
+        }
+
+        return $this->attributes;
     }
 
     /**

@@ -1,6 +1,4 @@
 <?php
-
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -9,6 +7,7 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
@@ -34,6 +33,8 @@ class ReflectionClass extends BaseReflectionClass
      *
      * @param object|string $argument      Class name or instance of object
      * @param ?ClassLike    $classLikeNode AST node for class
+     *
+     * @throws ReflectionException
      *
      * @noinspection PhpMissingParentConstructorInspection
      */
@@ -82,9 +83,14 @@ class ReflectionClass extends BaseReflectionClass
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
                     $implementName = $implementNode->toString();
-                    $interface     = new static($implementName);
 
-                    $interfaces[$implementName] = $interface;
+                    try {
+                        $interface = new static($implementName);
+
+                        $interfaces[$implementName] = $interface;
+                    } catch (ReflectionException) {
+                        // Ignore interfaces that cannot be parsed
+                    }
                 }
             }
         }
@@ -109,8 +115,13 @@ class ReflectionClass extends BaseReflectionClass
                     foreach ($classLevelNode->traits as $classTraitName) {
                         if ($classTraitName instanceof FullyQualified) {
                             $traitName = $classTraitName->toString();
-                            $trait     = new static($traitName);
-                            $traits[$traitName] = $trait;
+
+                            try {
+                                $trait = new static($traitName);
+                                $traits[$traitName] = $trait;
+                            } catch (ReflectionException) {
+                                // Ignore traits that cannot be parsed
+                            }
                         }
                     }
                     $traitAdaptations = $classLevelNode->adaptations;
@@ -171,6 +182,8 @@ class ReflectionClass extends BaseReflectionClass
      * @param string $className The name of the class to create a reflection for.
      *
      * @return ReflectionClass The appropriate reflection object.
+     *
+     * @throws ReflectionException
      */
     protected function createReflectionForClass(string $className): ReflectionClass
     {

@@ -16,7 +16,6 @@ use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
 use Go\ParserReflection\ReflectionAttribute;
 use Go\ParserReflection\ReflectionNamedType;
 use Go\ParserReflection\ReflectionParameter;
-use PhpParser\Node\AttributeGroup;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
@@ -30,10 +29,13 @@ use ReflectionType as BaseReflectionType;
 
 /**
  * General trait for all function-like reflections
+ *
+ * @template T of object
  */
 trait ReflectionFunctionLikeTrait
 {
     use InitializationTrait;
+    use CanHoldAttributesTrait;
 
     /**
      * Function-like node
@@ -55,13 +57,6 @@ trait ReflectionFunctionLikeTrait
      * @var ReflectionParameter[]
      */
     protected array $parameters;
-
-    /**
-     * Attributes for the function
-     *
-     * @var ReflectionAttribute[]
-     */
-    protected array $attributes;
 
     /**
      * {@inheritDoc}
@@ -378,16 +373,7 @@ trait ReflectionFunctionLikeTrait
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
         if (!isset($this->attributes)) {
-            $attributes = [];
-
-            foreach ($this->functionLikeNode->attrGroups as $attributeGroup) {
-                /** @var AttributeGroup $attributeGroup */
-                foreach ($attributeGroup->attrs as $attribute) {
-                    $attributes[] = new ReflectionAttribute($attribute->name->toString(), $attribute);
-                }
-            }
-
-            $this->attributes = $attributes;
+            $this->collectAttributes();
         }
 
         return $this->attributes;

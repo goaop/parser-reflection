@@ -1,6 +1,4 @@
 <?php
-
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -9,6 +7,7 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection\ValueResolver;
 
@@ -30,7 +29,6 @@ use ReflectionMethod;
  */
 class NodeExpressionResolver
 {
-
     /**
      * List of exception for constant fetch
      *
@@ -245,11 +243,14 @@ class NodeExpressionResolver
         if (!$isFQNConstant && method_exists($this->context, 'getFileName')) {
             $fileName      = $this->context->getFileName();
             $namespaceName = $this->resolveScalarMagicConstNamespace();
-            $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
-            if ($fileNamespace->hasConstant($constantName)) {
-                $constantValue = $fileNamespace->getConstant($constantName);
-                $constantName  = $fileNamespace->getName() . '\\' . $constantName;
-                $isResolved    = true;
+
+            if ($namespaceName) {
+                $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
+                if ($fileNamespace->hasConstant($constantName)) {
+                    $constantValue = $fileNamespace->getConstant($constantName);
+                    $constantName  = $fileNamespace->getName() . '\\' . $constantName;
+                    $isResolved    = true;
+                }
             }
         }
 
@@ -461,6 +462,11 @@ class NodeExpressionResolver
     protected function resolveExprBinaryOpLogicalXor(Expr\BinaryOp\LogicalXor $node): bool
     {
         return $this->resolve($node->left) xor $this->resolve($node->right);
+    }
+
+    protected function resolveArg(Node\Arg $node)
+    {
+        return $this->resolve($node->value);
     }
 
     private function getDispatchMethodFor(Node $node): string

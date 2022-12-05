@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -8,9 +7,11 @@ declare(strict_types=1);
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
  */
+declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\CanHoldAttributesTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Identifier;
@@ -25,10 +26,13 @@ use ReflectionType as BaseReflectionType;
 
 /**
  * AST-based reflection for method/function parameter
+ *
+ * @template T of object
  */
 class ReflectionParameter extends BaseReflectionParameter
 {
     use InternalPropertiesEmulationTrait;
+    use CanHoldAttributesTrait;
 
     /**
      * Reflection function or method
@@ -415,6 +419,25 @@ class ReflectionParameter extends BaseReflectionParameter
     public function isVariadic(): bool
     {
         return $this->parameterNode->variadic;
+    }
+
+    /**
+     * Returns an array of parameter attributes.
+     *
+     * @template T
+     *
+     * @param class-string<T>|null $name  Name of an attribute class
+     * @param int                  $flags Criteria by which the attribute is searched.
+     *
+     * @return ReflectionAttribute<T>[]
+     */
+    public function getAttributes(?string $name = null, int $flags = 0): array
+    {
+        if (!isset($this->attributes)) {
+            $this->collectAttributes();
+        }
+
+        return $this->attributes;
     }
 
     /**

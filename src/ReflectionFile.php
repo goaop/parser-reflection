@@ -21,7 +21,6 @@ use ReflectionException as BaseReflectionException;
  */
 class ReflectionFile
 {
-
     /**
      * Name of the file for reflection
      *
@@ -32,7 +31,7 @@ class ReflectionFile
     /**
      * List of namespaces in the file
      *
-     * @var ReflectionFileNamespace[]|array
+     * @var ReflectionFileNamespace[]
      */
     protected array $fileNamespaces;
 
