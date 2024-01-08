@@ -38,7 +38,7 @@ class ReflectionTypeTest extends TestCase
         } else {
             $this->assertEquals('string', $nativeTypeRef->getName());
         }
-        $this->assertNotContains('\\', get_class($nativeTypeRef));
+        $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
         $this->assertEquals('string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }
@@ -64,7 +64,7 @@ class ReflectionTypeTest extends TestCase
         } else {
             $this->assertEquals('string', $nativeTypeRef->getName());
         }
-        $this->assertNotContains('\\', get_class($nativeTypeRef));
+        $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
         $this->assertEquals('string or NULL', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }
@@ -91,7 +91,7 @@ class ReflectionTypeTest extends TestCase
         } else {
             $this->assertEquals('string', $nativeTypeRef->getName());
         }
-        $this->assertNotContains('\\', get_class($nativeTypeRef));
+        $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
         $this->assertEquals('string or NULL', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }

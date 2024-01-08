@@ -40,12 +40,12 @@ class NodeExpressionResolverTest extends TestCase
      * Testing passing PhpParser\Node\Expr as class for constant fetch
      *
      * Evaluating a run-time value like a variable should throw an exception.
-     *
-     * @expectedException        Go\ParserReflection\ReflectionException
-     * @expectedExceptionMessage Method Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveExprVariable() not found trying to resolve class constant
      */
     public function testResolveConstFetchFromVariableAsClass()
     {
+        $this->expectException(\Go\ParserReflection\ReflectionException::class);
+        $this->expectExceptionMessage('Method Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveExprVariable() not found trying to resolve class constant');
+
         $expressionNodeTree = $this->parser->parse("<?php \$someVariable::FOO;");
         $expressionSolver = new NodeExpressionResolver(NULL);
         $expressionSolver->process($expressionNodeTree[0]);
@@ -55,12 +55,12 @@ class NodeExpressionResolverTest extends TestCase
      * Testing passing non-expression as class for constant fetch
      *
      * Non-expressions should be invalid.
-     *
-     * @expectedException        Go\ParserReflection\ReflectionException
-     * @expectedExceptionMessage Unable to resolve class constant
      */
     public function testResolveConstFetchFromNonExprAsClass()
     {
+        $this->expectException(\Go\ParserReflection\ReflectionException::class);
+        $this->expectExceptionMessage('Unable to resolve class constant');
+
         $expressionNodeTree = $this->parser->parse("<?php ClassNameToReplace::Bar;");
         $notAnExpressionNodeTree = $this->parser->parse("<?php if (true) { \$baz = 3; }");
         // This should never happen...

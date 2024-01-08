@@ -212,8 +212,8 @@ class ReflectionClassTest extends AbstractTestCase
         $defaultProp2Value = $originalRefClass2->getStaticPropertyValue('a');
         $ex = null;
         try {
-            $this->assertEquals(M_PI, $parsedRefClass1->getStaticPropertyValue('h'), 'Close to expected value of M_PI', 0.0001);
-            $this->assertEquals(M_PI, $originalRefClass1->getStaticPropertyValue('h'), 'Close to expected value of M_PI', 0.0001);
+            $this->assertEqualsWithDelta(M_PI, $parsedRefClass1->getStaticPropertyValue('h'), 0.0001, 'Close to expected value of M_PI');
+            $this->assertEqualsWithDelta(M_PI, $originalRefClass1->getStaticPropertyValue('h'), 0.0001, 'Close to expected value of M_PI');
             $this->assertEquals(
                 realpath(dirname(__DIR__ . parent::DEFAULT_STUB_FILENAME)),
                 realpath($parsedRefClass2->getStaticPropertyValue('a')),
