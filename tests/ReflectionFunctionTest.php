@@ -72,7 +72,7 @@ class ReflectionFunctionTest extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . implode(', ', $allMissedMethods) . ' are not implemented');
         }
     }
 
