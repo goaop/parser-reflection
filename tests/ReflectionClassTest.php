@@ -195,9 +195,8 @@ class ReflectionClassTest extends AbstractTestCase
 
     public function testNewInstanceWithoutConstructorMethod()
     {
-        $arguments      = [1, 2];
         $parsedRefClass = $this->parsedRefFileNamespace->getClass(FinalClass::class);
-        $instance       = $parsedRefClass->newInstanceWithoutConstructor($arguments);
+        $instance       = $parsedRefClass->newInstanceWithoutConstructor();
         $this->assertInstanceOf(FinalClass::class, $instance);
         $this->assertSame([], $instance->args);
     }

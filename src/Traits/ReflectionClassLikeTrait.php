@@ -965,12 +965,12 @@ trait ReflectionClassLikeTrait
      *
      * @return object
      */
-    public function newInstanceWithoutConstructor($args = null)
+    public function newInstanceWithoutConstructor()
     {
         $function = __FUNCTION__;
         $this->initializeInternalReflection();
 
-        return parent::$function($args);
+        return parent::$function();
     }
 
     /**
