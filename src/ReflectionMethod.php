@@ -203,17 +203,17 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function invoke($object, $args = null)
+    public function invoke(?object $object, mixed ...$args): mixed
     {
         $this->initializeInternalReflection();
 
-        return parent::invoke(...func_get_args());
+        return parent::invoke($object, ...$args);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function invokeArgs($object, array $args)
+    public function invokeArgs(?object $object, array $args): mixed
     {
         $this->initializeInternalReflection();
 
