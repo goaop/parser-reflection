@@ -34,9 +34,7 @@ class ReflectionFunctionTest extends TestCase
             'returnsReference', 'getClosureScopeClass', 'getClosureThis'
         ];
 
-        if (PHP_VERSION_ID >= 70000) {
-            $allNameGetters[] = 'hasReturnType';
-        }
+        $allNameGetters[] = 'hasReturnType';
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {

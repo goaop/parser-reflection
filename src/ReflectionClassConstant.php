@@ -200,7 +200,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         ];
         $value = $this->getValue();
         $type  = gettype($value);
-        if (PHP_VERSION_ID >= 70300 && isset($typeMap[$type])) {
+        if (isset($typeMap[$type])) {
             $type = $typeMap[$type];
         }
         $valueType = new ReflectionType($type, null, true);

@@ -9,12 +9,8 @@ class ReflectionTypeTest extends TestCase
 {
     protected function setUp(): void
     {
-        if (PHP_VERSION_ID >= 70000) {
-            include_once (__DIR__ . '/Stub/FileWithClasses70.php');
-        }
-        if (PHP_VERSION_ID >= 70100) {
-            include_once (__DIR__ . '/Stub/FileWithClasses71.php');
-        }
+        include_once (__DIR__ . '/Stub/FileWithClasses70.php');
+        include_once (__DIR__ . '/Stub/FileWithClasses71.php');
     }
 
     /**

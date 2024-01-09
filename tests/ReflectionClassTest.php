@@ -30,7 +30,7 @@ class ReflectionClassTest extends AbstractTestCase
      */
     public function testGetModifiers($fileName)
     {
-        if (PHP_VERSION_ID >= 70400) {
+        if (PHP_VERSION_ID >= 80000) {
             $this->markTestSkipped('TODO: Fix mapping and logic of modifiers');
         }
         $mask =
