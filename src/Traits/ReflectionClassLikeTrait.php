@@ -417,10 +417,6 @@ trait ReflectionClassLikeTrait
             $modifiers += \ReflectionClass::IS_FINAL;
         }
 
-        if (PHP_VERSION_ID < 70000 && $this->isTrait()) {
-            $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
-        }
-
         if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
             $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
         }
