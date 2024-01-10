@@ -93,12 +93,8 @@ class ReflectionType extends BaseReflectionType
 
         $displayType = ltrim($displayType, '\\');
 
-        if ($type->allowsNull()) {
-            if (! $type instanceof ReflectionUnionType) {
-                $displayType = '?' . $displayType;
-            } else {
-                $displayType = '|null';
-            }
+        if ($type->allowsNull() && ! $type instanceof ReflectionUnionType) {
+            $displayType = '?' . $displayType;
         }
 
         return $displayType;
