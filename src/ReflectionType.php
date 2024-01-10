@@ -14,6 +14,7 @@ namespace Go\ParserReflection;
 
 use ReflectionNamedType;
 use ReflectionType as BaseReflectionType;
+use ReflectionUnionType;
 
 /**
  * ReflectionType implementation
@@ -93,7 +94,11 @@ class ReflectionType extends BaseReflectionType
         $displayType = ltrim($displayType, '\\');
 
         if ($type->allowsNull()) {
-            $displayType .= ' or NULL';
+            if (! $type instanceof ReflectionUnionType) {
+                $displayType = '?' . $displayType;
+            } else {
+                $displayType = '|null';
+            }
         }
 
         return $displayType;
