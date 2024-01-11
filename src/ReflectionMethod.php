@@ -112,11 +112,10 @@ class ReflectionMethod extends BaseReflectionMethod
         }
 
         return sprintf(
-            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}{$returnFormat}\n}\n",
+            "%sMethod [ <user%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}{$returnFormat}\n}\n",
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
             $prototype ? ", overwrites {$prototypeClass}, prototype {$prototypeClass}" : '',
             $this->isConstructor() ? ', ctor' : '',
-            $this->isDestructor() ? ', dtor' : '',
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
