@@ -119,7 +119,7 @@ class ReflectionProperty extends BaseReflectionProperty
             $this->__initialize();
             $defaultValue = $this->getDefaultValue();
             if (is_string($defaultValue)) {
-                if (strlen($defaultValue, 18)) {
+                if (strlen($defaultValue) > 18) {
                     $defaultValue = substr($defaultValue, 0, 15) . '...';
                 }
 
@@ -130,7 +130,9 @@ class ReflectionProperty extends BaseReflectionProperty
                 $defaultValue = "NULL";
             }
 
-            $defaultValueDisplay = '= ' . $defaultValue;
+            if (! is_array($defaultValue)) {
+                $defaultValueDisplay = '= ' . $defaultValue;
+            }
         }
 
         return sprintf(
