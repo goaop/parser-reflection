@@ -130,7 +130,9 @@ class ReflectionProperty extends BaseReflectionProperty
                 $defaultValue = "NULL";
             }
 
-            if (! is_array($defaultValue)) {
+            if (is_array($defaultValue)) {
+                $defaultValueDisplay = '= Array';
+            } else {
                 $defaultValueDisplay = '= ' . $defaultValue;
             }
         }
