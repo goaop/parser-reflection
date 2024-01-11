@@ -113,11 +113,31 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function __toString()
     {
+        $defaultValueDisplay = '';
+
+        if ($this->isDefault()) {
+            $this->__initialize();
+            $defaultValue = $this->getDefaultValue();
+            if (is_string($defaultValue)) {
+                if (strlen($defaultValue, 18)) {
+                    $defaultValue = substr($defaultValue, 0, 15) . '...';
+                }
+
+                $defaultValue = "'" . $defaultValue . "'";
+            }
+
+            if ($defaultValue === null) {
+                $defaultValue = "NULL";
+            }
+
+            $defaultValueDisplay = '= ' . $defaultValue;
+        }
+
         return sprintf(
-            "Property [%s %s $%s ]\n",
-            $this->isStatic() ? '' : ($this->isDefault() ? ' <default>' : ' <dynamic>'),
+            "Property [ %s $%s %s ]\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
-            $this->getName()
+            $this->getName(),
+            $defaultValueDisplay
         );
     }
 
