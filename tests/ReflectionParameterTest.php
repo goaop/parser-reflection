@@ -34,12 +34,8 @@ class ReflectionParameterTest extends TestCase
         $onlyWithDefaultValues = array_flip([
             'getDefaultValue', 'getDefaultValueConstantName', 'isDefaultValueConstant'
         ]);
-        if (PHP_VERSION_ID >= 50600) {
-            $allNameGetters[] = 'isVariadic';
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            $allNameGetters[] = 'hasType';
-        }
+        $allNameGetters[] = 'isVariadic';
+        $allNameGetters[] = 'hasType';
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
@@ -75,13 +71,8 @@ class ReflectionParameterTest extends TestCase
     public function fileProvider()
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
-
-        if (PHP_VERSION_ID >= 50600) {
-            $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithParameters56.php'];
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithParameters70.php'];
-        }
+        $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithParameters56.php'];
+        $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithParameters70.php'];
 
         return $files;
     }
@@ -253,15 +244,12 @@ class ReflectionParameterTest extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . implode(', ', $allMissedMethods) . ' are not implemented');
         }
     }
 
     public function testGetTypeMethod()
     {
-        if (PHP_VERSION_ID < 70000) {
-            $this->markTestSkipped('Test available only for PHP7.0 and newer');
-        }
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters70.php');
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
@@ -282,12 +270,7 @@ class ReflectionParameterTest extends TestCase
                         $originalReturnType = $originalRefParameter->getType();
                         $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull(), $message);
                         $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin(), $message);
-                        // TODO: To prevent deprecation error in tests
-                        if (PHP_VERSION_ID < 70400) {
-                            $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString(), $message);
-                        } else {
-                            $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString(), $message);
-                        }
+                        $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString(), $message);
                     } else {
                         $this->assertSame(
                             $originalRefParameter->getType(),

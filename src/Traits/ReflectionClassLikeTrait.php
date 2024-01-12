@@ -221,7 +221,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getConstants()
+    public function getConstants(?int $filter = null): array
     {
         if (!isset($this->constants)) {
             $this->constants = $this->recursiveCollect(
@@ -417,10 +417,6 @@ trait ReflectionClassLikeTrait
             $modifiers += \ReflectionClass::IS_FINAL;
         }
 
-        if (PHP_VERSION_ID < 70000 && $this->isTrait()) {
-            $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
-        }
-
         if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
             $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
         }
@@ -553,7 +549,7 @@ trait ReflectionClassLikeTrait
     /**
      * @inheritDoc
      */
-    public function getReflectionConstants()
+    public function getReflectionConstants(?int $filter = null): array
     {
         if (!isset($this->classConstants)) {
             $directClassConstants = ReflectionClassConstant::collectFromClassNode(
@@ -965,12 +961,12 @@ trait ReflectionClassLikeTrait
      *
      * @return object
      */
-    public function newInstanceWithoutConstructor($args = null)
+    public function newInstanceWithoutConstructor()
     {
         $function = __FUNCTION__;
         $this->initializeInternalReflection();
 
-        return parent::$function($args);
+        return parent::$function();
     }
 
     /**

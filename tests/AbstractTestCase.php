@@ -71,16 +71,9 @@ abstract class AbstractTestCase extends TestCase
     public function getFilesToAnalyze()
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php']];
-
-        if (PHP_VERSION_ID >= 50600) {
-            $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithClasses56.php'];
-        }
-        if (PHP_VERSION_ID >= 70000) {
-            $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithClasses70.php'];
-        }
-        if (PHP_VERSION_ID >= 70100) {
-            $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
-        }
+        $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithClasses56.php'];
+        $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithClasses70.php'];
+        $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
 
         return $files;
     }

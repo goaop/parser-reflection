@@ -146,14 +146,9 @@ class ReflectionMethodTest extends AbstractTestCase
             'getNumberOfRequiredParameters', 'returnsReference', 'getClosureScopeClass', 'getClosureThis'
         ];
 
-        if (PHP_VERSION_ID >= 50600) {
-            $allNameGetters[] = 'isVariadic';
-            $allNameGetters[] = 'isGenerator';
-        }
-
-        if (PHP_VERSION_ID >= 70000) {
-            $allNameGetters[] = 'hasReturnType';
-        }
+        $allNameGetters[] = 'isVariadic';
+        $allNameGetters[] = 'isGenerator';
+        $allNameGetters[] = 'hasReturnType';
 
         return $allNameGetters;
     }

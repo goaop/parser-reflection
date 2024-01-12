@@ -77,11 +77,11 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function invoke($args = null)
+    public function invoke(mixed ...$args)
     {
         $this->initializeInternalReflection();
 
-        return parent::invoke(...func_get_args());
+        return parent::invoke(...$args);
     }
 
     /**

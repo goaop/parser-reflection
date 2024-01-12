@@ -34,9 +34,7 @@ class ReflectionFunctionTest extends TestCase
             'returnsReference', 'getClosureScopeClass', 'getClosureThis'
         ];
 
-        if (PHP_VERSION_ID >= 70000) {
-            $allNameGetters[] = 'hasReturnType';
-        }
+        $allNameGetters[] = 'hasReturnType';
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
@@ -72,7 +70,7 @@ class ReflectionFunctionTest extends TestCase
         }
 
         if ($allMissedMethods) {
-            $this->markTestIncomplete('Methods ' . join($allMissedMethods, ', ') . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . implode(', ', $allMissedMethods) . ' are not implemented');
         }
     }
 
@@ -105,10 +103,6 @@ class ReflectionFunctionTest extends TestCase
 
     public function testGetReturnTypeMethod()
     {
-        if (PHP_VERSION_ID < 70000) {
-            $this->markTestSkipped('Test available only for PHP7.0 and newer');
-        }
-
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE70);
 
         $reflectionFile = new ReflectionFile($fileName);
@@ -129,12 +123,7 @@ class ReflectionFunctionTest extends TestCase
                     $originalReturnType = $originalRefFunction->getReturnType();
                     $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
                     $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
-                    // TODO: To prevent deprecation error in tests
-                    if (PHP_VERSION_ID < 70400) {
-                        $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
-                    } else {
-                        $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString());
-                    }
+                    $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString());
                 } else {
                     $this->assertSame(
                         $originalRefFunction->getReturnType(),
