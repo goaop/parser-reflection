@@ -32,8 +32,7 @@ class ReflectionClassTest extends AbstractTestCase
     {
         $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
-            + \ReflectionClass::IS_FINAL
-            + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
+            + \ReflectionClass::IS_FINAL;
 
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
