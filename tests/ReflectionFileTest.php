@@ -70,9 +70,8 @@ class ReflectionFileTest extends TestCase
      *
      * @param string $fileName Filename to analyse
      * @param bool $shouldBeStrict
-     *
-     * @dataProvider fileNameProvider
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('fileNameProvider')]
     public function testIsStrictType($fileName, $shouldBeStrict)
     {
         $fileName       = stream_resolve_include_path(__DIR__ . $fileName);
@@ -81,7 +80,7 @@ class ReflectionFileTest extends TestCase
         $this->assertSame($shouldBeStrict, $reflectionFile->isStrictMode());
     }
 
-    public function fileNameProvider()
+    public static function fileNameProvider()
     {
         return [
             '/Stub/FileWithClasses56.php'       => ['/Stub/FileWithClasses56.php', false],

@@ -41,6 +41,7 @@ abstract class AbstractTestCase extends TestCase
      */
     protected static $defaultClassToLoad = AbstractClassWithMethods::class;
 
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(static::$reflectionClassToTest);
@@ -68,7 +69,7 @@ abstract class AbstractTestCase extends TestCase
      *
      * @return array
      */
-    public function getFilesToAnalyze()
+    public static function getFilesToAnalyze()
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php']];
         $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithClasses56.php'];
@@ -83,7 +84,7 @@ abstract class AbstractTestCase extends TestCase
      *
      * @return array
      */
-    abstract protected function getGettersToCheck();
+    abstract static protected function getGettersToCheck();
 
     /**
      * Setups file for parsing

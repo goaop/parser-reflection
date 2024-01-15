@@ -24,10 +24,10 @@ class ReflectionClassTest extends AbstractTestCase
      * Tests getModifier() method
      * NB: value is masked because there are many internal constants that aren't exported in the userland
      *
-     * @dataProvider getFilesToAnalyze
      *
      * @param string $fileName File name to test
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('getFilesToAnalyze')]
     public function testGetModifiers($fileName)
     {
         $mask =
@@ -48,12 +48,12 @@ class ReflectionClassTest extends AbstractTestCase
     /**
      * Performs method-by-method comparison with original reflection
      *
-     * @dataProvider caseProvider
      *
      * @param ReflectionClass   $parsedClass Parsed class
      * @param \ReflectionMethod $refMethod Method to analyze
      * @param string                  $getterName Name of the reflection method to test
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('caseProvider')]
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
         $getterName
@@ -75,12 +75,12 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @return array
      */
-    public function caseProvider()
+    public static function caseProvider()
     {
-        $allNameGetters = $this->getGettersToCheck();
+        $allNameGetters = static::getGettersToCheck();
 
         $testCases = [];
-        $files     = $this->getFilesToAnalyze();
+        $files     = static::getFilesToAnalyze();
         foreach ($files as $fileList) {
             foreach ($fileList as $fileName) {
                 $fileName = stream_resolve_include_path($fileName);
@@ -108,10 +108,10 @@ class ReflectionClassTest extends AbstractTestCase
     /**
      * Tests getMethods() returns correct number of methods for the class
      *
-     * @dataProvider getFilesToAnalyze
      *
      * @param string $fileName File name to test
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('getFilesToAnalyze')]
     public function testGetMethodCount($fileName)
     {
         $this->setUpFile($fileName);
@@ -131,10 +131,10 @@ class ReflectionClassTest extends AbstractTestCase
     /**
      * Tests getReflectionConstants() returns correct number of reflectionConstants for the class
      *
-     * @dataProvider getFilesToAnalyze
      *
      * @param string $fileName File name to test
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('getFilesToAnalyze')]
     public function testGetReflectionConstantCount($fileName)
     {
         $this->setUpFile($fileName);
@@ -153,10 +153,10 @@ class ReflectionClassTest extends AbstractTestCase
     /**
      * Tests getProperties() returns correct number of properties for the class
      *
-     * @dataProvider getFilesToAnalyze
      *
      * @param string $fileName File name to test
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('getFilesToAnalyze')]
     public function testGetProperties($fileName)
     {
         $this->setUpFile($fileName);
@@ -316,7 +316,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @return array
      */
-    protected function getGettersToCheck()
+    protected static function getGettersToCheck()
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
