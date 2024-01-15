@@ -118,23 +118,7 @@ class ReflectionProperty extends BaseReflectionProperty
         if ($this->isDefault()) {
             $this->__initialize();
             $defaultValue = $this->getDefaultValue();
-            if (is_string($defaultValue)) {
-                if (strlen($defaultValue) > 18) {
-                    $defaultValue = substr($defaultValue, 0, 15) . '...';
-                }
-
-                $defaultValue = "'" . $defaultValue . "'";
-            }
-
-            if ($defaultValue === null) {
-                $defaultValue = "NULL";
-            }
-
-            if (is_array($defaultValue)) {
-                $defaultValueDisplay = '= Array';
-            } else {
-                $defaultValueDisplay = '= ' . $defaultValue;
-            }
+            $defaultValueDisplay = '= ' . str_replace('\\', '\\', var_export($defaultValue, true));
         }
 
         return sprintf(
