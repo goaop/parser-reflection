@@ -121,7 +121,11 @@ class ReflectionProperty extends BaseReflectionProperty
 
             $originalDisplay = parent::__toString();
 
-            [, $defaultValueFromDisplay] = explode(' = ', $originalDisplay);
+            // @see https://3v4l.org/XToie
+            $list = explode(' = ', $originalDisplay);
+            array_shift($list);
+
+            $defaultValueFromDisplay = implode('=', $list);
 
             $defaultValueDisplay = '= ' . rtrim($defaultValueFromDisplay, ' ]' . PHP_EOL);
 
