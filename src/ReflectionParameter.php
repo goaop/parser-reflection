@@ -248,7 +248,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDefaultValueConstantName()
+    public function getDefaultValueConstantName(): null|string
     {
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');
@@ -268,7 +268,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getPosition()
+    public function getPosition(): int
     {
         return $this->parameterIndex;
     }
@@ -276,7 +276,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getType()
+    public function getType(): ?\ReflectionType
     {
         $isBuiltin     = false;
         $parameterType = $this->parameterNode->type;
@@ -372,10 +372,9 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Returns if all following parameters have a default value definition.
      *
-     * @return bool
      * @throws ReflectionException If could not fetch declaring function reflection
      */
-    protected function haveSiblingsDefaultValues()
+    protected function haveSiblingsDefaultValues(): bool
     {
         $function = $this->getDeclaringFunction();
         if (null === $function) {
