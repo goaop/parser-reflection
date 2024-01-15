@@ -152,7 +152,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function getModifiers()
+    public function getModifiers(): int
     {
         $modifiers = 0;
         if ($this->isPublic()) {
