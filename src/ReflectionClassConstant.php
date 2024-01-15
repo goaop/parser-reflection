@@ -166,7 +166,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function isPrivate()
+    public function isPrivate(): bool
     {
         return $this->classConstantNode->isPrivate();
     }
@@ -174,7 +174,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->classConstantNode->isProtected();
     }
@@ -182,7 +182,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->classConstantNode->isPublic();
     }

@@ -100,7 +100,7 @@ class ReflectionFunction extends BaseReflectionFunction
      * Only internal functions can be disabled using disable_functions directive.
      * User-defined functions are unaffected.
      */
-    public function isDisabled()
+    public function isDisabled(): bool
     {
         return false;
     }

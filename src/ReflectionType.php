@@ -61,7 +61,7 @@ class ReflectionType extends BaseReflectionType
     /**
      * @inheritDoc
      */
-    public function isBuiltin()
+    public function isBuiltin(): bool
     {
         return $this->isBuiltin;
     }

@@ -222,7 +222,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isAbstract()
+    public function isAbstract(): bool
     {
         return $this->getDeclaringClass()->isInterface() || $this->getClassMethodNode()->isAbstract();
     }
@@ -230,7 +230,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isConstructor()
+    public function isConstructor(): bool
     {
         return $this->getClassMethodNode()->name->toLowerString() === '__construct';
     }
@@ -238,7 +238,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isDestructor()
+    public function isDestructor(): bool
     {
         return $this->getClassMethodNode()->name->toLowerString() === '__destruct';
     }
@@ -246,7 +246,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isFinal()
+    public function isFinal(): bool
     {
         return $this->getClassMethodNode()->isFinal();
     }
@@ -254,7 +254,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPrivate()
+    public function isPrivate(): bool
     {
         return $this->getClassMethodNode()->isPrivate();
     }
@@ -262,7 +262,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->getClassMethodNode()->isProtected();
     }
@@ -270,7 +270,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->getClassMethodNode()->isPublic();
     }
@@ -278,7 +278,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isStatic()
+    public function isStatic(): bool
     {
         return $this->getClassMethodNode()->isStatic();
     }
@@ -286,7 +286,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function setAccessible($accessible)
+    public function setAccessible($accessible): void
     {
         $this->initializeInternalReflection();
 

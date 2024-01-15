@@ -174,7 +174,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->propertyNode->name->toString();
     }
@@ -202,7 +202,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function isDefault()
+    public function isDefault(): bool
     {
         // TRUE if the property was declared at compile-time
 
@@ -212,7 +212,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function isPrivate()
+    public function isPrivate(): bool
     {
         return $this->propertyTypeNode->isPrivate();
     }
@@ -220,7 +220,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->propertyTypeNode->isProtected();
     }
@@ -228,7 +228,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->propertyTypeNode->isPublic();
     }
@@ -236,7 +236,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function isStatic()
+    public function isStatic(): bool
     {
         return $this->propertyTypeNode->isStatic();
     }
@@ -244,7 +244,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function setAccessible($accessible)
+    public function setAccessible($accessible): void
     {
         $this->initializeInternalReflection();
 
@@ -254,7 +254,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function setValue($object, $value = null)
+    public function setValue($object, $value = null): void
     {
         $this->initializeInternalReflection();
 

@@ -260,7 +260,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
         return (string)$this->parameterNode->var->name;
     }
@@ -312,7 +312,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function isArray()
+    public function isArray(): bool
     {
         $type = $this->parameterNode->type;
 
@@ -322,7 +322,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function isCallable()
+    public function isCallable(): bool
     {
         $type = $this->parameterNode->type;
 
@@ -332,7 +332,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function isDefaultValueAvailable()
+    public function isDefaultValueAvailable(): bool
     {
         return isset($this->parameterNode->default);
     }
@@ -340,7 +340,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function isDefaultValueConstant()
+    public function isDefaultValueConstant(): bool
     {
         return $this->isDefaultValueConstant;
     }
@@ -348,7 +348,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function isOptional()
+    public function isOptional(): bool
     {
         return $this->isVariadic() || ($this->isDefaultValueAvailable() && $this->haveSiblingsDefaultValues());
     }
@@ -356,7 +356,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function isPassedByReference()
+    public function isPassedByReference(): bool
     {
         return (bool) $this->parameterNode->byRef;
     }
@@ -364,7 +364,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function isVariadic()
+    public function isVariadic(): bool
     {
         return (bool) $this->parameterNode->variadic;
     }
