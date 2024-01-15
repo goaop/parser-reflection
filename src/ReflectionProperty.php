@@ -142,7 +142,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         $docBlock = $this->propertyTypeNode->getDocComment();
 

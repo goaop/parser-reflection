@@ -119,7 +119,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         $docBlock = $this->classConstantNode->getDocComment();
 

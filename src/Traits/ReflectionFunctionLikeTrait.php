@@ -24,6 +24,7 @@ use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeTraverser;
+use ReflectionExtension;
 
 /**
  * General trait for all function-like reflections
@@ -69,29 +70,29 @@ trait ReflectionFunctionLikeTrait
         return parent::getClosureThis();
     }
 
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         $docComment = $this->functionLikeNode->getDocComment();
 
         return $docComment ? $docComment->getText() : false;
     }
 
-    public function getEndLine()
+    public function getEndLine(): int
     {
         return $this->functionLikeNode->getAttribute('endLine');
     }
 
-    public function getExtension()
+    public function getExtension(): ?ReflectionExtension
     {
         return null;
     }
 
-    public function getExtensionName()
+    public function getExtensionName(): string|false
     {
         return false;
     }
 
-    public function getFileName()
+    public function getFileName(): string|false
     {
         return $this->functionLikeNode->getAttribute('fileName');
     }

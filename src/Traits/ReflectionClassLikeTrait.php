@@ -26,6 +26,7 @@ use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
 use PhpParser\Node\Stmt\TraitUseAdaptation;
+use ReflectionExtension;
 use ReflectionObject;
 use RuntimeException;
 
@@ -209,7 +210,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getConstant($name)
+    public function getConstant($name): mixed
     {
         if ($this->hasConstant($name)) {
             return $this->constants[$name];
@@ -238,7 +239,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getConstructor()
+    public function getConstructor(): ?ReflectionMethod
     {
         $constructor = $this->getMethod('__construct');
         if (!$constructor) {
@@ -256,7 +257,7 @@ trait ReflectionClassLikeTrait
      * @return array An array of default properties, with the key being the name of the property and the value being
      * the default value of the property or NULL if the property doesn't have a default value
      */
-    public function getDefaultProperties()
+    public function getDefaultProperties(): array
     {
         $defaultValues = [];
         $properties    = $this->getProperties();
@@ -289,29 +290,29 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         $docComment = $this->classLikeNode->getDocComment();
 
         return $docComment ? $docComment->getText() : false;
     }
 
-    public function getEndLine()
+    public function getEndLine(): int
     {
         return $this->classLikeNode->getAttribute('endLine');
     }
 
-    public function getExtension()
+    public function getExtension(): ?ReflectionExtension
     {
         return null;
     }
 
-    public function getExtensionName()
+    public function getExtensionName(): string|false
     {
         return false;
     }
 
-    public function getFileName()
+    public function getFileName(): string|false
     {
         return $this->classLikeNode->getAttribute('fileName');
     }
