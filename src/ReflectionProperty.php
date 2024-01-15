@@ -125,7 +125,7 @@ class ReflectionProperty extends BaseReflectionProperty
 
             $defaultValueDisplay = '= ' . rtrim($defaultValueFromDisplay, ' ]' . PHP_EOL);
 
-            if (is_array($defaultValue) && $defaultValueDisplay === '= [') {
+            if (is_array($defaultValue) && str_starts_with($defaultValueDisplay, '= [')) {
                 $defaultValueDisplay .= ']';
             }
         }
