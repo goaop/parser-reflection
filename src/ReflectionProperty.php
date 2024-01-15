@@ -118,9 +118,16 @@ class ReflectionProperty extends BaseReflectionProperty
         if ($this->isDefault()) {
             $this->__initialize();
             $defaultValue = $this->getDefaultValue();
-            $defaultValueDisplay = is_array($defaultValue)
-                ? '= ' . $defaultValue
-                : '= ' . str_replace('\\', '\\', var_export($defaultValue, true));
+
+            $originalDisplay = parent::__toString();
+
+            [, $defaultValueFromDisplay] = explode(' = ', $originalDisplay);
+
+            $defaultValueDisplay = '= ' . rtrim($defaultValueFromDisplay, ' ]' . PHP_EOL);
+
+            if (is_array($defaultValue) && $defaultValueDisplay === '= [') {
+                $defaultValueDisplay .= ']';
+            }
         }
 
         return sprintf(
