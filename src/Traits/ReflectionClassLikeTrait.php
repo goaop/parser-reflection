@@ -346,9 +346,9 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
-     * @param string $name
      */
-    public function getMethod($name)
+    #[\ReturnTypeWillChange]
+    public function getMethod(string $name)
     {
         $methods = $this->getMethods();
         foreach ($methods as $method) {
@@ -518,7 +518,8 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritdoc}
      */
-    public function getProperty($name)
+    #[\ReturnTypeWillChange]
+    public function getProperty(string $name)
     {
         $properties = $this->getProperties();
         foreach ($properties as $property) {
@@ -969,7 +970,7 @@ trait ReflectionClassLikeTrait
      * @param string $name  Property name
      * @param mixed  $value New property value
      */
-    public function setStaticPropertyValue($name, $value)
+    public function setStaticPropertyValue($name, $value): void
     {
         $this->initializeInternalReflection();
 
