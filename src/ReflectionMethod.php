@@ -138,7 +138,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getClosure($object = null)
+    public function getClosure($object = null): \Closure
     {
         $this->initializeInternalReflection();
 
@@ -148,7 +148,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getDeclaringClass()
+    public function getDeclaringClass(): \ReflectionClass
     {
         return $this->declaringClass ?? new ReflectionClass($this->className);
     }
@@ -184,7 +184,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getPrototype()
+    public function getPrototype(): \ReflectionMethod
     {
         $parent = $this->getDeclaringClass()->getParentClass();
         if (!$parent) {

@@ -24,6 +24,7 @@ use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeTraverser;
+use ReflectionException;
 use ReflectionExtension;
 
 /**
@@ -53,7 +54,7 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getClosureScopeClass()
+    public function getClosureScopeClass(): ?\ReflectionClass
     {
         $this->initializeInternalReflection();
 
@@ -63,7 +64,7 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getClosureThis()
+    public function getClosureThis(): ?object
     {
         $this->initializeInternalReflection();
 
@@ -175,11 +176,9 @@ trait ReflectionFunctionLikeTrait
     /**
      * Gets the specified return type of a function
      *
-     * @return \ReflectionType
-     *
      * @link http://php.net/manual/en/reflectionfunctionabstract.getreturntype.php
      */
-    public function getReturnType()
+    public function getReturnType(): ?\ReflectionType
     {
         $isBuiltin  = false;
         $returnType = $this->functionLikeNode->getReturnType();
@@ -205,13 +204,13 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getShortName()
+    public function getShortName(): string
     {
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
             return $this->functionLikeNode->name->toString();
         }
 
-        return false;
+        throw new ReflectionException('unable to get short name');
     }
 
     public function getStartLine(): int
@@ -222,7 +221,7 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getStaticVariables()
+    public function getStaticVariables(): array
     {
         $nodeTraverser      = new NodeTraverser();
         $variablesCollector = new StaticVariablesCollector($this);

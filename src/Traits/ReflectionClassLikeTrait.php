@@ -453,7 +453,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getParentClass()
+    public function getParentClass(): \ReflectionClass|false
     {
         if (!isset($this->parentClass)) {
             static $extendsField = 'extends';
@@ -479,7 +479,7 @@ trait ReflectionClassLikeTrait
      *
      * @return ReflectionProperty[]
      */
-    public function getProperties($filter = null)
+    public function getProperties($filter = null): array
     {
         if (!isset($this->properties)) {
             $directProperties = ReflectionProperty::collectFromClassNode($this->classLikeNode, $this->getName());
@@ -533,7 +533,7 @@ trait ReflectionClassLikeTrait
     /**
      * @inheritDoc
      */
-    public function getReflectionConstant($name)
+    public function getReflectionConstant($name): \ReflectionClassConstant|false
     {
         $classConstants = $this->getReflectionConstants();
         foreach ($classConstants as $classConstant) {
@@ -577,7 +577,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getShortName()
+    public function getShortName(): string
     {
         return $this->className;
     }
@@ -595,7 +595,7 @@ trait ReflectionClassLikeTrait
      * @return array|null an array with new method names in keys and original names (in the format
      *                    "TraitName::original") in values.
      */
-    public function getTraitAliases()
+    public function getTraitAliases(): array
     {
         $aliases = [];
         $traits  = $this->getTraits();
@@ -652,7 +652,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function hasConstant($name)
+    public function hasConstant($name): bool
     {
         $constants   = $this->getConstants();
         $hasConstant = isset($constants[$name]) || array_key_exists($name, $constants);
@@ -664,7 +664,7 @@ trait ReflectionClassLikeTrait
      * {@inheritdoc}
      * @param string $name
      */
-    public function hasMethod($name)
+    public function hasMethod($name): bool
     {
         $methods = $this->getMethods();
         foreach ($methods as $method) {
@@ -679,7 +679,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritdoc}
      */
-    public function hasProperty($name)
+    public function hasProperty($name): bool
     {
         $properties = $this->getProperties();
         foreach ($properties as $property) {
@@ -695,7 +695,7 @@ trait ReflectionClassLikeTrait
      * {@inheritDoc}
      * @param string $interfaceName
      */
-    public function implementsInterface($interfaceName)
+    public function implementsInterface($interfaceName): bool
     {
         $allInterfaces = $this->getInterfaces();
 
@@ -765,7 +765,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isInstance($object)
+    public function isInstance($object): bool
     {
         if (!is_object($object)) {
             throw new RuntimeException(sprintf('Parameter must be an object, "%s" provided.', gettype($object)));
@@ -897,10 +897,9 @@ trait ReflectionClassLikeTrait
      * @param mixed  $default A default value to return in case the class does not declare
      *                        a static property with the given name
      *
-     * @return mixed
      * @throws ReflectionException If there is no such property and no default value was given
      */
-    public function getStaticPropertyValue($name, $default = null)
+    public function getStaticPropertyValue($name, $default = null): mixed
     {
         $properties     = $this->getStaticProperties();
         $propertyExists = array_key_exists($name, $properties);
@@ -925,10 +924,8 @@ trait ReflectionClassLikeTrait
      *
      * @param mixed $arg  First argument
      * @param mixed $args Accepts a variable number of arguments which are passed to the class constructor
-     *
-     * @return object
      */
-    public function newInstance($arg = null, ...$args)
+    public function newInstance($arg = null, ...$args): object
     {
         $args = array_slice(array_merge([$arg], $args), 0, func_num_args());
         $this->initializeInternalReflection();
@@ -942,10 +939,8 @@ trait ReflectionClassLikeTrait
      * @link http://php.net/manual/en/reflectionclass.newinstanceargs.php
      *
      * @param array $args The parameters to be passed to the class constructor as an array.
-     *
-     * @return object
      */
-    public function newInstanceArgs(array $args = [])
+    public function newInstanceArgs(array $args = []): ?object
     {
         $function = __FUNCTION__;
         $this->initializeInternalReflection();
@@ -957,10 +952,8 @@ trait ReflectionClassLikeTrait
      * Creates a new class instance without invoking the constructor.
      *
      * @link http://php.net/manual/en/reflectionclass.newinstancewithoutconstructor.php
-     *
-     * @return object
      */
-    public function newInstanceWithoutConstructor()
+    public function newInstanceWithoutConstructor(): object
     {
         $function = __FUNCTION__;
         $this->initializeInternalReflection();

@@ -67,7 +67,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function getClosure()
+    public function getClosure(): \Closure
     {
         $this->initializeInternalReflection();
 
