@@ -118,7 +118,9 @@ class ReflectionProperty extends BaseReflectionProperty
         if ($this->isDefault()) {
             $this->__initialize();
             $defaultValue = $this->getDefaultValue();
-            $defaultValueDisplay = '= ' . str_replace('\\', '\\', var_export($defaultValue, true));
+            $defaultValueDisplay = is_array($defaultValue)
+                ? '= ' . $defaultValue
+                : '= ' . str_replace('\\', '\\', var_export($defaultValue, true));
         }
 
         return sprintf(
