@@ -50,6 +50,11 @@ class ReflectionParameterTest extends TestCase
                         }
                         $expectedValue = $originalRefParameter->$getterName();
                         $actualValue   = $refParameter->$getterName();
+
+                        if ($parameterName === 'arrayParamWithDefault' && $expectedValue === false && $actualValue === true) {
+                            dump($isDefaultValueAvailable);
+                        }
+
                         $this->assertSame(
                             $expectedValue,
                             $actualValue,
