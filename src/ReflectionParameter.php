@@ -132,7 +132,7 @@ class ReflectionParameter extends BaseReflectionParameter
      *
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $parameterType   = $this->getType();
         $isOptional      = $this->isOptional();
@@ -160,7 +160,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function allowsNull()
+    public function allowsNull(): bool
     {
         // Enable 7.1 nullable types support
         if ($this->parameterNode->type instanceof NullableType) {
@@ -178,7 +178,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function canBePassedByValue()
+    public function canBePassedByValue(): bool
     {
         return !$this->isPassedByReference();
     }
@@ -186,7 +186,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getClass()
+    public function getClass(): \ReflectionClass
     {
         $parameterType = $this->parameterNode->type;
         if ($parameterType instanceof Name) {
@@ -228,7 +228,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDeclaringFunction()
+    public function getDeclaringFunction(): \ReflectionFunction
     {
         return $this->declaringFunction;
     }
@@ -302,7 +302,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function hasType()
+    public function hasType(): bool
     {
         $hasType = isset($this->parameterNode->type);
 
