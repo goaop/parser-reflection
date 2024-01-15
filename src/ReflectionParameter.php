@@ -186,7 +186,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getClass(): \ReflectionClass
+    public function getClass(): ?\ReflectionClass
     {
         $parameterType = $this->parameterNode->type;
         if ($parameterType instanceof Name) {
@@ -228,7 +228,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDeclaringFunction(): \ReflectionFunction
+    public function getDeclaringFunction(): ReflectionFunctionAbstract
     {
         return $this->declaringFunction;
     }
