@@ -30,13 +30,9 @@ class ReflectionClassTest extends AbstractTestCase
      */
     public function testGetModifiers($fileName)
     {
-        if (PHP_VERSION_ID >= 80000) {
-            $this->markTestSkipped('TODO: Fix mapping and logic of modifiers');
-        }
         $mask =
             \ReflectionClass::IS_EXPLICIT_ABSTRACT
-            + \ReflectionClass::IS_FINAL
-            + \ReflectionClass::IS_IMPLICIT_ABSTRACT;
+            + \ReflectionClass::IS_FINAL;
 
         $this->setUpFile($fileName);
         $parsedClasses = $this->parsedRefFileNamespace->getClasses();
