@@ -17,6 +17,7 @@ use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Name;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\MagicConst\Line;
@@ -277,6 +278,11 @@ class NodeExpressionResolver
         }
         $refClass     = $this->fetchReflectionClass($classToReflect);
         $constantName = ($node->name instanceof Expr\Error) ? '' : $node->name->toString();
+
+        if ($node->class instanceof Name && $node->class->isSpecialClassName()) {
+            $this->isConstant = true;
+            return $node->class . '::' . $constantName;
+        }
 
         // special handling of ::class constants
         if ('class' === $constantName) {

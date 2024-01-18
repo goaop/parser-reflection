@@ -140,9 +140,11 @@ class ReflectionParameter extends BaseReflectionParameter
         $defaultValue    = '';
         if ($hasDefaultValue) {
             $defaultValue = $this->getDefaultValue();
-            $defaultValue = is_array($defaultValue)
-                ? $defaultValue
-                : str_replace('\\', '\\', var_export($defaultValue, true));
+            if (! $this->isDefaultValueConstant() || ! is_string($defaultValue) || ! str_contains($defaultValue, '::')) {
+                $defaultValue = is_array($defaultValue)
+                    ? $defaultValue
+                    : str_replace('\\', '\\', var_export($defaultValue, true));
+            }
         }
 
         return sprintf(
