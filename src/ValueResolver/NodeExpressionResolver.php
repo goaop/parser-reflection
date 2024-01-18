@@ -301,7 +301,7 @@ class NodeExpressionResolver
         $this->isConstant   = true;
         $this->constantName = $classToReflect . '::' . $constantName;
 
-        return $refClass->getConstant($constantName) ?? $this->constantName;
+        return $refClass->getConstant($constantName);
     }
 
     protected function resolveExprArray(Expr\Array_ $node): array
