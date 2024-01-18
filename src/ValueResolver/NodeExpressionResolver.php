@@ -261,6 +261,10 @@ class NodeExpressionResolver
         if ($this->nodeLevel === 1 && !isset(self::$notConstants[$constantName])) {
             $this->isConstant   = true;
             $this->constantName = $constantName;
+
+            if ($this->isParameter) {
+                return $this->constantName;
+            }
         }
 
         return $constantValue;
