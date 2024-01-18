@@ -79,9 +79,12 @@ class NodeExpressionResolver
      */
     private $value;
 
-    public function __construct($context)
+    private bool $isParameter;
+
+    public function __construct($context, bool $isParameter = false)
     {
         $this->context = $context;
+        $this->isParameter = $isParameter;
     }
 
     public function getConstantName(): ?string
@@ -287,25 +290,11 @@ class NodeExpressionResolver
             return $refClass->getName();
         }
 
-        if ($node->class instanceof Name && $node->class->isSpecialClassName() && $this->nodeLevel === 1) {
-            $parentNode = $node->getAttribute('parent');
-            $isFromParam = false;
+        if ($node->class instanceof Name && $node->class->isSpecialClassName() && $this->isParameter) {
+            $this->isConstant = true;
+            $this->constantName = $node->class . '::' . $constantName;
 
-            while ($parentNode instanceof Node) {
-                if ($parentNode instanceof Param) {
-                    $isFromParam = true;
-                    break;
-                }
-
-                $parentNode = $parentNode->getAttribute('parent');
-            }
-
-            if ($isFromParam) {
-                $this->isConstant = true;
-                $this->constantName = $node->class . '::' . $constantName;
-
-                return $this->constantName;
-            }
+            return $this->constantName;
         }
 
         $this->isConstant   = true;
