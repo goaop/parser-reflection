@@ -23,6 +23,7 @@ use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
+use PhpParser\NodeVisitor\ParentConnectingVisitor;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 
@@ -80,6 +81,7 @@ class ReflectionEngine
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
         $traverser->addVisitor(new RootNamespaceNormalizer());
+        $traverser->addVisitor(new ParentConnectingVisitor());
 
         self::$locator = $locator;
     }

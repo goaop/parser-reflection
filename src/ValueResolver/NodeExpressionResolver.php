@@ -16,13 +16,16 @@ use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
+use PhpParser\Node\Const_;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Name;
+use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\MagicConst\Line;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\PropertyProperty;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 
@@ -284,15 +287,31 @@ class NodeExpressionResolver
             return $refClass->getName();
         }
 
-        if ($node->class instanceof Name && $node->class->isSpecialClassName()) {
-            $this->isConstant = true;
-            return $node->class . '::' . $constantName;
+        if ($node->class instanceof Name && $node->class->isSpecialClassName() && $this->nodeLevel === 1) {
+            $parentNode = $node->getAttribute('parent');
+            $isFromParam = false;
+
+            while ($parentNode instanceof Node) {
+                if ($parentNode instanceof Param) {
+                    $isFromParam = true;
+                    break;
+                }
+
+                $parentNode = $parentNode->getAttribute('parent');
+            }
+
+            if ($isFromParam) {
+                $this->isConstant = true;
+                $this->constantName = $node->class . '::' . $constantName;
+
+                return $this->constantName;
+            }
         }
 
         $this->isConstant   = true;
         $this->constantName = $classToReflect . '::' . $constantName;
 
-        return $refClass->getConstant($constantName);
+        return $refClass->getConstant($constantName) ?? $this->constantName;
     }
 
     protected function resolveExprArray(Expr\Array_ $node): array
