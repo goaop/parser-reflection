@@ -107,10 +107,8 @@ class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * Returns textual representation of function
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";

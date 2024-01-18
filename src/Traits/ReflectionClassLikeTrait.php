@@ -110,10 +110,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * Returns the string representation of the ReflectionClass object.
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $isObject = $this instanceof ReflectionObject;
 

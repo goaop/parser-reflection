@@ -108,10 +108,8 @@ class ReflectionProperty extends BaseReflectionProperty
 
     /**
      * Return string representation of this little old property.
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $defaultValueDisplay = '';
 

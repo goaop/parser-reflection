@@ -86,10 +86,8 @@ class ReflectionMethod extends BaseReflectionMethod
      * Returns the string representation of the Reflection method object.
      *
      * @link http://php.net/manual/en/reflectionmethod.tostring.php
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         // Internally $this->getReturnType() !== null is the same as $this->hasReturnType()
         $returnType       = $this->getReturnType();
