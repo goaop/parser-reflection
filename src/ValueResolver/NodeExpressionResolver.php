@@ -279,14 +279,14 @@ class NodeExpressionResolver
         $refClass     = $this->fetchReflectionClass($classToReflect);
         $constantName = ($node->name instanceof Expr\Error) ? '' : $node->name->toString();
 
-        if ($node->class instanceof Name && $node->class->isSpecialClassName()) {
-            $this->isConstant = true;
-            return $node->class . '::' . $constantName;
-        }
-
         // special handling of ::class constants
         if ('class' === $constantName) {
             return $refClass->getName();
+        }
+
+        if ($node->class instanceof Name && $node->class->isSpecialClassName()) {
+            $this->isConstant = true;
+            return $node->class . '::' . $constantName;
         }
 
         $this->isConstant   = true;
