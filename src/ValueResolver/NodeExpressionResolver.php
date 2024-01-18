@@ -263,6 +263,10 @@ class NodeExpressionResolver
             $this->constantName = $constantName;
 
             if ($this->isParameter) {
+                if (isset($namespaceName)) {
+                    return $namespaceName . '\\' . $this->constantName;
+                }
+
                 return $this->constantName;
             }
         }
