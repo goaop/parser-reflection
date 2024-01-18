@@ -157,6 +157,10 @@ class ReflectionParameter extends BaseReflectionParameter
             }
         }
 
+        if (is_array($defaultValue)) {
+            $defaultValue = '[]';
+        }
+
         return sprintf(
             'Parameter #%d [ %s %s%s%s$%s%s ]',
             $this->parameterIndex,
