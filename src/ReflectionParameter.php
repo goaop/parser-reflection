@@ -143,9 +143,11 @@ class ReflectionParameter extends BaseReflectionParameter
         if ($hasDefaultValue) {
             $defaultValue = $this->getDefaultValue();
 
-            if (
-                (is_array($defaultValue) || $this->parameterNode->default instanceof Concat || $this->parameterNode->default instanceof ClassConstFetch || is_string($defaultValue))
-                    && $this->declaringFunction instanceof \ReflectionMethod
+            if ((is_array($defaultValue)
+                    || $this->parameterNode->default instanceof Concat
+                    || $this->parameterNode->default instanceof ClassConstFetch
+                    || is_string($defaultValue)
+                ) && $this->declaringFunction instanceof \ReflectionMethod
                 ) {
                     if ($this->parameterNode->default instanceof ClassConstFetch && is_string($defaultValue) && str_contains($defaultValue, '\\')) {
                         $defaultValue = str_replace('\\', '\\', var_export($defaultValue, true));
