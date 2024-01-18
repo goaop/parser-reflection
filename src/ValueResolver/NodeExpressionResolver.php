@@ -26,6 +26,7 @@ use PhpParser\Node\Scalar\MagicConst\Line;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\PropertyProperty;
+use PhpParser\PrettyPrinter\Standard;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 
@@ -382,6 +383,11 @@ class NodeExpressionResolver
 
     protected function resolveExprBinaryOpConcat(Expr\BinaryOp\Concat $node): string
     {
+        if ($this->context instanceof \ReflectionClass && $this->isParameter) {
+            $printer = new Standard();
+            return $printer->prettyPrintExpr($node);
+        }
+
         return $this->resolve($node->left) . $this->resolve($node->right);
     }
 
