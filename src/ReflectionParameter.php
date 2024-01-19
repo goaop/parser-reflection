@@ -13,6 +13,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Identifier;
@@ -350,7 +351,24 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isDefaultValueAvailable(): bool
     {
-        return isset($this->parameterNode->default);
+        if (! isset($this->parameterNode->default)) {
+            return false;
+        }
+
+        // start from PHP 8.1, isDefaultValueAvailable() returns false if next parameter is required
+        // see https://github.com/php/php-src/issues/8090
+        $parameters = $this->declaringFunction->getNode()->getParams();
+        foreach ($parameters as $key => $parameter) {
+            if ($key <= $this->parameterIndex) {
+                continue;
+            }
+
+            if (! $parameter->default instanceof Expr) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
