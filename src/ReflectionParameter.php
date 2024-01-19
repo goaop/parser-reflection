@@ -16,6 +16,7 @@ use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\ClassConstFetch;
+use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
@@ -189,7 +190,12 @@ class ReflectionParameter extends BaseReflectionParameter
             return true;
         }
 
-        return !isset($this->parameterNode->type);
+        if (!isset($this->parameterNode->type)) {
+            return true;
+        }
+
+        return $this->parameterNode->default instanceof ConstFetch
+            && strtolower($this->parameterNode->default->name->toString()) === 'null';
     }
 
     /**
