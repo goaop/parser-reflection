@@ -364,12 +364,8 @@ class ReflectionParameter extends BaseReflectionParameter
         // start from PHP 8.1, isDefaultValueAvailable() returns false if next parameter is required
         // see https://github.com/php/php-src/issues/8090
         $parameters = $this->declaringFunction->getNode()->getParams();
-        foreach ($parameters as $key => $parameter) {
-            if ($key <= $this->parameterIndex) {
-                continue;
-            }
-
-            if (! $parameter->default instanceof Expr) {
+        for ($key = $this->parameterIndex + 1; $key < count($parameters); ++$key) {
+            if (! $parameters[$key]->default instanceof Expr) {
                 return false;
             }
         }
