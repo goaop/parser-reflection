@@ -53,6 +53,7 @@ class ReflectionFunctionTest extends TestCase
         }
     }
 
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(\ReflectionFunction::class);

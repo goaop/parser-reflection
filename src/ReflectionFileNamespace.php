@@ -165,7 +165,7 @@ class ReflectionFileNamespace
      *
      * @return string|false The doc comment if it exists, otherwise "false"
      */
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         $docComment = false;
         $comments   = $this->namespaceNode->getAttribute('comments');

@@ -25,12 +25,12 @@ class ReflectionPropertyTest extends AbstractTestCase
     /**
      * Performs method-by-method comparison with original reflection
      *
-     * @dataProvider caseProvider
      *
      * @param ReflectionClass     $parsedClass Parsed class
      * @param \ReflectionProperty $refProperty Property to analyze
      * @param string              $getterName  Name of the reflection method to test
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('caseProvider')]
     public function testReflectionMethodParity(
         ReflectionClass $parsedClass,
         \ReflectionProperty $refProperty,
@@ -54,12 +54,12 @@ class ReflectionPropertyTest extends AbstractTestCase
      *
      * @return array
      */
-    public function caseProvider()
+    public static function caseProvider()
     {
-        $allNameGetters = $this->getGettersToCheck();
+        $allNameGetters = static::getGettersToCheck();
 
         $testCases = [];
-        $files     = $this->getFilesToAnalyze();
+        $files     = static::getFilesToAnalyze();
         foreach ($files as $fileList) {
             foreach ($fileList as $fileName) {
                 $fileName = stream_resolve_include_path($fileName);
@@ -134,7 +134,7 @@ class ReflectionPropertyTest extends AbstractTestCase
      *
      * @return array
      */
-    protected function getGettersToCheck()
+    protected static function getGettersToCheck()
     {
         $allNameGetters = [
             'isDefault', 'getName', 'getModifiers', 'getDocComment',

@@ -77,6 +77,7 @@ class ReflectionClassConstantTest extends TestCase
         $this->assertSame($classConstants[4], $parsedClass->getReflectionConstant('CALCULATED_CONST'));
     }
 
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(\ReflectionClassConstant::class);

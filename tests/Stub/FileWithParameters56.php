@@ -12,5 +12,5 @@ namespace Go\ParserReflection\Stub;
 
 function arrayVariadicParameters(array ...$acceptsArrays) {}
 function callableVariadicParameters(callable ...$acceptsArrays) {}
-function constantExpressionAsDefault($value = 0.5 * 2 * 10, $another = __FUNCTION__ . 'test') {}
+function constantExpressionAsDefault($value = 0.5 * 2 * 10, $another = __FUNCTION__ . 'test', $anotherOne = ['test'], $anotherTwo = array('yoo')) {}
 function constantExponentiation($value = 0.5 * 2**2) {}

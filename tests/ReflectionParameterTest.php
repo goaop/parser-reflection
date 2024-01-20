@@ -20,9 +20,7 @@ class ReflectionParameterTest extends TestCase
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters55.php');
     }
 
-    /**
-     * @dataProvider fileProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('fileProvider')]
     public function testGeneralInfoGetters($fileName)
     {
         $this->setUpFile($fileName);
@@ -52,6 +50,7 @@ class ReflectionParameterTest extends TestCase
                         }
                         $expectedValue = $originalRefParameter->$getterName();
                         $actualValue   = $refParameter->$getterName();
+
                         $this->assertSame(
                             $expectedValue,
                             $actualValue,
@@ -68,7 +67,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @return array
      */
-    public function fileProvider()
+    public static function fileProvider()
     {
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
         $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithParameters56.php'];
@@ -187,10 +186,9 @@ class ReflectionParameterTest extends TestCase
     }
 
     /**
-     * @dataProvider listOfDefaultGetters
-     *
      * @param string $getterName Name of the getter to call
      */
+    #[\PHPUnit\Framework\Attributes\DataProvider('listOfDefaultGetters')]
     public function testGetDefaultValueThrowsAnException($getterName)
     {
         $originalException = null;
@@ -219,7 +217,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame($originalException->getMessage(), $parsedException->getMessage());
     }
 
-    public function listOfDefaultGetters()
+    public static function listOfDefaultGetters()
     {
         return [
             ['getDefaultValue'],
@@ -227,6 +225,7 @@ class ReflectionParameterTest extends TestCase
         ];
     }
 
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testCoverAllMethods()
     {
         $allInternalMethods = get_class_methods(\ReflectionParameter::class);

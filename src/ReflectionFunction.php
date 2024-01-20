@@ -67,7 +67,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function getClosure()
+    public function getClosure(): \Closure
     {
         $this->initializeInternalReflection();
 
@@ -100,17 +100,15 @@ class ReflectionFunction extends BaseReflectionFunction
      * Only internal functions can be disabled using disable_functions directive.
      * User-defined functions are unaffected.
      */
-    public function isDisabled()
+    public function isDisabled(): bool
     {
         return false;
     }
 
     /**
      * Returns textual representation of function
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";

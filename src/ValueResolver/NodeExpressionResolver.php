@@ -16,12 +16,17 @@ use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
+use PhpParser\Node\Const_;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Name;
+use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\MagicConst\Line;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\PropertyProperty;
+use PhpParser\PrettyPrinter\Standard;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 
@@ -75,9 +80,12 @@ class NodeExpressionResolver
      */
     private $value;
 
-    public function __construct($context)
+    private bool $isParameter;
+
+    public function __construct($context, bool $isParameter = false)
     {
         $this->context = $context;
+        $this->isParameter = $isParameter;
     }
 
     public function getConstantName(): ?string
@@ -253,6 +261,14 @@ class NodeExpressionResolver
         if ($this->nodeLevel === 1 && !isset(self::$notConstants[$constantName])) {
             $this->isConstant   = true;
             $this->constantName = $constantName;
+
+            if ($this->isParameter) {
+                if (isset($namespaceName)) {
+                    return $namespaceName . '\\' . $this->constantName;
+                }
+
+                return $this->constantName;
+            }
         }
 
         return $constantValue;
@@ -281,6 +297,13 @@ class NodeExpressionResolver
         // special handling of ::class constants
         if ('class' === $constantName) {
             return $refClass->getName();
+        }
+
+        if ($node->class instanceof Name && $node->class->isSpecialClassName() && $this->isParameter) {
+            $this->isConstant = true;
+            $this->constantName = $node->class . '::' . $constantName;
+
+            return $this->constantName;
         }
 
         $this->isConstant   = true;
@@ -368,6 +391,11 @@ class NodeExpressionResolver
 
     protected function resolveExprBinaryOpConcat(Expr\BinaryOp\Concat $node): string
     {
+        if ($this->context instanceof \ReflectionClass && $this->isParameter) {
+            $printer = new Standard();
+            return $printer->prettyPrintExpr($node);
+        }
+
         return $this->resolve($node->left) . $this->resolve($node->right);
     }
 
