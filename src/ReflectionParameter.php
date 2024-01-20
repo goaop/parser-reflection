@@ -14,6 +14,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\BinaryOp\Concat;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
@@ -21,6 +22,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
+use PhpParser\PrettyPrinter\Standard;
 use ReflectionFunctionAbstract;
 use ReflectionParameter as BaseReflectionParameter;
 
@@ -145,8 +147,11 @@ class ReflectionParameter extends BaseReflectionParameter
         if ($hasDefaultValue) {
             $defaultValue = $this->getDefaultValue();
 
-            if ((is_array($defaultValue)
-                    || $this->parameterNode->default instanceof Concat
+            if ($this->parameterNode->default instanceof Array_) {
+                $this->parameterNode->default->setAttribute('kind', Array_::KIND_SHORT);
+                $printer = new Standard(['shortArraySyntax' => true]);
+                $defaultValue = $printer->prettyPrintExpr($this->parameterNode->default);
+            } elseif (($this->parameterNode->default instanceof Concat
                     || $this->parameterNode->default instanceof ClassConstFetch
                     || is_string($defaultValue)
                 ) && $this->declaringFunction instanceof \ReflectionMethod
@@ -157,10 +162,6 @@ class ReflectionParameter extends BaseReflectionParameter
             } else {
                 $defaultValue = var_export($defaultValue, true);
             }
-        }
-
-        if (is_array($defaultValue)) {
-            $defaultValue = '[]';
         }
 
         return sprintf(
