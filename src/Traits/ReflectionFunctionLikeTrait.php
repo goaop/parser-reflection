@@ -198,6 +198,10 @@ trait ReflectionFunctionLikeTrait
             return null;
         }
 
+        if ($returnType === 'iterable') {
+            $returnType = 'Traversable|array';
+        }
+
         return new ReflectionNamedType($returnType, $isNullable, $isBuiltin);
     }
 
