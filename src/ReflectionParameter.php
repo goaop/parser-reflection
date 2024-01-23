@@ -320,6 +320,10 @@ class ReflectionParameter extends BaseReflectionParameter
             return null;
         }
 
+        if ($parameterType === 'iterable') {
+            $parameterType = 'Traversable|array';
+        }
+
         return new ReflectionNamedType($parameterType, $allowsNull, $isBuiltin);
     }
 
