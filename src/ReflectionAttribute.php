@@ -17,15 +17,18 @@ use ReflectionAttribute as BaseReflectionAttribute;
 use PhpParser\Node;
 use Reflector;
 
+/**
+ * ref original usage https://3v4l.org/duaQI
+ */
 class ReflectionAttribute extends BaseReflectionAttribute
 {
     use InternalPropertiesEmulationTrait;
 
     public function __construct(
-        string                  $attributeName,
+        string $attributeName,
         private ?Node\Attribute $attributeNode = null,
-        private ?Node\Stmt\ClassLike      $classLikeNode = null,
-        private ?Reflector      $declaringReflector = null
+        private ?Node\Stmt\ClassLike $classLikeNode = null,
+        private ?Reflector $declaringReflector = null
     ) {
         $this->attributeNode ??= ReflectionEngine::parseAttribute($attributeName);
         $this->classLikeNode ??= ReflectionEngine::parseClass($attributeName);
