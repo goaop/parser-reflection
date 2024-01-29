@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Exception;
 use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
 use InvalidArgumentException;
@@ -139,6 +140,11 @@ class ReflectionEngine
         }
 
         throw new InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
+    }
+
+    public static function parseAttribute(string $attributeName): Node\Attribute
+    {
+        throw new Exception('to be implemented');
     }
 
     /**
