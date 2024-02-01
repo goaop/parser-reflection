@@ -13,6 +13,12 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
+use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionException;
+use Go\ParserReflection\ReflectionFunction;
+use Go\ParserReflection\ReflectionMethod;
+use Go\ParserReflection\ReflectionProperty;
+use ReflectionClassConstant;
 
 trait AttributeResolverTrait
 {
@@ -21,6 +27,22 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        throw new \Exception('need to be implemented');
+        if (
+            $this instanceof ReflectionClass ||
+            $this instanceof ReflectionFunction ||
+            $this instanceof ReflectionMethod ||
+            $this instanceof ReflectionProperty ||
+            $this instanceof ReflectionClassConstant
+        ) {
+            $attributes = $this->getAttributes($name, $flags);
+            $reflectionAttributes = [];
+            foreach ($attributes as $attribute) {
+                $reflectionAttributes[] = new ReflectionAttribute($attribute->getName());
+            }
+
+            return $reflectionAttributes;
+        }
+
+        throw new ReflectionException('not yet supported');
     }
 }
