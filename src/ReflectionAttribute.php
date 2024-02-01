@@ -15,6 +15,11 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use ReflectionAttribute as BaseReflectionAttribute;
 use PhpParser\Node;
+use PhpParser\Node\Stmt\Class_;
+use PhpParser\Node\Stmt\ClassConst;
+use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Property;
 use Reflector;
 
 /**
@@ -23,19 +28,22 @@ use Reflector;
 class ReflectionAttribute extends BaseReflectionAttribute
 {
     public function __construct(
-        string $attributeName,
-        private ?Node\Attribute $attributeNode = null
+        private string $attributeName,
+        int $flags = 0,
+        private Class_|ClassMethod|Function_|ClassConst|Property $attributeHolder
     ) {
-        $this->attributeNode ??= ReflectionEngine::parseAttribute($attributeName);
-    }
-
-    public function __debugInfo(): array
-    {
-        return [];
     }
 
     public function getNode(): Node\Attribute
     {
-        return $this->attributeNode;
+        foreach ($this->attributeHolder->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                if ($attr->name->toString() === $this->attributeName) {
+                    return $attr;
+                }
+            }
+        }
+
+        throw new ReflectionException(sprintf('attribute %s not exists', $this->attributeName));
     }
 }
