@@ -19,7 +19,6 @@ use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFunction;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
-use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;

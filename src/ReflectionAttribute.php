@@ -29,8 +29,8 @@ class ReflectionAttribute extends BaseReflectionAttribute
 {
     public function __construct(
         private string $attributeName,
-        int $flags = 0,
-        private Class_|ClassMethod|Function_|ClassConst|Property $attributeHolder
+        private int $flags = 0,
+        private Class_|ClassMethod|Function_|ClassConst|Property|null $attributeHolder = null
     ) {
     }
 
