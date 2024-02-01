@@ -22,16 +22,11 @@ use Reflector;
  */
 class ReflectionAttribute extends BaseReflectionAttribute
 {
-    use InternalPropertiesEmulationTrait;
-
     public function __construct(
         string $attributeName,
-        private ?Node\Attribute $attributeNode = null,
-        private ?Node\Stmt\ClassLike $classLikeNode = null,
-        private ?Reflector $declaringReflector = null
+        private ?Node\Attribute $attributeNode = null
     ) {
         $this->attributeNode ??= ReflectionEngine::parseAttribute($attributeName);
-        $this->classLikeNode ??= ReflectionEngine::parseClass($attributeName);
     }
 
     public function __debugInfo(): array
