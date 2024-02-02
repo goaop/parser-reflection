@@ -12,6 +12,29 @@ class ReflectionAttributesTest extends TestCase
      */
     protected $parsedRefFile;
 
+    public function testGetAttributeOnFunction()
+    {
+        $this->setUpFile(__DIR__ . '/Stub/FileWithFunction80.php');
+
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $function = $fileNamespace->getFunction('function_with_attribute');
+        $attributes = $function->getAttributes();
+
+        $originalReflection = new \ReflectionFunction('Go\ParserReflection\Stub\function_with_attribute');
+
+        foreach ($attributes as $attribute) {
+            $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
+
+            $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+            $this->assertSame($originalAttribute->getName(), $attribute->getName());
+            $this->assertSame($originalAttribute->getName(), $attribute->getName());
+            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+            $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
+            $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
+        }
+    }
+
     public function testGetAttributeOnParameters()
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters80.php');
