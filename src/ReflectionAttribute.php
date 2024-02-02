@@ -12,7 +12,6 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use ReflectionAttribute as BaseReflectionAttribute;
 use PhpParser\Node;
 use PhpParser\Node\Param;
@@ -30,7 +29,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
 {
     public function __construct(
         private string $attributeName,
-        private \Reflector $reflector,
+        private Reflector $reflector,
         private int $flags = 0
     ) {
     }
@@ -44,10 +43,12 @@ class ReflectionAttribute extends BaseReflectionAttribute
             ! $this->reflector instanceof ReflectionClassConstant &&
             ! $this->reflector instanceof ReflectionFunction &&
             ! $this->reflector instanceof ReflectionParameter) {
-            throw new ReflectionException(sprintf('attribute node not available at', $this->reflector::class));
+            throw new ReflectionException(sprintf('attribute node not available at ', $this->reflector::class));
         }
 
-        foreach ($this->reflector->getNode()->attrGroups as $attrGroup) {
+        /** @var Class_|ClassMethod|Property|ClassConst|Function_|Param $node  */
+        $node = $this->reflector->getNode();
+        foreach ($node->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 if ($attr->name->toString() === $this->attributeName) {
                     return $attr;
