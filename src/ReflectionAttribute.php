@@ -20,6 +20,7 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\PropertyProperty;
 
 /**
  * ref original usage https://3v4l.org/duaQI
@@ -40,6 +41,10 @@ class ReflectionAttribute extends BaseReflectionAttribute
     {
         /** @var Class_|ClassMethod|Property|ClassConst|Function_|Param $node  */
         $node = $this->reflector->getNode();
+        if ($node instanceof PropertyProperty) {
+            $node = $node->getAttribute('parent');
+        }
+
         foreach ($node->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 if ($attr->name->toString() === $this->attributeName) {
