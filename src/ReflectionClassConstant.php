@@ -219,7 +219,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
     public function getNode(): Node\Stmt\ClassConst
     {
-        return $this->classConstNode;
+        return $this->classConstantNode;
     }
 
     /**

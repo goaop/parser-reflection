@@ -111,7 +111,7 @@ class ReflectionAttributesTest extends TestCase
 
             foreach ($attributes as $attribute) {
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
-              //  $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+                $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
