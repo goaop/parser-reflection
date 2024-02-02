@@ -35,6 +35,32 @@ class ReflectionAttributesTest extends TestCase
         }
     }
 
+    public function testGetAttributeOnClassMethod()
+    {
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClassMethod80.php');
+
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $class = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassMethod');
+
+        foreach ($class->getMethods() as $method) {
+            $attributes = $method->getAttributes();
+
+            $originalReflection = new \ReflectionMethod('Go\ParserReflection\Stub\FileWithClassMethod', $method->getName());
+
+            foreach ($attributes as $attribute) {
+                $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
+
+                $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+                $this->assertSame($originalAttribute->getName(), $attribute->getName());
+                $this->assertSame($originalAttribute->getName(), $attribute->getName());
+                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+                $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
+                $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
+            }
+        }
+    }
+
     public function testGetAttributeOnParameters()
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters80.php');
