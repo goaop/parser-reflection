@@ -64,6 +64,30 @@ class ReflectionAttributesTest extends TestCase
         }
     }
 
+
+    public function testGetAttributeOnClass()
+    {
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClass80.php');
+
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $class = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassAttribute');
+
+        $attributes = $class->getAttributes();
+        $originalReflection = new \ReflectionClass($class->getName());
+
+        foreach ($attributes as $attribute) {
+            $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
+
+            $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+            $this->assertSame($originalAttribute->getName(), $attribute->getName());
+            $this->assertSame($originalAttribute->getName(), $attribute->getName());
+            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+            $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
+            $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
+        }
+    }
+
     public function testGetAttributeOnProperty()
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithClassProperty80.php');
