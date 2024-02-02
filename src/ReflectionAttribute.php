@@ -20,7 +20,6 @@ use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Property;
-use Reflector;
 
 /**
  * ref original usage https://3v4l.org/duaQI
@@ -29,23 +28,15 @@ class ReflectionAttribute extends BaseReflectionAttribute
 {
     public function __construct(
         private string $attributeName,
-        private Reflector $reflector,
-        private int $flags = 0
+        private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
+        private int $flags = 0,
+        private array $arguments = [],
+        private int $target
     ) {
     }
 
     public function getNode(): Node\Attribute
     {
-        if (
-            ! $this->reflector instanceof ReflectionClass &&
-            ! $this->reflector instanceof ReflectionMethod &&
-            ! $this->reflector instanceof ReflectionProperty &&
-            ! $this->reflector instanceof ReflectionClassConstant &&
-            ! $this->reflector instanceof ReflectionFunction &&
-            ! $this->reflector instanceof ReflectionParameter) {
-            throw new ReflectionException(sprintf('attribute node not available at ', $this->reflector::class));
-        }
-
         /** @var Class_|ClassMethod|Property|ClassConst|Function_|Param $node  */
         $node = $this->reflector->getNode();
         foreach ($node->attrGroups as $attrGroup) {
@@ -57,5 +48,35 @@ class ReflectionAttribute extends BaseReflectionAttribute
         }
 
         throw new ReflectionException('ReflectionAttribute should be initiated from Go\ParserReflection Reflection classes');
+    }
+
+    public function isRepeated(): bool
+    {
+        $attributes = $this->reflector->getAttributes($this->attributeName);
+        return $attributes[0]->isRepeated();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getArguments(): array
+    {
+        return $this->arguments;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getName(): string
+    {
+        return $this->attributeName;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTarget(): int
+    {
+        return $this->target;
     }
 }
