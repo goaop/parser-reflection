@@ -13,19 +13,6 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
-use Go\ParserReflection\ReflectionClass;
-use Go\ParserReflection\ReflectionClassConstant;
-use Go\ParserReflection\ReflectionException;
-use Go\ParserReflection\ReflectionFunction;
-use Go\ParserReflection\ReflectionMethod;
-use Go\ParserReflection\ReflectionParameter;
-use Go\ParserReflection\ReflectionProperty;
-use PhpParser\Node\Param;
-use PhpParser\Node\Stmt\ClassConst;
-use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\ClassMethod;
-use PhpParser\Node\Stmt\Function_;
-use PhpParser\Node\Stmt\Property;
 
 trait AttributeResolverTrait
 {
@@ -34,44 +21,13 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        /** @var ClassLike|ClassMethod|Property|ClassConst|Function_|Param|null $attributeHolder */
-        $attributeHolder = null;
-
-        if ($this instanceof ReflectionClass) {
-            $attributeHolder = $this->classLikeNode;
-        }
-
-        if ($this instanceof ReflectionMethod) {
-            $attributeHolder = $this->classMethodNode;
-        }
-
-        if ($this instanceof ReflectionProperty) {
-            $attributeHolder = $this->propertyNode;
-        }
-
-        if ($this instanceof ReflectionClassConstant) {
-            $attributeHolder = $this->classConstNode;
-        }
-
-        if ($this instanceof ReflectionFunction) {
-            $attributeHolder = $this->functionNode;
-        }
-
-        if ($this instanceof ReflectionParameter) {
-            $attributeHolder = $this->parameterNode;
-        }
-
-        if ($attributeHolder === null) {
-            throw new ReflectionException(sprintf('Attribute on %s not supported yet'), $this::class);
-        }
-
         $attributes = [];
-        foreach ($attributeHolder->attrGroups as $attrGroup) {
+        foreach ($this->getNode()->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 if ($name !== null) {
-                    $attributes[] = new ReflectionAttribute($name, $flags, $attributeHolder);
+                    $attributes[] = new ReflectionAttribute($name, $this, $flags);
                 } else {
-                    $attributes[] = new ReflectionAttribute($attr->name->toString(), $flags, $attributeHolder);
+                    $attributes[] = new ReflectionAttribute($attr->name->toString(), $this, $flags);
                 }
             }
         }

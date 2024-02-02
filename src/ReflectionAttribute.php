@@ -30,14 +30,24 @@ class ReflectionAttribute extends BaseReflectionAttribute
 {
     public function __construct(
         private string $attributeName,
-        private int $flags = 0,
-        private Class_|ClassMethod|Function_|ClassConst|Property|Param|null $attributeHolder = null
+        private \Reflector $reflector,
+        private int $flags = 0
     ) {
     }
 
     public function getNode(): Node\Attribute
     {
-        foreach ($this->attributeHolder->attrGroups as $attrGroup) {
+        if (
+            ! $this->reflector instanceof ReflectionClass &&
+            ! $this->reflector instanceof ReflectionMethod &&
+            ! $this->reflector instanceof ReflectionProperty &&
+            ! $this->reflector instanceof ReflectionClassConstant &&
+            ! $this->reflector instanceof ReflectionFunction &&
+            ! $this->reflector instanceof ReflectionParameter) {
+            throw new ReflectionException(sprintf('attribute node not available at', $this->reflector::class));
+        }
+
+        foreach ($this->reflector->getNode()->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 if ($attr->name->toString() === $this->attributeName) {
                     return $attr;
@@ -45,6 +55,6 @@ class ReflectionAttribute extends BaseReflectionAttribute
             }
         }
 
-        throw new ReflectionException(sprintf('attribute %s not exists', $this->attributeName));
+        throw new ReflectionException('ReflectionAttribute should be initiated from Go\ParserReflection Reflection classes');
     }
 }
