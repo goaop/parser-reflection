@@ -169,7 +169,7 @@ class ReflectionAttributesTest extends TestCase
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
-           //     $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+                $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
