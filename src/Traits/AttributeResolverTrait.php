@@ -35,11 +35,11 @@ trait AttributeResolverTrait
 
         foreach ($node->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
-                if ($name !== null) {
-                    $attributes[] = new ReflectionAttribute($name, $this, $flags, $attr->args, $this->resolveTarget($name, $flags));
-                } else {
-                    $attributes[] = new ReflectionAttribute($attr->name->toString(), $this, $flags, $attr->args, $this->resolveTarget($name, $flags));
-                }
+                $attributeName = $name === null
+                    ? $attr->name->toString()
+                    : $name;
+
+                $attributes[] = new ReflectionAttribute($attributeName, $this, $flags, $attr->args, $this->resolveTarget($attributeName, $flags));
             }
         }
 
