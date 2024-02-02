@@ -15,6 +15,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use ReflectionAttribute as BaseReflectionAttribute;
 use PhpParser\Node;
+use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -30,7 +31,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
     public function __construct(
         private string $attributeName,
         private int $flags = 0,
-        private Class_|ClassMethod|Function_|ClassConst|Property|null $attributeHolder = null
+        private Class_|ClassMethod|Function_|ClassConst|Property|Param|null $attributeHolder = null
     ) {
     }
 

@@ -18,7 +18,9 @@ use Go\ParserReflection\ReflectionClassConstant;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFunction;
 use Go\ParserReflection\ReflectionMethod;
+use Go\ParserReflection\ReflectionParameter;
 use Go\ParserReflection\ReflectionProperty;
+use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -32,7 +34,7 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        /** @var ClassLike|ClassMethod|Property|ClassConst|Function_|null $attributeHolder */
+        /** @var ClassLike|ClassMethod|Property|ClassConst|Function_|Param|null $attributeHolder */
         $attributeHolder = null;
 
         if ($this instanceof ReflectionClass) {
@@ -53,6 +55,10 @@ trait AttributeResolverTrait
 
         if ($this instanceof ReflectionFunction) {
             $attributeHolder = $this->functionNode;
+        }
+
+        if ($this instanceof ReflectionParameter) {
+            $attributeHolder = $this->parameterNode;
         }
 
         if ($attributeHolder === null) {
