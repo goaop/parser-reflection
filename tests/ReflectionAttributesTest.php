@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use PhpParser\Node\Attribute;
 use PHPUnit\Framework\TestCase;
 
 class ReflectionAttributesTest extends TestCase
@@ -26,6 +27,8 @@ class ReflectionAttributesTest extends TestCase
             $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
             $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+            $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+
             $this->assertSame($originalAttribute->getName(), $attribute->getName());
             $this->assertSame($originalAttribute->getName(), $attribute->getName());
             $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
@@ -51,6 +54,8 @@ class ReflectionAttributesTest extends TestCase
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+                $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
@@ -78,6 +83,8 @@ class ReflectionAttributesTest extends TestCase
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+                $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
@@ -103,8 +110,8 @@ class ReflectionAttributesTest extends TestCase
             $originalReflection = new \ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
 
             foreach ($attributes as $attribute) {
-
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
+              //  $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
@@ -134,6 +141,8 @@ class ReflectionAttributesTest extends TestCase
             $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
             $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+            $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+
             $this->assertSame($originalAttribute->getName(), $attribute->getName());
             $this->assertSame($originalAttribute->getName(), $attribute->getName());
             $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
@@ -160,6 +169,8 @@ class ReflectionAttributesTest extends TestCase
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+           //     $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
                 $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
