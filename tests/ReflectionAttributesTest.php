@@ -58,6 +58,8 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
+
+            $this->assertSame($originalReflection->__toString(), $method->__toString());
         }
     }
 
@@ -83,6 +85,8 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
+
+            $this->assertSame($originalReflection->__toString(), $parameter->__toString());
         }
     }
 
@@ -110,6 +114,8 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
+
+            $this->assertSame($originalReflection->__toString(), $reflectionClassConst->__toString());
         }
     }
 
@@ -135,6 +141,8 @@ class ReflectionAttributesTest extends TestCase
             $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
             $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
         }
+
+        $this->assertSame($originalReflection->__toString(), $class->__toString());
     }
 
     public function testGetAttributeOnProperty()
@@ -159,6 +167,8 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
+
+            $this->assertSame($originalReflection->__toString(), $property->__toString());
         }
     }
 

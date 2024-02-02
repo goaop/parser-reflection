@@ -583,6 +583,12 @@ trait ReflectionClassLikeTrait
 
     public function getStartLine(): int
     {
+        // php parser detect same line for has attrGroups
+        // attrGroup is mostly on next line
+        if ($this->classLikeNode->attrGroups !== []) {
+            return $this->classLikeNode->getAttribute('startLine') + count($this->classLikeNode->attrGroups);
+        }
+
         return $this->classLikeNode->getAttribute('startLine');
     }
 
