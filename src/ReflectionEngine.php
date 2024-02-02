@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
-use Exception;
 use Go\ParserReflection\Instrument\PathResolver;
 use Go\ParserReflection\NodeVisitor\RootNamespaceNormalizer;
 use InvalidArgumentException;

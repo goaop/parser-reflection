@@ -27,7 +27,7 @@ class ReflectionParameterTest extends TestCase
         $allNameGetters = [
             'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
-            'isDefaultValueConstant', '__toString'
+            'isDefaultValueConstant', '__toString', 'getAttributes'
         ];
         $onlyWithDefaultValues = array_flip([
             'getDefaultValue', 'getDefaultValueConstantName', 'isDefaultValueConstant'
@@ -72,6 +72,7 @@ class ReflectionParameterTest extends TestCase
         $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
         $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithParameters56.php'];
         $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithParameters70.php'];
+        $files['PHP8.0'] = [__DIR__ . '/Stub/FileWithParameters80.php'];
 
         return $files;
     }
