@@ -13,18 +13,7 @@ namespace Go\ParserReflection\Stub;
 
 use Go\ParserReflection\{ReflectionMethod, ReflectionProperty as P};
 
-#[SomeAttribute]
 class ClassWithPhp80Features
 {
-    #[\Doctrin\ORM\Mapping\Id]
-    private $id;
-
     public function acceptsStringArrayDefaultToNull(array|string $iterable = null) : array {}
-
-    #[SomeAttribute]
-    public function withAttribute(
-        #[\SensitiveParameter]
-        $password)
-    {
-    }
 }
