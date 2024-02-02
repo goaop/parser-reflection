@@ -31,7 +31,8 @@ class ReflectionAttribute extends BaseReflectionAttribute
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
         private int $flags = 0,
         private array $arguments = [],
-        private int $target
+        private int $target,
+        private bool $isRepeated
     ) {
     }
 
@@ -52,8 +53,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
 
     public function isRepeated(): bool
     {
-        $attributes = $this->reflector->getAttributes($this->attributeName);
-        return $attributes[0]->isRepeated();
+        return $this->isRepeated;
     }
 
     /**
