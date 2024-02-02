@@ -71,7 +71,7 @@ trait AttributeResolverTrait
                 if ($name !== null) {
                     $attributes[] = new ReflectionAttribute($name, $flags, $attributeHolder);
                 } else {
-                    $attributes[] = new ReflectionAttribute($attr->toString(), $flags, $attributeHolder);
+                    $attributes[] = new ReflectionAttribute($attr->name->toString(), $flags, $attributeHolder);
                 }
             }
         }
