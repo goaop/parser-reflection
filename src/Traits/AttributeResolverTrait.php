@@ -63,10 +63,10 @@ trait AttributeResolverTrait
         foreach ($attributeHolder->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
                 if ($name !== null) {
-                    return [new ReflectionAttribute($name, $flags, $attributeHolder)];
+                    $attributes[] = new ReflectionAttribute($name, $flags, $attributeHolder);
+                } else {
+                    $attributes[] = new ReflectionAttribute($attr->toString(), $flags, $attributeHolder);
                 }
-
-                $attributes[] = new ReflectionAttribute($attr->toString(), $flags, $attributeHolder);
             }
         }
 
