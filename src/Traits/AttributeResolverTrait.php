@@ -28,7 +28,7 @@ trait AttributeResolverTrait
         $originalAttributes = parent::getAttributes($name, $flags);
         foreach ($originalAttributes as $originalAttribute) {
             $attributeName = $originalAttribute->getName();
-            $attributes[] = new ReflectionAttribute($attributeName, $this, $originalAttribute, $flags);
+            $attributes[] = new ReflectionAttribute($attributeName, $this, $originalAttribute);
         }
 
         return $attributes;

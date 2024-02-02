@@ -34,8 +34,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
     public function __construct(
         private string $attributeName,
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
-        \ReflectionAttribute $reflectionAttribute,
-        private int $flags = 0
+        \ReflectionAttribute $reflectionAttribute
     ) {
         $this->arguments = $reflectionAttribute->getArguments();
         $this->target = $reflectionAttribute->getTarget();
