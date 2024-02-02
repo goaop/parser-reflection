@@ -13,5 +13,6 @@ namespace Go\ParserReflection\Stub;
 
 class FileWithClassConstAttribute
 {
+    #[\SomeAttribute]
     public const FOO = 1;
 }
