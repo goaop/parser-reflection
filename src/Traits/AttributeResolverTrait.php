@@ -21,6 +21,8 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
+        $this->__initialize();
+
         $attributes = [];
 
         $originalAttributes = parent::getAttributes($name, $flags);
