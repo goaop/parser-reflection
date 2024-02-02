@@ -21,10 +21,10 @@ class ReflectionAttributesTest extends TestCase
 
         foreach ($parameters as $parameter) {
             $attributes = $parameter->getAttributes();
-            $originalReflectionParameter = new \ReflectionParameter('Go\ParserReflection\Stub\authenticate', $parameter->getName());
+            $originalReflection = new \ReflectionParameter('Go\ParserReflection\Stub\authenticate', $parameter->getName());
 
             foreach ($attributes as $attribute) {
-                $originalAttribute = current($originalReflectionParameter->getAttributes($attribute->getName()));
+                $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
@@ -47,11 +47,36 @@ class ReflectionAttributesTest extends TestCase
         foreach (array_keys($constants) as $constant) {
             $reflectionClassConst = new ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
             $attributes = $reflectionClassConst->getAttributes();
-            $originalReflectionClassConst = new \ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
+            $originalReflection = new \ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
 
             foreach ($attributes as $attribute) {
 
-                $originalAttribute = current($originalReflectionClassConst->getAttributes($attribute->getName()));
+                $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
+
+                $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+                $this->assertSame($originalAttribute->getName(), $attribute->getName());
+                $this->assertSame($originalAttribute->getName(), $attribute->getName());
+                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
+                $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
+                $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
+            }
+        }
+    }
+
+    public function testGetAttributeOnProperty()
+    {
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClassProperty80.php');
+
+        $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
+        $properties = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassProperty')->getProperties();
+
+        foreach ($properties as $property) {
+            $attributes = $property->getAttributes();
+            $originalReflection = new \ReflectionProperty('Go\ParserReflection\Stub\FileWithClassProperty', $property->getName());
+
+            foreach ($attributes as $attribute) {
+                $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
