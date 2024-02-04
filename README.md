@@ -11,7 +11,7 @@ This library can be used for analysing the source code; for automatic proxy crea
 [![Total Downloads](https://img.shields.io/packagist/dt/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
 [![Daily Downloads](https://img.shields.io/packagist/dd/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
-[![PHP Version](https://img.shields.io/badge/php-%3E%3D%207.3-8892BF.svg)](https://php.net/)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D%208.2-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
 
 Installation
