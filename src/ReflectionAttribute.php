@@ -91,6 +91,6 @@ class ReflectionAttribute extends BaseReflectionAttribute
      */
     public function newInstance(): object
     {
-        throw new \RuntimeException(sprintf('cannot createw new instance from %s', $this::class));
+        throw new \RuntimeException(sprintf('cannot create new instance from %s', $this::class));
     }
 }
