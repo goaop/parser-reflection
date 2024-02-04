@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 
 trait AttributeResolverTrait
 {
@@ -21,16 +22,51 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        $this->__initialize();
-
+        $node = $this->getNode();
         $attributes = [];
+        $nodeExpressionResolver = new NodeExpressionResolver($this);
 
-        $originalAttributes = parent::getAttributes($name, $flags);
-        foreach ($originalAttributes as $originalAttribute) {
-            $attributeName = $originalAttribute->getName();
-            $attributes[] = new ReflectionAttribute($attributeName, $this, $originalAttribute);
+        foreach ($node->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                $arguments = [];
+                foreach ($attr->args as $arg) {
+                    $nodeExpressionResolver->process($arg->value);
+                    $arguments[] = $nodeExpressionResolver->getValue();
+                }
+
+                if ($name === null) {
+                    $attributes[] = new ReflectionAttribute($attr->name->toString(), $this, $arguments, $this->isAttributeRepeated($attr->name->toString(), $node->attrGroups));
+
+                    continue;
+                }
+
+                if ($name !== $attr->name->toString()) {
+                    continue;
+                }
+
+                $attributes[] = new ReflectionAttribute($name, $this, $arguments, $this->isAttributeRepeated($attr->name->toString(), $node->attrGroups));
+            }
         }
 
         return $attributes;
+    }
+
+    private function isAttributeRepeated(string $attributeName, array $attrGroups): bool
+    {
+        $count = 0;
+
+        foreach ($attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                if ($count === 2) {
+                    return true;
+                }
+
+                if ($attr->name->toString() === $attributeName) {
+                    ++$count;
+                }
+            }
+        }
+
+        return false;
     }
 }

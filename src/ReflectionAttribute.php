@@ -27,18 +27,15 @@ use PhpParser\Node\Stmt\PropertyProperty;
  */
 class ReflectionAttribute extends BaseReflectionAttribute
 {
-    private array $arguments;
     private int $target;
-    private bool $isRepeated;
 
     public function __construct(
         private string $attributeName,
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
-        \ReflectionAttribute $reflectionAttribute
+        private array $arguments,
+        private bool $isRepeated,
     ) {
-        $this->arguments = $reflectionAttribute->getArguments();
-        $this->target = $reflectionAttribute->getTarget();
-        $this->isRepeated = $reflectionAttribute->isRepeated();
+        $this->target = 0; //$reflector->getAttributes($attributeName)[0]->getTarget();
     }
 
     public function getNode(): Node\Attribute

@@ -13,6 +13,7 @@ namespace Go\ParserReflection\Stub;
 
 class FileWithClassConstAttribute
 {
-    #[\SomeAttribute]
+    #[\SomeAttribute('first')]
+    #[\SomeAttribute('second')]
     public const FOO = 1;
 }

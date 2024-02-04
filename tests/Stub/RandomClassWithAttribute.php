@@ -14,7 +14,7 @@ namespace Go\ParserReflection\Stub;
 use JetBrains\PhpStorm\ArrayShape;
 use JetBrains\PhpStorm\Deprecated;
 
-#[Deprecated]
+#[Deprecated('some arg')]
 class RandomClassWithAttribute
 {
     #[ArrayShape([
