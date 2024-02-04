@@ -219,10 +219,8 @@ trait ReflectionFunctionLikeTrait
 
     public function getStartLine(): int
     {
-        // php parser detect same line for has attrGroups
-        // attrGroup is mostly on next line
         if ($this->functionLikeNode->attrGroups !== []) {
-            return $this->functionLikeNode->getAttribute('startLine') + count($this->functionLikeNode->attrGroups);
+            return parent::getStartLine();
         }
 
         return $this->functionLikeNode->getAttribute('startLine');
