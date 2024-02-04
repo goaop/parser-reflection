@@ -100,15 +100,19 @@ class ReflectionAttributesTest extends TestCase
             $attributes = $reflectionClassConst->getAttributes();
             $originalReflection = new \ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
 
-            foreach ($attributes as $attribute) {
-                $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
+            foreach ($attributes as $key => $attribute) {
+                $originalAttributes = $originalReflection->getAttributes($attribute->getName());
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
                 $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
-                $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
-                $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
+                $this->assertSame(current($originalAttributes)->getName(), $attribute->getName());
+                $this->assertSame(current($originalAttributes)->isRepeated(), $attribute->isRepeated());
+
+                // test repeated on constant stub
+                if ($attribute->isRepeated()) {
+                    $this->assertSame($originalAttributes[$key]->getArguments(), $attribute->getArguments());
+                }
             }
 
             $this->assertSame($originalReflection->__toString(), $reflectionClassConst->__toString());
