@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
+use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 
 trait AttributeResolverTrait
@@ -22,6 +23,12 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
+        if ($this instanceof ReflectionProperty) {
+            $node = $this->getTypeNode();
+        } else {
+            $node = $this->getNode();
+        }
+
         $node = $this->getNode();
         $attributes = [];
         $nodeExpressionResolver = new NodeExpressionResolver($this);
