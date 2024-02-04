@@ -42,8 +42,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
 
         // attrGroups only exists in Property Stmt
         if ($node instanceof PropertyProperty) {
-            $node = $node->getAttribute('parent');
-            assert($node instanceof Property);
+            $node = $this->reflector->getTypeNode();
         }
 
         foreach ($node->attrGroups as $attrGroup) {
