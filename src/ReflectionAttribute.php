@@ -37,7 +37,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
 
     public function getNode(): Node\Attribute
     {
-        /** @var Class_|ClassMethod|Property|ClassConst|Function_|Param $node  */
+        /** @var Class_|ClassMethod|PropertyProperty|ClassConst|Function_|Param $node  */
         $node = $this->reflector->getNode();
 
         // attrGroups only exists in Property Stmt
