@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use ReflectionAttribute as BaseReflectionAttribute;
 use PhpParser\Node;
 use PhpParser\Node\Param;
@@ -45,11 +46,24 @@ class ReflectionAttribute extends BaseReflectionAttribute
             $node = $this->reflector->getTypeNode();
         }
 
+        $nodeExpressionResolver = new NodeExpressionResolver($this);
         foreach ($node->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
-                if ($attr->name->toString() === $this->attributeName) {
-                    return $attr;
+                if ($attr->name->toString() !== $this->attributeName) {
+                    continue;
                 }
+
+                $arguments = [];
+                foreach ($attr->args as $arg) {
+                    $nodeExpressionResolver->process($arg->value);
+                    $arguments[] = $nodeExpressionResolver->getValue();
+                }
+
+                if ($arguments !== $this->arguments) {
+                    continue;
+                }
+
+                return $attr;
             }
         }
 
