@@ -434,18 +434,4 @@ class ReflectionParameter extends BaseReflectionParameter
 
         return true;
     }
-
-    /**
-     * Implementation of internal reflection initialization
-     */
-    protected function __initialize(): void
-    {
-        if ($this->declaringFunction instanceof \ReflectionFunction) {
-            parent::__construct($this->declaringFunction->getName(), $this->getName());
-        }
-
-        if ($this->declaringFunction instanceof \ReflectionMethod) {
-            parent::__construct([$this->declaringFunction->getDeclaringClass()->getName(), $this->declaringFunction->getName()], $this->getName());
-        }
-    }
 }

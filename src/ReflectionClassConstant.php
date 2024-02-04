@@ -221,12 +221,4 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     {
         return $this->classConstantNode;
     }
-
-    /**
-     * Implementation of internal reflection initialization
-     */
-    protected function __initialize(): void
-    {
-        parent::__construct($this->className, $this->getName());
-    }
 }
