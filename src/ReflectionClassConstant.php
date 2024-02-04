@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
@@ -22,6 +24,7 @@ use ReflectionClassConstant as BaseReflectionClassConstant;
 class ReflectionClassConstant extends BaseReflectionClassConstant
 {
     use InternalPropertiesEmulationTrait;
+    use AttributeResolverTrait;
 
     /**
      * Concrete class constant node
@@ -212,5 +215,10 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             $this->getName(),
             (string) $value
         );
+    }
+
+    public function getNode(): Node\Stmt\ClassConst
+    {
+        return $this->classConstantNode;
     }
 }

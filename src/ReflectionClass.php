@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name\FullyQualified;
@@ -27,6 +28,7 @@ class ReflectionClass extends InternalReflectionClass
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionClassLikeTrait;
+    use AttributeResolverTrait;
 
     /**
      * Initializes reflection instance

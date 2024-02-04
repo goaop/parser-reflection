@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
 use PhpParser\Node\Stmt\ClassLike;
@@ -25,6 +26,7 @@ class ReflectionMethod extends BaseReflectionMethod
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionFunctionLikeTrait;
+    use AttributeResolverTrait;
 
     /**
      * Name of the class

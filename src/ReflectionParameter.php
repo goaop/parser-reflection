@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node\Expr;
@@ -32,6 +33,7 @@ use ReflectionParameter as BaseReflectionParameter;
 class ReflectionParameter extends BaseReflectionParameter
 {
     use InternalPropertiesEmulationTrait;
+    use AttributeResolverTrait;
 
     /**
      * Reflection function or method
@@ -260,7 +262,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDefaultValue()
+    public function getDefaultValue(): mixed
     {
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');

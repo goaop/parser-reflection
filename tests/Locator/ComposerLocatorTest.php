@@ -5,6 +5,7 @@ namespace Go\ParserReflection\Locator;
 
 use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionEngine;
 
 class ComposerLocatorTest extends TestCase
 {
@@ -20,5 +21,13 @@ class ComposerLocatorTest extends TestCase
             $reflectionClass->getFileName(),
             $locator->locateClass('\\' . ReflectionClass::class)
         );
+    }
+
+    public function testLocateClassWithAttributes()
+    {
+        ReflectionEngine::init(new ComposerLocator());
+
+        $parsedClass = new \Go\ParserReflection\ReflectionClass(\Go\ParserReflection\Stub\RandomClassWithAttribute::class);
+        $this->assertIsArray($parsedClass->getAttributes());
     }
 }
