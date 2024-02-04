@@ -44,7 +44,7 @@ trait AttributeResolverTrait
                     continue;
                 }
 
-                $attributes[] = new ReflectionAttribute($name, $this, $arguments, $this->isAttributeRepeated($attr->name->toString(), $node->attrGroups));
+                $attributes[] = new ReflectionAttribute($name, $this, $arguments, $this->isAttributeRepeated($name, $node->attrGroups));
             }
         }
 
@@ -57,16 +57,12 @@ trait AttributeResolverTrait
 
         foreach ($attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
-                if ($count === 2) {
-                    return true;
-                }
-
                 if ($attr->name->toString() === $attributeName) {
                     ++$count;
                 }
             }
         }
 
-        return false;
+        return $count >= 2;
     }
 }
