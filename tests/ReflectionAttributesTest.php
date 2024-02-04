@@ -30,9 +30,6 @@ class ReflectionAttributesTest extends TestCase
             $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
             $this->assertSame($originalAttribute->getName(), $attribute->getName());
-            $this->assertSame($originalAttribute->getName(), $attribute->getName());
-            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
-            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
             $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
             $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
         }
@@ -57,9 +54,6 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
@@ -86,9 +80,6 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
@@ -111,13 +102,11 @@ class ReflectionAttributesTest extends TestCase
 
             foreach ($attributes as $attribute) {
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
-                $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertInstanceOf(ReflectionAttribute::class, $attribute);
+                $this->assertInstanceOf(Attribute::class, $attribute->getNode());
+
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }
@@ -144,9 +133,6 @@ class ReflectionAttributesTest extends TestCase
             $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
             $this->assertSame($originalAttribute->getName(), $attribute->getName());
-            $this->assertSame($originalAttribute->getName(), $attribute->getName());
-            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
-            $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
             $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
             $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
         }
@@ -172,9 +158,6 @@ class ReflectionAttributesTest extends TestCase
                 $this->assertInstanceOf(Attribute::class, $attribute->getNode());
 
                 $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getName(), $attribute->getName());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
-                $this->assertSame($originalAttribute->getTarget(), $attribute->getTarget());
                 $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
                 $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
             }

@@ -27,15 +27,12 @@ use PhpParser\Node\Stmt\PropertyProperty;
  */
 class ReflectionAttribute extends BaseReflectionAttribute
 {
-    private int $target;
-
     public function __construct(
         private string $attributeName,
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
         private array $arguments,
         private bool $isRepeated,
     ) {
-        $this->target = 0; //$reflector->getAttributes($attributeName)[0]->getTarget();
     }
 
     public function getNode(): Node\Attribute
@@ -86,6 +83,14 @@ class ReflectionAttribute extends BaseReflectionAttribute
      */
     public function getTarget(): int
     {
-        return $this->target;
+        throw new \RuntimeException(sprintf('cannot get target from %s', $this::class));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function newInstance(): object
+    {
+        throw new \RuntimeException(sprintf('cannot createw new instance from %s', $this::class));
     }
 }

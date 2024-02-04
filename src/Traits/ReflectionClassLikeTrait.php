@@ -584,7 +584,10 @@ trait ReflectionClassLikeTrait
     public function getStartLine(): int
     {
         if ($this->classLikeNode->attrGroups !== []) {
-            return parent::getStartLine();
+            $attrGroups = $this->classLikeNode->attrGroups;
+            $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
+
+            return $lastAttrGroupsEndLine + 1;
         }
 
         return $this->classLikeNode->getAttribute('startLine');

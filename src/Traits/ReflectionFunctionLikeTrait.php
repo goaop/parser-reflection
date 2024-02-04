@@ -220,7 +220,10 @@ trait ReflectionFunctionLikeTrait
     public function getStartLine(): int
     {
         if ($this->functionLikeNode->attrGroups !== []) {
-            return parent::getStartLine();
+            $attrGroups = $this->functionLikeNode->attrGroups;
+            $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
+
+            return $lastAttrGroupsEndLine + 1;
         }
 
         return $this->functionLikeNode->getAttribute('startLine');
