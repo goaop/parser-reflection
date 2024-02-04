@@ -262,7 +262,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * {@inheritDoc}
      */
-    public function getDefaultValue()
+    public function getDefaultValue(): mixed
     {
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');
