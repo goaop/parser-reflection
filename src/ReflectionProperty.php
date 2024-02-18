@@ -193,6 +193,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
+    #[\ReturnTypeWillChange]
     public function getValue($object = null)
     {
         if (!isset($object)) {
