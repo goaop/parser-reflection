@@ -209,7 +209,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         if (isset($typeMap[$type])) {
             $type = $typeMap[$type];
         }
-        $valueType = new ReflectionType($type, null, true);
+        $valueType = new ReflectionType($type, false, true);
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",

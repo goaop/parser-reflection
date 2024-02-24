@@ -24,27 +24,23 @@ class ReflectionType extends BaseReflectionType
 {
     /**
      * If type allows null or not
-     *
-     * @var bool
      */
-    private $allowsNull;
+    private bool $allowsNull;
 
     /**
      * Is type built-in or not
-     *
-     * @var
      */
-    private $isBuiltin;
+    private bool $isBuiltin;
 
     /**
-     * @var string Type name
+     * Type name
      */
-    private $type;
+    private string $type;
 
     /**
      * Initializes reflection data
      */
-    public function __construct($type, $allowsNull, $isBuiltin)
+    public function __construct(string $type, bool $allowsNull, bool $isBuiltin)
     {
         $this->type       = $type;
         $this->allowsNull = $allowsNull;
@@ -79,12 +75,8 @@ class ReflectionType extends BaseReflectionType
      * PHP reflection has it's own rules, so 'int' type will be displayed as 'integer', etc...
      *
      * @see https://3v4l.org/nZFiT
-     *
-     * @param BaseReflectionType $type Type to display
-     *
-     * @return string
      */
-    public static function convertToDisplayType(BaseReflectionType $type)
+    public static function convertToDisplayType(BaseReflectionType $type): string
     {
         if ($type instanceof ReflectionNamedType) {
             $displayType = $type->getName();
