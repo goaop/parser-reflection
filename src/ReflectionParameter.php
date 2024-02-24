@@ -137,8 +137,6 @@ class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * Returns string representation of this parameter.
-     *
-     * @return string
      */
     public function __toString(): string
     {

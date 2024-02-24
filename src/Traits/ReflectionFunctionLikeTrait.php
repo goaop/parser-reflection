@@ -247,7 +247,6 @@ trait ReflectionFunctionLikeTrait
     /**
      * Checks if the function has a specified return type
      *
-     * @return bool
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.hasreturntype.php
      */

@@ -43,8 +43,6 @@ trait InitializationTrait
 
     /**
      * Implementation of internal reflection initialization
-     *
-     * @return void
      */
     abstract protected function __initialize(): void;
 }

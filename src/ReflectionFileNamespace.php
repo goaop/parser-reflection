@@ -140,8 +140,6 @@ class ReflectionFileNamespace
      * Returns a list of defined constants in the namespace
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
-     *
-     * @return array
      */
     public function getConstants(bool $withDefined = false): array
     {
@@ -356,8 +354,6 @@ class ReflectionFileNamespace
      * Searches for constants in the given AST
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
-     *
-     * @return array
      */
     private function findConstants(bool $withDefined = false): array
     {

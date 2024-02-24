@@ -626,8 +626,6 @@ trait ReflectionClassLikeTrait
      * Returns an array of names of traits used by this class
      *
      * @link http://php.net/manual/en/reflectionclass.gettraitnames.php
-     *
-     * @return array
      */
     public function getTraitNames(): array
     {
@@ -873,8 +871,6 @@ trait ReflectionClassLikeTrait
      * Gets static properties
      *
      * @link http://php.net/manual/en/reflectionclass.getstaticproperties.php
-     *
-     * @return array
      */
     public function getStaticProperties(): array
     {

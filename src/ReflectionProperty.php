@@ -304,8 +304,6 @@ class ReflectionProperty extends BaseReflectionProperty
 
     /**
      * Implementation of internal reflection initialization
-     *
-     * @return void
      */
     protected function __initialize(): void
     {

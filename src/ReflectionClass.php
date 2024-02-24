@@ -129,8 +129,6 @@ class ReflectionClass extends InternalReflectionClass
 
     /**
      * Implementation of internal reflection initialization
-     *
-     * @return void
      */
     protected function __initialize(): void
     {
