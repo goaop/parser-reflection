@@ -10,10 +10,7 @@ class ReflectionFunctionTest extends TestCase
     public const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
     public const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
 
-    /**
-     * @var ReflectionFile
-     */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -30,7 +27,7 @@ class ReflectionFunctionTest extends TestCase
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
-            'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString', 'isDisabled',
+            'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString',
             'returnsReference', 'getClosureScopeClass', 'getClosureThis'
         ];
 

@@ -15,6 +15,7 @@ use Closure;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Stmt\Function_;
 use ReflectionFunction as BaseReflectionFunction;
 
@@ -103,6 +104,7 @@ class ReflectionFunction extends BaseReflectionFunction
      * Only internal functions can be disabled using disable_functions directive.
      * User-defined functions are unaffected.
      */
+    #[Deprecated('ReflectionFunction::isDisabled() is deprecated', since: "8.0")]
     public function isDisabled(): bool
     {
         return false;
