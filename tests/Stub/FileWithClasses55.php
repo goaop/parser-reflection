@@ -136,7 +136,6 @@ abstract class ClassWithMethodsAndProperties
 
     final public function publicFinalMethod() {}
     final protected function protectedFinalMethod() {}
-    final private function privateFinalMethod() {}
 }
 
 interface SimpleInterface {}

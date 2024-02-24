@@ -15,7 +15,7 @@ function miscScalarParameters(
     int $acceptsInteger,
     string $acceptsString,
     float $acceptsFloat = \INF,
-    boolean $acceptsBool,
+    bool $acceptsBool,
     int $acceptsVariadicInteger,
     string ...$acceptsDefaultString
 ) {
