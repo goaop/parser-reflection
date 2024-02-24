@@ -54,7 +54,7 @@ class ReflectionType extends BaseReflectionType
     /**
      * @inheritDoc
      */
-    public function allowsNull()
+    public function allowsNull(): bool
     {
         return $this->allowsNull;
     }
