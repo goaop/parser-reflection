@@ -80,7 +80,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function invoke(mixed ...$args)
+    public function invoke(mixed ...$args): mixed
     {
         $this->initializeInternalReflection();
 
@@ -90,7 +90,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function invokeArgs(array $args)
+    public function invokeArgs(array $args): mixed
     {
         $this->initializeInternalReflection();
 
