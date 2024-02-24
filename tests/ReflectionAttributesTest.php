@@ -13,7 +13,7 @@ class ReflectionAttributesTest extends TestCase
      */
     protected $parsedRefFile;
 
-    public function testGetAttributeOnFunction()
+    public function testGetAttributeOnFunction(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithFunction80.php');
 
@@ -35,7 +35,7 @@ class ReflectionAttributesTest extends TestCase
         }
     }
 
-    public function testGetAttributeOnClassMethod()
+    public function testGetAttributeOnClassMethod(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithClassMethod80.php');
 
@@ -62,7 +62,7 @@ class ReflectionAttributesTest extends TestCase
         }
     }
 
-    public function testGetAttributeOnParameters()
+    public function testGetAttributeOnParameters(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters80.php');
 
@@ -88,7 +88,7 @@ class ReflectionAttributesTest extends TestCase
         }
     }
 
-    public function testGetAttributeOnClassConst()
+    public function testGetAttributeOnClassConst(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithClassConst80.php');
 
@@ -120,7 +120,7 @@ class ReflectionAttributesTest extends TestCase
     }
 
 
-    public function testGetAttributeOnClass()
+    public function testGetAttributeOnClass(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithClass80.php');
 
@@ -144,7 +144,7 @@ class ReflectionAttributesTest extends TestCase
         $this->assertSame($originalReflection->__toString(), $class->__toString());
     }
 
-    public function testGetAttributeOnProperty()
+    public function testGetAttributeOnProperty(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithClassProperty80.php');
 
@@ -175,7 +175,7 @@ class ReflectionAttributesTest extends TestCase
      *
      * @param string $fileName File name to use
      */
-    private function setUpFile($fileName)
+    private function setUpFile($fileName): void
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

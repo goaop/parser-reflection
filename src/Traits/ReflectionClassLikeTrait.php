@@ -1008,7 +1008,7 @@ trait ReflectionClassLikeTrait
     /**
      * Collects list of constants from the class itself
      */
-    private function collectSelfConstants()
+    private function collectSelfConstants(): void
     {
         $expressionSolver = new NodeExpressionResolver($this);
         $localConstants   = [];

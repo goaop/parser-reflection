@@ -25,7 +25,7 @@ class ReflectionFunctionTest extends TestCase
         include_once $fileName;
     }
 
-    public function testGeneralInfoGetters()
+    public function testGeneralInfoGetters(): void
     {
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
@@ -54,7 +54,7 @@ class ReflectionFunctionTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public function testCoverAllMethods()
+    public function testCoverAllMethods(): void
     {
         $allInternalMethods = get_class_methods(\ReflectionFunction::class);
         $allMissedMethods   = [];
@@ -75,7 +75,7 @@ class ReflectionFunctionTest extends TestCase
         }
     }
 
-    public function testGetClosureMethod()
+    public function testGetClosureMethod(): void
     {
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $refFunc       = $fileNamespace->getFunction('noGeneratorFunc');
@@ -86,7 +86,7 @@ class ReflectionFunctionTest extends TestCase
         $this->assertEquals(100, $retValue);
     }
 
-    public function testInvokeMethod()
+    public function testInvokeMethod(): void
     {
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
@@ -94,7 +94,7 @@ class ReflectionFunctionTest extends TestCase
         $this->assertEquals([1, 2, 3], $retValue);
     }
 
-    public function testInvokeArgsMethod()
+    public function testInvokeArgsMethod(): void
     {
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
@@ -102,7 +102,7 @@ class ReflectionFunctionTest extends TestCase
         $this->assertEquals([1, 2, 3], $retValue);
     }
 
-    public function testGetReturnTypeMethod()
+    public function testGetReturnTypeMethod(): void
     {
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE70);
 

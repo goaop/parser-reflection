@@ -7,7 +7,7 @@ class ReflectionMethodTest extends AbstractTestCase
 {
     protected static $reflectionClassToTest = \ReflectionMethod::class;
 
-    public function testGetClosureMethod()
+    public function testGetClosureMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithDocAndBody');
         $closure   = $refMethod->getClosure(null);
@@ -17,21 +17,21 @@ class ReflectionMethodTest extends AbstractTestCase
         $this->assertEquals('hello', $retValue);
     }
 
-    public function testInvokeMethod()
+    public function testInvokeMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
         $retValue  = $refMethod->invoke(null, 1, 2, 3);
         $this->assertEquals([1, 2, 3], $retValue);
     }
 
-    public function testInvokeArgsMethod()
+    public function testInvokeArgsMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
         $retValue  = $refMethod->invokeArgs(null, [1, 2, 3]);
         $this->assertEquals([1, 2, 3], $retValue);
     }
 
-    public function testDebugInfoMethod()
+    public function testDebugInfoMethod(): void
     {
         $parsedRefMethod   = $this->parsedRefClass->getMethod('funcWithDocAndBody');
         $originalRefMethod = new \ReflectionMethod($this->parsedRefClass->getName(), 'funcWithDocAndBody');
@@ -39,7 +39,7 @@ class ReflectionMethodTest extends AbstractTestCase
         $this->assertSame($expectedValue, $parsedRefMethod->__debugInfo());
     }
 
-    public function testSetAccessibleMethod()
+    public function testSetAccessibleMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('protectedStaticFunc');
         $refMethod->setAccessible(true);
@@ -47,7 +47,7 @@ class ReflectionMethodTest extends AbstractTestCase
         $this->assertEquals(null, $retValue);
     }
 
-    public function testGetPrototypeMethod()
+    public function testGetPrototypeMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('prototypeMethod');
         $retValue  = $refMethod->invokeArgs(null, []);
@@ -73,7 +73,7 @@ class ReflectionMethodTest extends AbstractTestCase
         ReflectionClass $parsedClass,
         \ReflectionMethod $refMethod,
         $getterName
-    ) {
+    ): void {
         $methodName   = $refMethod->getName();
         $className    = $parsedClass->getName();
         $parsedMethod = $parsedClass->getMethod($methodName);

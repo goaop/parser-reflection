@@ -21,7 +21,7 @@ class ReflectionParameterTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('fileProvider')]
-    public function testGeneralInfoGetters($fileName)
+    public function testGeneralInfoGetters($fileName): void
     {
         $this->setUpFile($fileName);
         $allNameGetters = [
@@ -76,7 +76,7 @@ class ReflectionParameterTest extends TestCase
         return $files;
     }
 
-    public function testGetClassMethod()
+    public function testGetClassMethod(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
@@ -98,7 +98,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame(\Traversable::class, $internalInterfaceParam->getName());
     }
 
-    public function testGetClassMethodReturnsSelfAndParent()
+    public function testGetClassMethodReturnsSelfAndParent(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass     = $parsedNamespace->getClass(SubFoo::class);
@@ -114,7 +114,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame(Foo::class, $parentParam->getName());
     }
 
-    public function testNonConstantsResolvedForGlobalNamespace()
+    public function testNonConstantsResolvedForGlobalNamespace(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('');
         $parsedClass     = $parsedNamespace->getClass(TestParametersForRootNsClass::class);
@@ -126,7 +126,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame(true, $parameters[2]->getDefaultValue());
     }
 
-    public function testGetDeclaringClassMethodReturnsObject()
+    public function testGetDeclaringClassMethodReturnsObject(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass     = $parsedNamespace->getClass(Foo::class);
@@ -136,7 +136,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame($parsedClass->getName(), $parameters[0]->getDeclaringClass()->getName());
     }
 
-    public function testParamWithDefaultConstValue()
+    public function testParamWithDefaultConstValue(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass     = $parsedNamespace->getClass(Foo::class);
@@ -153,7 +153,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame('Go\ParserReflection\Stub\SubFoo::ANOTHER_CLASS_CONST', $parameters[3]->getDefaultValueConstantName());
     }
 
-    public function testParamBuiltInClassConst()
+    public function testParamBuiltInClassConst(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass     = $parsedNamespace->getClass(Foo::class);
@@ -164,7 +164,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame('DateTime::ATOM', $parameters[0]->getDefaultValueConstantName());
     }
 
-    public function testGetDeclaringClassMethodReturnsNull()
+    public function testGetDeclaringClassMethodReturnsNull(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
@@ -173,7 +173,7 @@ class ReflectionParameterTest extends TestCase
         $this->assertNull($parameters[0]->getDeclaringClass());
     }
 
-    public function testDebugInfoMethod()
+    public function testDebugInfoMethod(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
@@ -189,7 +189,7 @@ class ReflectionParameterTest extends TestCase
      * @param string $getterName Name of the getter to call
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('listOfDefaultGetters')]
-    public function testGetDefaultValueThrowsAnException($getterName)
+    public function testGetDefaultValueThrowsAnException($getterName): void
     {
         $originalException = null;
         $parsedException   = null;
@@ -226,7 +226,7 @@ class ReflectionParameterTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public function testCoverAllMethods()
+    public function testCoverAllMethods(): void
     {
         $allInternalMethods = get_class_methods(\ReflectionParameter::class);
         $allMissedMethods   = [];
@@ -247,7 +247,7 @@ class ReflectionParameterTest extends TestCase
         }
     }
 
-    public function testGetTypeMethod()
+    public function testGetTypeMethod(): void
     {
         $this->setUpFile(__DIR__ . '/Stub/FileWithParameters70.php');
 
@@ -287,7 +287,7 @@ class ReflectionParameterTest extends TestCase
      *
      * @param string $fileName File name to use
      */
-    private function setUpFile($fileName)
+    private function setUpFile($fileName): void
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

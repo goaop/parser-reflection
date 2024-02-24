@@ -30,7 +30,7 @@ class ReflectionFileNamespaceTest extends TestCase
         include_once $fileName;
     }
 
-    public function testGetClass()
+    public function testGetClass(): void
     {
         $refClass = $this->parsedRefFileNamespace->getClass('Unknown');
         $this->assertFalse($refClass);
@@ -40,13 +40,13 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertEquals(TestNamespaceClassFoo::class, $refClass->name);
     }
 
-    public function testGetClasses()
+    public function testGetClasses(): void
     {
         $refClasses = $this->parsedRefFileNamespace->getClasses();
         $this->assertCount(2, $refClasses);
     }
 
-    public function testGetConstant()
+    public function testGetConstant(): void
     {
         $constValue = $this->parsedRefFileNamespace->getConstant('Unknown');
         $this->assertFalse($constValue);
@@ -56,7 +56,7 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $constValue);
     }
 
-    public function testGetConstants()
+    public function testGetConstants(): void
     {
         $constValue = $this->parsedRefFileNamespace->getConstants(true);
         $this->assertEquals(
@@ -83,7 +83,7 @@ class ReflectionFileNamespaceTest extends TestCase
         );
     }
 
-    public function testGetConstantsCacheIndependence()
+    public function testGetConstantsCacheIndependence(): void
     {
         $globalConstants = $this->parsedRefFileNamespace->getConstants(true);
         $this->assertArrayHasKey('FILE_NAME', $globalConstants, 'Namespaced constant found.');
@@ -100,7 +100,7 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertFalse($this->parsedRefFileNamespace->getConstant('INT_CONST'), 'Global constant not found.');
     }
 
-    public function testGetGlobalConstants()
+    public function testGetGlobalConstants(): void
     {
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_GLOBAL_FILE);
         $reflectionFile = new ReflectionFile($fileName);
@@ -122,25 +122,25 @@ class ReflectionFileNamespaceTest extends TestCase
         );
     }
 
-    public function testGetDocComment()
+    public function testGetDocComment(): void
     {
         $docComment = $this->parsedRefFileNamespace->getDocComment();
         $this->assertNotEmpty($docComment);
     }
 
-    public function testGetEndLine()
+    public function testGetEndLine(): void
     {
         $endLine = $this->parsedRefFileNamespace->getEndLine();
         $this->assertEquals(\Go\ParserReflection\Stub\END_MARKER + 1, $endLine);
     }
 
-    public function testGetFileName()
+    public function testGetFileName(): void
     {
         $fileName = $this->parsedRefFileNamespace->getFileName();
         $this->assertEquals(\Go\ParserReflection\Stub\FILE_NAME, $fileName);
     }
 
-    public function testGetFunction()
+    public function testGetFunction(): void
     {
         $refFunction = $this->parsedRefFileNamespace->getFunction('Unknown');
         $this->assertFalse($refFunction);
@@ -150,19 +150,19 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertEquals('testFunctionBar', $refFunction->name);
     }
 
-    public function testGetFunctions()
+    public function testGetFunctions(): void
     {
         $refFunctions = $this->parsedRefFileNamespace->getFunctions();
         $this->assertCount(1, $refFunctions);
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $namespaceName = $this->parsedRefFileNamespace->getName();
         $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $namespaceName);
     }
 
-    public function testGetNameOfGlobalNamespace()
+    public function testGetNameOfGlobalNamespace(): void
     {
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_GLOBAL_FILE);
         $reflectionFile = new ReflectionFile($fileName);
@@ -172,7 +172,7 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertSame('', $reflectionFileNamespace->getName());
     }
 
-    public function testGetNamespaceAliases()
+    public function testGetNamespaceAliases(): void
     {
         $expectedAliases = [
             'SomeClass\WithoutAlias' => 'WithoutAlias',
@@ -185,13 +185,13 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertEquals($expectedAliases, $realAliases);
     }
 
-    public function testGetStartLine()
+    public function testGetStartLine(): void
     {
         $startLine = $this->parsedRefFileNamespace->getStartLine();
         $this->assertEquals(\Go\ParserReflection\Stub\START_MARKER - 2, $startLine);
     }
 
-    public function testHasClass()
+    public function testHasClass(): void
     {
         $hasClass = $this->parsedRefFileNamespace->hasClass('Unknown');
         $this->assertFalse($hasClass);
@@ -200,7 +200,7 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertTrue($hasClass);
     }
 
-    public function testHasConstant()
+    public function testHasConstant(): void
     {
         $hasConstant = $this->parsedRefFileNamespace->hasConstant('Unknown');
         $this->assertFalse($hasConstant);
@@ -209,7 +209,7 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertTrue($hasConstant);
     }
 
-    public function testHasFunction()
+    public function testHasFunction(): void
     {
         $hasFunction = $this->parsedRefFileNamespace->hasFunction('Unknown');
         $this->assertFalse($hasFunction);

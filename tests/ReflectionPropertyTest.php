@@ -35,7 +35,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         ReflectionClass $parsedClass,
         \ReflectionProperty $refProperty,
         $getterName
-    )
+    ): void
     {
         $propertyName   = $refProperty->getName();
         $className      = $parsedClass->getName();
@@ -88,7 +88,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         return $testCases;
     }
 
-    public function testSetAccessibleMethod()
+    public function testSetAccessibleMethod(): void
     {
         $parsedProperty = $this->parsedRefClass->getProperty('protectedStaticProperty');
         $parsedProperty->setAccessible(true);
@@ -97,7 +97,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         $this->assertSame('foo', $value);
     }
 
-    public function testGetSetValueForObjectMethods()
+    public function testGetSetValueForObjectMethods(): void
     {
         $parsedProperty = $this->parsedRefClass->getProperty('protectedProperty');
         $parsedProperty->setAccessible(true);
@@ -113,7 +113,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         $this->assertSame(43, $value);
     }
 
-    public function testCompatibilityWithOriginalConstructor()
+    public function testCompatibilityWithOriginalConstructor(): void
     {
         $parsedRefProperty = new ReflectionProperty($this->parsedRefClass->getName(), 'publicStaticProperty');
         $originalValue     = $parsedRefProperty->getValue();
@@ -121,7 +121,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         $this->assertSame(M_PI, $originalValue);
     }
 
-    public function testDebugInfoMethod()
+    public function testDebugInfoMethod(): void
     {
         $parsedRefProperty   = $this->parsedRefClass->getProperty('publicStaticProperty');
         $originalRefProperty = new \ReflectionProperty($this->parsedRefClass->getName(), 'publicStaticProperty');

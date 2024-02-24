@@ -21,7 +21,7 @@ class ReflectionClassConstantTest extends TestCase
         $this->setUpFile(__DIR__ . '/Stub/FileWithClasses71.php');
     }
 
-    public function testGeneralInfoGetters()
+    public function testGeneralInfoGetters(): void
     {
         $allNameGetters = [
             'getDocComment',
@@ -54,7 +54,7 @@ class ReflectionClassConstantTest extends TestCase
         }
     }
 
-    public function testGetClassConstantProperties()
+    public function testGetClassConstantProperties(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass = $parsedNamespace->getClass(ClassWithPhp71Features::class);
@@ -64,7 +64,7 @@ class ReflectionClassConstantTest extends TestCase
         $this->assertSame(ClassWithPhp71Features::class, $constant->class);
     }
 
-    public function testGetClassConstant()
+    public function testGetClassConstant(): void
     {
         $parsedNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $parsedClass = $parsedNamespace->getClass(ClassWithPhp71Features::class);
@@ -78,7 +78,7 @@ class ReflectionClassConstantTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public function testCoverAllMethods()
+    public function testCoverAllMethods(): void
     {
         $allInternalMethods = get_class_methods(\ReflectionClassConstant::class);
         $allMissedMethods = [];
@@ -104,7 +104,7 @@ class ReflectionClassConstantTest extends TestCase
      *
      * @param string $fileName File name to use
      */
-    private function setUpFile($fileName)
+    private function setUpFile($fileName): void
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

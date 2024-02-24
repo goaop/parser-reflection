@@ -20,7 +20,7 @@ class ReflectionTypeTest extends TestCase
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
      */
-    public function testTypeConvertToDisplayTypeWithNativeType()
+    public function testTypeConvertToDisplayTypeWithNativeType(): void
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
@@ -41,7 +41,7 @@ class ReflectionTypeTest extends TestCase
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
      */
-    public function testTypeConvertToDisplayTypeWithNullableNativeType()
+    public function testTypeConvertToDisplayTypeWithNullableNativeType(): void
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithNullableScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
@@ -62,7 +62,7 @@ class ReflectionTypeTest extends TestCase
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
      */
-    public function testTypeConvertToDisplayTypeImplicitlyNullable()
+    public function testTypeConvertToDisplayTypeImplicitlyNullable(): void
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringDefaultToNull');
@@ -84,7 +84,7 @@ class ReflectionTypeTest extends TestCase
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
      */
-    public function testTypeConvertToDisplayTypeImplicitlyUnionNullable()
+    public function testTypeConvertToDisplayTypeImplicitlyUnionNullable(): void
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp80Features');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringArrayDefaultToNull');

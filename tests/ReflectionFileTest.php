@@ -25,20 +25,20 @@ class ReflectionFileTest extends TestCase
         $this->parsedRefFile = $reflectionFile;
     }
 
-    public function testGetName()
+    public function testGetName(): void
     {
         $fileName     = $this->parsedRefFile->getName();
         $expectedName = stream_resolve_include_path(__DIR__ . self::STUB_FILE);
         $this->assertEquals($expectedName, $fileName);
     }
 
-    public function testGetFileNamespaces()
+    public function testGetFileNamespaces(): void
     {
         $reflectionFileNamespaces = $this->parsedRefFile->getFileNamespaces();
         $this->assertCount(3, $reflectionFileNamespaces);
     }
 
-    public function testGetFileNamespace()
+    public function testGetFileNamespace(): void
     {
         $reflectionFileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $this->assertInstanceOf(ReflectionFileNamespace::class, $reflectionFileNamespace);
@@ -47,7 +47,7 @@ class ReflectionFileTest extends TestCase
         $this->assertFalse($reflectionFileNamespace);
     }
 
-    public function testHasFileNamespace()
+    public function testHasFileNamespace(): void
     {
         $hasFileNamespace = $this->parsedRefFile->hasFileNamespace('Go\ParserReflection\Stub');
         $this->assertTrue($hasFileNamespace);
@@ -56,7 +56,7 @@ class ReflectionFileTest extends TestCase
         $this->assertFalse($hasFileNamespace);
     }
 
-    public function testGetGlobalFileNamespace()
+    public function testGetGlobalFileNamespace(): void
     {
         $fileName       = stream_resolve_include_path(__DIR__ . self::STUB_GLOBAL_FILE);
         $reflectionFile = new ReflectionFile($fileName);
@@ -72,7 +72,7 @@ class ReflectionFileTest extends TestCase
      * @param bool $shouldBeStrict
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('fileNameProvider')]
-    public function testIsStrictType($fileName, $shouldBeStrict)
+    public function testIsStrictType($fileName, $shouldBeStrict): void
     {
         $fileName       = stream_resolve_include_path(__DIR__ . $fileName);
         $reflectionFile = new ReflectionFile($fileName);
@@ -90,7 +90,7 @@ class ReflectionFileTest extends TestCase
         ];
     }
 
-    public function testGetInterfaceNamesWithExtends()
+    public function testGetInterfaceNamesWithExtends(): void
     {
         $fileName = __DIR__ . '/Stub/Issue44/ClassWithoutNamespace.php';
 

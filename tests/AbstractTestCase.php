@@ -42,7 +42,7 @@ abstract class AbstractTestCase extends TestCase
     protected static $defaultClassToLoad = AbstractClassWithMethods::class;
 
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public function testCoverAllMethods()
+    public function testCoverAllMethods(): void
     {
         $allInternalMethods = get_class_methods(static::$reflectionClassToTest);
         $allMissedMethods   = [];
