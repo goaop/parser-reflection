@@ -154,7 +154,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->constNode->name->toString();
     }
@@ -162,7 +162,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
-    public function getValue()
+    public function getValue(): mixed
     {
         $solver = new NodeExpressionResolver($this->getDeclaringClass());
         $solver->process($this->constNode->value);
