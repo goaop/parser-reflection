@@ -40,7 +40,7 @@ class ClassWithPhp71Features
     /**
      * Description for PUBLIC_CONST_A
      */
-    const PUBLIC_CONST_A = 1;
+    public const PUBLIC_CONST_A = 1;
 
     /**
      * Description for PUBLIC_CONST_B

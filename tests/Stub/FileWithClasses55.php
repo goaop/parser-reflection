@@ -38,7 +38,7 @@ class BaseClass
  */
 abstract class AbstractClassWithMethods extends BaseClass
 {
-    const TEST = 5;
+    public const TEST = 5;
 
     public function __construct(){}
     public function __destruct(){}
@@ -223,20 +223,20 @@ interface AbstractInterface
 
 class ClassWithScalarConstants
 {
-    const A = 10, A1 = 11;
-    const B = 42.0;
-    const C = 'foo';
-    const D = false;
-    const E = null;
+    public const A = 10, A1 = 11;
+    public const B = 42.0;
+    public const C = 'foo';
+    public const D = false;
+    public const E = null;
 }
 
 class ClassWithMagicConstants
 {
-    const A = __DIR__;
-    const B = __FILE__;
-    const C = __NAMESPACE__;
-    const D = __CLASS__;
-    const E = __LINE__;
+    public const A = __DIR__;
+    public const B = __FILE__;
+    public const C = __NAMESPACE__;
+    public const D = __CLASS__;
+    public const E = __LINE__;
 
     public static $a    = self::A;
     protected static $b = self::B;
@@ -247,9 +247,9 @@ const NS_CONST = 'test';
 
 class ClassWithConstantsAndInheritance extends ClassWithMagicConstants
 {
-    const A = 'overridden';
-    const H = M_PI;
-    const J = NS_CONST;
+    public const A = 'overridden';
+    public const H = M_PI;
+    public const J = NS_CONST;
 
     public static $h = self::H;
 }

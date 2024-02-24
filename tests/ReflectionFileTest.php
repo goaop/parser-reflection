@@ -9,8 +9,8 @@ use TypeError;
 
 class ReflectionFileTest extends TestCase
 {
-    const STUB_FILE        = '/Stub/FileWithNamespaces.php';
-    const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
+    public const STUB_FILE        = '/Stub/FileWithNamespaces.php';
+    public const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
 
     /**
      * @var ReflectionFile

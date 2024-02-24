@@ -4,17 +4,17 @@ namespace Go\ParserReflection\Stub;
 
 class ClassWithArrayConstants
 {
-    const A = [10, 11];
-    const B = array(42.0, 43.0);
+    public const A = [10, 11];
+    public const B = array(42.0, 43.0);
 }
 
 const NS_CONST56 = 'test';
 
 class ClassWithComplexConstantsAndInheritance extends ClassWithArrayConstants
 {
-    const K = array(1, NS_CONST56);
-    const L = [self::class, ClassWithArrayConstants::A, parent::B, self::A];
-    const M = \DateTime::ATOM;
+    public const K = array(1, NS_CONST56);
+    public const L = [self::class, ClassWithArrayConstants::A, parent::B, self::A];
+    public const M = \DateTime::ATOM;
 }
 
 const ONE = 1;
@@ -52,34 +52,34 @@ const ONE = 1;
  */
 class ClassWithConstantExpressions
 {
-    const ADDITION            = ONE + 1;
-    const SUBTRACTION         = 2 - ONE;
-    const MULTIPLICATION      = ONE * 2;
-    const DIVISION            = ONE / 2;
-    const MODULUS             = ONE % 2;
-    const BOOLEAN_NEGATION    = !ONE;
-    const BITWISE_NEGATION    = ~ONE;
-    const BITWISE_OR          = ONE | 2;
-    const BITWISE_AND         = ONE & 2;
-    const BITWISE_XOR         = ONE ^ 2;
-    const BITWISE_SHIFT_LEFT  = ONE << 3;
-    const BITWISE_SHIFT_RIGHT = ONE >> 3;
-    const CONCATENATION       = 'Value of shift left is ' . self::BITWISE_SHIFT_LEFT;
-    const TERNARY_OPERATOR    = true ?: false;
-    const SMALLER_OR_EQUAL    = ONE <= 2;
-    const GREATER_OR_EQUAL    = ONE >= 2;
-    const EQUAL               = ONE == true;
-    const NOT_EQUAL           = ONE != 2;
-    const SMALLER             = ONE < 2;
-    const GREATER             = ONE > 2;
-    const IDENTICAL           = ONE === true;
-    const NOT_IDENTICAL       = ONE !== true;
-    const BOOLEAN_AND         = ONE && false;
-    const LOGICAL_AND         = ONE and false;
-    const BOOLEAN_OR          = ONE || true;
-    const LOGICAL_OR          = ONE or true;
-    const LOGICAL_XOR         = ONE xor true;
-    const GROUPING            = (ONE + 2) * 3;
+    public const ADDITION            = ONE + 1;
+    public const SUBTRACTION         = 2 - ONE;
+    public const MULTIPLICATION      = ONE * 2;
+    public const DIVISION            = ONE / 2;
+    public const MODULUS             = ONE % 2;
+    public const BOOLEAN_NEGATION    = !ONE;
+    public const BITWISE_NEGATION    = ~ONE;
+    public const BITWISE_OR          = ONE | 2;
+    public const BITWISE_AND         = ONE & 2;
+    public const BITWISE_XOR         = ONE ^ 2;
+    public const BITWISE_SHIFT_LEFT  = ONE << 3;
+    public const BITWISE_SHIFT_RIGHT = ONE >> 3;
+    public const CONCATENATION       = 'Value of shift left is ' . self::BITWISE_SHIFT_LEFT;
+    public const TERNARY_OPERATOR    = true ?: false;
+    public const SMALLER_OR_EQUAL    = ONE <= 2;
+    public const GREATER_OR_EQUAL    = ONE >= 2;
+    public const EQUAL               = ONE == true;
+    public const NOT_EQUAL           = ONE != 2;
+    public const SMALLER             = ONE < 2;
+    public const GREATER             = ONE > 2;
+    public const IDENTICAL           = ONE === true;
+    public const NOT_IDENTICAL       = ONE !== true;
+    public const BOOLEAN_AND         = ONE && false;
+    public const LOGICAL_AND         = ONE and false;
+    public const BOOLEAN_OR          = ONE || true;
+    public const LOGICAL_OR          = ONE or true;
+    public const LOGICAL_XOR         = ONE xor true;
+    public const GROUPING            = (ONE + 2) * 3;
 
-    const REFERENCE = self::ADDITION;
+    public const REFERENCE = self::ADDITION;
 }

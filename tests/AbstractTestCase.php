@@ -15,7 +15,7 @@ use Go\ParserReflection\Stub\AbstractClassWithMethods;
 
 abstract class AbstractTestCase extends TestCase
 {
-    const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
+    public const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
 
     /**
      * @var ReflectionFileNamespace

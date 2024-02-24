@@ -7,8 +7,8 @@ use PHPUnit\Framework\TestCase;
 
 class ReflectionFunctionTest extends TestCase
 {
-    const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
-    const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
+    public const STUB_FILE55 = '/Stub/FileWithFunctions55.php';
+    public const STUB_FILE70 = '/Stub/FileWithFunctions70.php';
 
     /**
      * @var ReflectionFile

@@ -46,7 +46,7 @@ namespace Go\ParserReflection\Stub {
 
     class Foo
     {
-        const CLASS_CONST = __CLASS__;
+        public const CLASS_CONST = __CLASS__;
 
         public function methodParam($firstParam, $optionalParam = null)
         {
@@ -63,7 +63,7 @@ namespace Go\ParserReflection\Stub {
 
     class SubFoo extends Foo
     {
-        const ANOTHER_CLASS_CONST = __CLASS__;
+        public const ANOTHER_CLASS_CONST = __CLASS__;
 
         public function anotherMethodParam(self $selfParam, parent $parentParam)
         {
