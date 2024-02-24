@@ -29,6 +29,7 @@ use ReflectionParameter as BaseReflectionParameter;
 
 /**
  * AST-based reflection for method/function parameter
+ * @see \Go\ParserReflection\ReflectionParameterTest
  */
 class ReflectionParameter extends BaseReflectionParameter
 {

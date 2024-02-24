@@ -21,6 +21,9 @@ use PhpParser\Node\Stmt\ClassLike;
 use Reflection;
 use ReflectionClassConstant as BaseReflectionClassConstant;
 
+/**
+ * @see \Go\ParserReflection\ReflectionClassConstantTest
+ */
 class ReflectionClassConstant extends BaseReflectionClassConstant
 {
     use InternalPropertiesEmulationTrait;

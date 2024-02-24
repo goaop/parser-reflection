@@ -14,21 +14,21 @@ class ReflectionMethodTest extends AbstractTestCase
 
         $this->assertInstanceOf(\Closure::class, $closure);
         $retValue = $closure();
-        $this->assertEquals('hello', $retValue);
+        $this->assertSame('hello', $retValue);
     }
 
     public function testInvokeMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
         $retValue  = $refMethod->invoke(null, 1, 2, 3);
-        $this->assertEquals([1, 2, 3], $retValue);
+        $this->assertSame([1, 2, 3], $retValue);
     }
 
     public function testInvokeArgsMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('funcWithReturnArgs');
         $retValue  = $refMethod->invokeArgs(null, [1, 2, 3]);
-        $this->assertEquals([1, 2, 3], $retValue);
+        $this->assertSame([1, 2, 3], $retValue);
     }
 
     public function testDebugInfoMethod(): void
@@ -51,13 +51,13 @@ class ReflectionMethodTest extends AbstractTestCase
     {
         $refMethod = $this->parsedRefClass->getMethod('prototypeMethod');
         $retValue  = $refMethod->invokeArgs(null, []);
-        $this->assertEquals($this->parsedRefClass->getName(), $retValue);
+        $this->assertSame($this->parsedRefClass->getName(), $retValue);
 
         $prototype = $refMethod->getPrototype();
         $this->assertInstanceOf(\ReflectionMethod::class, $prototype);
         $prototype->setAccessible(true);
         $retValue  = $prototype->invokeArgs(null, []);
-        $this->assertNotEquals($this->parsedRefClass->getName(), $retValue);
+        $this->assertNotSame($this->parsedRefClass->getName(), $retValue);
     }
 
     /**

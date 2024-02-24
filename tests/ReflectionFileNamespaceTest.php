@@ -37,7 +37,7 @@ class ReflectionFileNamespaceTest extends TestCase
 
         $refClass = $this->parsedRefFileNamespace->getClass(TestNamespaceClassFoo::class);
         $this->assertInstanceOf(\ReflectionClass::class, $refClass);
-        $this->assertEquals(TestNamespaceClassFoo::class, $refClass->name);
+        $this->assertSame(TestNamespaceClassFoo::class, $refClass->name);
     }
 
     public function testGetClasses(): void
@@ -53,7 +53,7 @@ class ReflectionFileNamespaceTest extends TestCase
 
         $constValue = $this->parsedRefFileNamespace->getConstant('NAMESPACE_NAME');
         $this->assertNotFalse($constValue);
-        $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $constValue);
+        $this->assertSame(\Go\ParserReflection\Stub\NAMESPACE_NAME, $constValue);
     }
 
     public function testGetConstants(): void
@@ -131,7 +131,7 @@ class ReflectionFileNamespaceTest extends TestCase
     public function testGetEndLine(): void
     {
         $endLine = $this->parsedRefFileNamespace->getEndLine();
-        $this->assertEquals(\Go\ParserReflection\Stub\END_MARKER + 1, $endLine);
+        $this->assertSame(\Go\ParserReflection\Stub\END_MARKER + 1, $endLine);
     }
 
     public function testGetFileName(): void
@@ -147,7 +147,7 @@ class ReflectionFileNamespaceTest extends TestCase
 
         $refFunction = $this->parsedRefFileNamespace->getFunction('testFunctionBar');
         $this->assertInstanceOf(\ReflectionFunction::class, $refFunction);
-        $this->assertEquals('testFunctionBar', $refFunction->name);
+        $this->assertSame('testFunctionBar', $refFunction->name);
     }
 
     public function testGetFunctions(): void
@@ -159,7 +159,7 @@ class ReflectionFileNamespaceTest extends TestCase
     public function testGetName(): void
     {
         $namespaceName = $this->parsedRefFileNamespace->getName();
-        $this->assertEquals(\Go\ParserReflection\Stub\NAMESPACE_NAME, $namespaceName);
+        $this->assertSame(\Go\ParserReflection\Stub\NAMESPACE_NAME, $namespaceName);
     }
 
     public function testGetNameOfGlobalNamespace(): void
@@ -182,13 +182,13 @@ class ReflectionFileNamespaceTest extends TestCase
         ];
 
         $realAliases = $this->parsedRefFileNamespace->getNamespaceAliases();
-        $this->assertEquals($expectedAliases, $realAliases);
+        $this->assertSame($expectedAliases, $realAliases);
     }
 
     public function testGetStartLine(): void
     {
         $startLine = $this->parsedRefFileNamespace->getStartLine();
-        $this->assertEquals(\Go\ParserReflection\Stub\START_MARKER - 2, $startLine);
+        $this->assertSame(\Go\ParserReflection\Stub\START_MARKER - 2, $startLine);
     }
 
     public function testHasClass(): void

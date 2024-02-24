@@ -20,6 +20,7 @@ use ReflectionFunction as BaseReflectionFunction;
 
 /**
  * AST-based reflection for function
+ * @see \Go\ParserReflection\ReflectionFunctionTest
  */
 class ReflectionFunction extends BaseReflectionFunction
 {

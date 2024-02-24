@@ -83,7 +83,7 @@ class ReflectionFunctionTest extends TestCase
 
         $this->assertInstanceOf(\Closure::class, $closure);
         $retValue = $closure();
-        $this->assertEquals(100, $retValue);
+        $this->assertSame(100, $retValue);
     }
 
     public function testInvokeMethod(): void
@@ -91,7 +91,7 @@ class ReflectionFunctionTest extends TestCase
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
         $retValue      = $refFunc->invoke(1, 2, 3);
-        $this->assertEquals([1, 2, 3], $retValue);
+        $this->assertSame([1, 2, 3], $retValue);
     }
 
     public function testInvokeArgsMethod(): void
@@ -99,7 +99,7 @@ class ReflectionFunctionTest extends TestCase
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $refFunc       = $fileNamespace->getFunction('funcWithReturnArgs');
         $retValue      = $refFunc->invokeArgs([1, 2, 3]);
-        $this->assertEquals([1, 2, 3], $retValue);
+        $this->assertSame([1, 2, 3], $retValue);
     }
 
     public function testGetReturnTypeMethod(): void

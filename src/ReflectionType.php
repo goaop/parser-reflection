@@ -18,6 +18,7 @@ use ReflectionUnionType;
 
 /**
  * ReflectionType implementation
+ * @see \Go\ParserReflection\ReflectionTypeTest
  */
 class ReflectionType extends BaseReflectionType
 {

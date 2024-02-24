@@ -23,6 +23,7 @@ use ReflectionClass as InternalReflectionClass;
 
 /**
  * AST-based reflection class
+ * @see \Go\ParserReflection\ReflectionClassTest
  */
 class ReflectionClass extends InternalReflectionClass
 {

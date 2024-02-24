@@ -82,8 +82,8 @@ class ReflectionParameterTest extends TestCase
         $parsedFunction  = $parsedNamespace->getFunction('miscParameters');
 
         $parameters = $parsedFunction->getParameters();
-        $this->assertSame(null, $parameters[0 /* array $arrayParam*/]->getClass());
-        $this->assertSame(null, $parameters[3 /* callable $callableParam */]->getClass());
+        $this->assertNull($parameters[0 /* array $arrayParam*/]->getClass());
+        $this->assertNull($parameters[3 /* callable $callableParam */]->getClass());
 
         $objectParam = $parameters[5 /* \stdClass $objectParam */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $objectParam);
@@ -121,9 +121,9 @@ class ReflectionParameterTest extends TestCase
         $parsedFunction  = $parsedClass->getMethod('foo');
 
         $parameters = $parsedFunction->getParameters();
-        $this->assertSame(null, $parameters[0]->getDefaultValue());
-        $this->assertSame(false, $parameters[1]->getDefaultValue());
-        $this->assertSame(true, $parameters[2]->getDefaultValue());
+        $this->assertNull($parameters[0]->getDefaultValue());
+        $this->assertFalse($parameters[1]->getDefaultValue());
+        $this->assertTrue($parameters[2]->getDefaultValue());
     }
 
     public function testGetDeclaringClassMethodReturnsObject(): void
@@ -217,12 +217,10 @@ class ReflectionParameterTest extends TestCase
         $this->assertSame($originalException->getMessage(), $parsedException->getMessage());
     }
 
-    public static function listOfDefaultGetters()
+    public static function listOfDefaultGetters(): \Iterator
     {
-        return [
-            ['getDefaultValue'],
-            ['getDefaultValueConstantName']
-        ];
+        yield ['getDefaultValue'];
+        yield ['getDefaultValueConstantName'];
     }
 
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]

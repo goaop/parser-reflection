@@ -80,14 +80,12 @@ class ReflectionFileTest extends TestCase
         $this->assertSame($shouldBeStrict, $reflectionFile->isStrictMode());
     }
 
-    public static function fileNameProvider()
+    public static function fileNameProvider(): \Iterator
     {
-        return [
-            '/Stub/FileWithClasses56.php'       => ['/Stub/FileWithClasses56.php', false],
-            '/Stub/FileWithClasses70.php'       => ['/Stub/FileWithClasses70.php', false],
-            '/Stub/FileWithClasses71.php'       => ['/Stub/FileWithClasses71.php', true],
-            '/Stub/FileWithGlobalNamespace.php' => ['/Stub/FileWithGlobalNamespace.php', true],
-        ];
+        yield '/Stub/FileWithClasses56.php' => ['/Stub/FileWithClasses56.php', false];
+        yield '/Stub/FileWithClasses70.php' => ['/Stub/FileWithClasses70.php', false];
+        yield '/Stub/FileWithClasses71.php' => ['/Stub/FileWithClasses71.php', true];
+        yield '/Stub/FileWithGlobalNamespace.php' => ['/Stub/FileWithGlobalNamespace.php', true];
     }
 
     public function testGetInterfaceNamesWithExtends(): void
@@ -104,6 +102,6 @@ class ReflectionFileTest extends TestCase
         $class = array_pop($classes);
 
         $interfaceNames = $class->getInterfaceNames();
-        $this->assertEquals([], $interfaceNames);
+        $this->assertSame([], $interfaceNames);
     }
 }

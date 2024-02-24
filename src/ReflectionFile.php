@@ -19,6 +19,7 @@ use PhpParser\Node\Stmt\Namespace_;
 
 /**
  * AST-based reflector for the source file
+ * @see \Go\ParserReflection\ReflectionFileTest
  */
 class ReflectionFile
 {

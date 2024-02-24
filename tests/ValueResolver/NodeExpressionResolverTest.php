@@ -31,9 +31,9 @@ class NodeExpressionResolverTest extends TestCase
         $expressionNodeTree = $this->parser->parse("<?php ('\\\\Date' . 'Time')::ATOM;");
         $expressionSolver = new NodeExpressionResolver(NULL);
         $expressionSolver->process($expressionNodeTree[0]);
-        $this->assertEquals(\DateTime::ATOM, $expressionSolver->getValue());
+        $this->assertSame(\DateTime::ATOM, $expressionSolver->getValue());
         $this->assertTrue($expressionSolver->isConstant());
-        $this->assertEquals('DateTime::ATOM', $expressionSolver->getConstantName());
+        $this->assertSame('DateTime::ATOM', $expressionSolver->getConstantName());
     }
 
     /**

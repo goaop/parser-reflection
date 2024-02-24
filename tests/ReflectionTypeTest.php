@@ -24,15 +24,15 @@ class ReflectionTypeTest extends TestCase
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
-        $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
+        $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();
         $this->assertCount(2, $nativeParamRefArr);
-        $this->assertEquals(\ReflectionParameter::class, get_class($nativeParamRefArr[0]));
+        $this->assertInstanceOf(\ReflectionParameter::class, $nativeParamRefArr[0]);
         $nativeTypeRef = $nativeParamRefArr[0]->getType();
-        $this->assertEquals('string', $nativeTypeRef->getName());
+        $this->assertSame('string', $nativeTypeRef->getName());
         $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
-        $this->assertEquals('string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
+        $this->assertSame('string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }
 
     /**
@@ -45,15 +45,15 @@ class ReflectionTypeTest extends TestCase
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithNullableScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
-        $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
+        $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();
         $this->assertCount(2, $nativeParamRefArr);
-        $this->assertEquals(\ReflectionParameter::class, get_class($nativeParamRefArr[0]));
+        $this->assertInstanceOf(\ReflectionParameter::class, $nativeParamRefArr[0]);
         $nativeTypeRef = $nativeParamRefArr[0]->getType();
-        $this->assertEquals('string', $nativeTypeRef->getName());
+        $this->assertSame('string', $nativeTypeRef->getName());
         $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
-        $this->assertEquals('?string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
+        $this->assertSame('?string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }
 
     /**
@@ -66,16 +66,16 @@ class ReflectionTypeTest extends TestCase
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringDefaultToNull');
-        $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
+        $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();
         $this->assertCount(1, $nativeParamRefArr);
-        $this->assertEquals(\ReflectionParameter::class, get_class($nativeParamRefArr[0]));
+        $this->assertInstanceOf(\ReflectionParameter::class, $nativeParamRefArr[0]);
         $nativeTypeRef = $nativeParamRefArr[0]->getType();
         $this->assertTrue($nativeTypeRef->allowsNull());
-        $this->assertEquals('string', $nativeTypeRef->getName());
+        $this->assertSame('string', $nativeTypeRef->getName());
         $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
-        $this->assertEquals('?string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
+        $this->assertSame('?string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }
 
     /**
@@ -88,15 +88,15 @@ class ReflectionTypeTest extends TestCase
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp80Features');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringArrayDefaultToNull');
-        $this->assertEquals(\ReflectionMethod::class, get_class($nativeMethodRef));
+        $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();
         $this->assertCount(1, $nativeParamRefArr);
-        $this->assertEquals(\ReflectionParameter::class, get_class($nativeParamRefArr[0]));
+        $this->assertInstanceOf(\ReflectionParameter::class, $nativeParamRefArr[0]);
         $nativeTypeRef = $nativeParamRefArr[0]->getType();
         $this->assertTrue($nativeTypeRef->allowsNull());
-        $this->assertEquals('array|string|null', $nativeTypeRef);
+        $this->assertSame('array|string|null', (string) $nativeTypeRef);
         $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
         $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
-        $this->assertEquals('array|string|null', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
+        $this->assertSame('array|string|null', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
     }
 }

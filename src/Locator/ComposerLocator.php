@@ -19,6 +19,7 @@ use Go\ParserReflection\ReflectionException;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
+ * @see \Go\ParserReflection\Locator\ComposerLocatorTest
  */
 class ComposerLocator implements LocatorInterface
 {

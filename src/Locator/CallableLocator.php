@@ -16,6 +16,7 @@ use Go\ParserReflection\LocatorInterface;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
+ * @see \Go\ParserReflection\Locator\CallableLocatorTest
  */
 class CallableLocator implements LocatorInterface
 {

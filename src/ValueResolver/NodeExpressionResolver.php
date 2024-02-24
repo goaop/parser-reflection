@@ -32,6 +32,7 @@ use ReflectionMethod;
 
 /**
  * Tries to resolve expression into value
+ * @see \Go\ParserReflection\ValueResolver\NodeExpressionResolverTest
  */
 class NodeExpressionResolver
 {

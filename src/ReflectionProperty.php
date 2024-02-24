@@ -23,6 +23,7 @@ use ReflectionProperty as BaseReflectionProperty;
 
 /**
  * AST-based reflection for class property
+ * @see \Go\ParserReflection\ReflectionPropertyTest
  */
 class ReflectionProperty extends BaseReflectionProperty
 {

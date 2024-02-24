@@ -21,6 +21,7 @@ use ReflectionMethod as BaseReflectionMethod;
 
 /**
  * AST-based reflection for the method in a class
+ * @see \Go\ParserReflection\ReflectionMethodTest
  */
 class ReflectionMethod extends BaseReflectionMethod
 {
