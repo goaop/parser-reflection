@@ -10,10 +10,7 @@ use TestParametersForRootNsClass;
 
 class ReflectionParameterTest extends TestCase
 {
-    /**
-     * @var ReflectionFile
-     */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -21,19 +18,17 @@ class ReflectionParameterTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('fileProvider')]
-    public function testGeneralInfoGetters($fileName): void
+    public function testGeneralInfoGetters(string $fileName): void
     {
         $this->setUpFile($fileName);
         $allNameGetters = [
-            'isArray', 'isCallable', 'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
+            'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
-            'isDefaultValueConstant', '__toString'
+            'isDefaultValueConstant', '__toString', 'isVariadic', 'hasType'
         ];
         $onlyWithDefaultValues = array_flip([
             'getDefaultValue', 'getDefaultValueConstantName', 'isDefaultValueConstant'
         ]);
-        $allNameGetters[] = 'isVariadic';
-        $allNameGetters[] = 'hasType';
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {

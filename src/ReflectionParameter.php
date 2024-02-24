@@ -14,6 +14,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\BinaryOp\Concat;
@@ -38,61 +39,46 @@ class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * Reflection function or method
-     *
-     * @var ReflectionFunctionAbstract
      */
-    private $declaringFunction;
+    private ?ReflectionFunctionAbstract $declaringFunction;
 
     /**
      * Stores the default value for node (if present)
-     *
-     * @var mixed
      */
-    private $defaultValue;
+    private mixed $defaultValue;
 
     /**
      * Whether or not default value is constant
-     *
-     * @var bool
      */
-    private $isDefaultValueConstant = false;
+    private bool $isDefaultValueConstant = false;
 
     /**
      * Name of the constant of default value
-     *
-     * @var string
      */
-    private $defaultValueConstantName;
+    private ?string $defaultValueConstantName;
 
     /**
      * Index of parameter in the list
-     *
-     * @var int
      */
-    private $parameterIndex;
+    private int $parameterIndex;
 
     /**
      * Concrete parameter node
-     *
-     * @var Param
      */
-    private $parameterNode;
+    private ?Param $parameterNode;
 
     /**
      * Initializes a reflection for the property
      *
      * @param string|array                $unusedFunctionName Name of the function/method
      * @param string                      $parameterName      Name of the parameter to reflect
-     * @param ?Param                      $parameterNode      Parameter definition node
-     * @param int                         $parameterIndex     Index of parameter
-     * @param ?ReflectionFunctionAbstract $declaringFunction
      */
     public function __construct(
         $unusedFunctionName,
         $parameterName,
         Param $parameterNode = null,
-        $parameterIndex = 0,
-        ReflectionFunctionAbstract $declaringFunction = null
+        int $parameterIndex = 0,
+        ?ReflectionFunctionAbstract $declaringFunction = null
     ) {
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
@@ -118,10 +104,8 @@ class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * Returns an AST-node for parameter
-     *
-     * @return Param
      */
-    public function getNode()
+    public function getNode(): ?Param
     {
         return $this->parameterNode;
     }
@@ -341,6 +325,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
+    #[Deprecated(reason: "Use ReflectionParameter::getType() instead.", since: "8.0")]
     public function isArray(): bool
     {
         $type = $this->parameterNode->type;
@@ -351,6 +336,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
+    #[Deprecated(reason: "Use ReflectionParameter::getType() instead.", since: "8.0")]
     public function isCallable(): bool
     {
         $type = $this->parameterNode->type;
