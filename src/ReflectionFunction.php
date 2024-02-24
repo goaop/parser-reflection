@@ -123,9 +123,7 @@ class ReflectionFunction extends BaseReflectionFunction
             $this->getStartLine(),
             $this->getEndLine(),
             count($this->getParameters()),
-            array_reduce($this->getParameters(), static function ($str, ReflectionParameter $param) {
-                return $str . "\n    " . $param;
-            }, '')
+            array_reduce($this->getParameters(), static fn($str, ReflectionParameter $param) => $str . "\n    " . $param, '')
         );
     }
 
