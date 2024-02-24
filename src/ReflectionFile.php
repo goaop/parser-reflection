@@ -60,7 +60,6 @@ class ReflectionFile
     /**
      * Returns a namespace from the file or false if no such a namespace
      *
-     * @param string $namespaceName
      *
      * @return bool|ReflectionFileNamespace
      */

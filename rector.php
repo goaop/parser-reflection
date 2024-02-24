@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
 use Rector\TypeDeclaration\Rector\ClassMethod\AddVoidReturnTypeWhereNoReturnRector;
 
 return RectorConfig::configure()
@@ -14,4 +15,5 @@ return RectorConfig::configure()
     // ->withPhpSets()
     ->withRules([
         AddVoidReturnTypeWhereNoReturnRector::class,
+        RemoveUselessParamTagRector::class,
     ]);

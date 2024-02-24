@@ -214,8 +214,6 @@ class ReflectionEngine
     /**
      * Parses class constants
      *
-     * @param string $fullClassName
-     * @param string $constantName
      * @return array Pair of [ClassConst and Const_] nodes
      */
     public static function parseClassConstant(string $fullClassName, string $constantName): array

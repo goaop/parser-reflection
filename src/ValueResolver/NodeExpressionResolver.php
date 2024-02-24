@@ -119,7 +119,6 @@ class NodeExpressionResolver
     /**
      * Resolves node into valid value
      *
-     * @param Node $node
      *
      * @return mixed
      */
