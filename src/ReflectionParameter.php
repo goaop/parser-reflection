@@ -399,20 +399,14 @@ class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * Returns if all following parameters have a default value definition.
-     *
-     * @throws ReflectionException If could not fetch declaring function reflection
      */
     protected function haveSiblingsDefaultValues(): bool
     {
         $function = $this->getDeclaringFunction();
-        if (null === $function) {
-            throw new ReflectionException('Could not get the declaring function reflection.');
-        }
 
-        /** @var BaseReflectionParameter[] $remainingParameters */
         $remainingParameters = array_slice($function->getParameters(), $this->parameterIndex + 1);
         foreach ($remainingParameters as $reflectionParameter) {
-            if (!$reflectionParameter->isDefaultValueAvailable()) {
+            if (!$reflectionParameter->isDefaultValueAvailable() && !$reflectionParameter->isVariadic()) {
                 return false;
             }
         }
