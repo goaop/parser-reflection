@@ -239,9 +239,10 @@ trait ReflectionClassLikeTrait
      */
     public function getConstructor(): ?ReflectionMethod
     {
-        $constructor = $this->getMethod('__construct');
-        if (!$constructor) {
-            return null;
+        try {
+            $constructor = $this->getMethod('__construct');
+        } catch (\ReflectionException) {
+            $constructor = null;
         }
 
         return $constructor;
@@ -344,28 +345,26 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
+     *
+     * @return ReflectionMethod
      */
-    #[\ReturnTypeWillChange]
-    public function getMethod(string $name)
+    public function getMethod(string $name): \ReflectionMethod
     {
-        $methods = $this->getMethods();
-        foreach ($methods as $method) {
+        foreach ($this->getMethods() as $method) {
             if ($method->getName() === $name) {
                 return $method;
             }
         }
 
-        return false;
+        throw new ReflectionException("Method " . $this->getName() . "::" . $name . " does not exist");
     }
 
     /**
-     * Returns list of reflection methods
+     * {@inheritdoc}
      *
-     * @param null|int $filter Optional filter
-     *
-     * @return \ReflectionMethod[]
+     * @return ReflectionMethod[]
      */
-    public function getMethods($filter = null): array
+    public function getMethods(int|null $filter = null): array
     {
         if (!isset($this->methods)) {
             $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this);
@@ -516,8 +515,7 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritdoc}
      */
-    #[\ReturnTypeWillChange]
-    public function getProperty(string $name)
+    public function getProperty(string $name): \ReflectionProperty
     {
         $properties = $this->getProperties();
         foreach ($properties as $property) {
@@ -526,7 +524,7 @@ trait ReflectionClassLikeTrait
             }
         }
 
-        return false;
+        throw new ReflectionException("Property " . $this->getName() . "::" . $name . " does not exist");
     }
 
     /**

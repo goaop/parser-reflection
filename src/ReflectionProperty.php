@@ -194,8 +194,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    #[\ReturnTypeWillChange]
-    public function getValue($object = null)
+    public function getValue(object|null $object = null): mixed
     {
         if (!isset($object)) {
             $solver = new NodeExpressionResolver($this->getDeclaringClass());
