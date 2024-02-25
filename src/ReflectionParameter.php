@@ -386,7 +386,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isPassedByReference(): bool
     {
-        return (bool) $this->parameterNode->byRef;
+        return $this->parameterNode->byRef;
     }
 
     /**
@@ -394,7 +394,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isVariadic(): bool
     {
-        return (bool) $this->parameterNode->variadic;
+        return $this->parameterNode->variadic;
     }
 
     /**
