@@ -378,6 +378,14 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
+    public function isPromoted(): bool
+    {
+        return $this->parameterNode->isPromoted();
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function isVariadic(): bool
     {
         return $this->parameterNode->variadic;

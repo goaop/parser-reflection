@@ -24,7 +24,7 @@ class ReflectionParameterTest extends TestCase
         $allNameGetters = [
             'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
-            'isDefaultValueConstant', '__toString', 'isVariadic', 'hasType'
+            'isDefaultValueConstant', '__toString', 'isVariadic', 'isPromoted', 'hasType'
         ];
         $onlyWithDefaultValues = array_flip([
             'getDefaultValue', 'getDefaultValueConstantName', 'isDefaultValueConstant'
