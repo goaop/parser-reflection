@@ -40,7 +40,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Reflection function or method
      */
-    private ?ReflectionFunctionAbstract $declaringFunction;
+    private ReflectionFunctionAbstract $declaringFunction;
 
     /**
      * Stores the default value for node (if present)
@@ -54,6 +54,8 @@ class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * Name of the constant of default value
+     *
+     * @see $isDefaultValueConstant
      */
     private ?string $defaultValueConstantName;
 
@@ -65,20 +67,17 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Concrete parameter node
      */
-    private ?Param $parameterNode;
+    private Param $parameterNode;
 
     /**
      * Initializes a reflection for the property
-     *
-     * @param string|array                $unusedFunctionName Name of the function/method
-     * @param string                      $parameterName      Name of the parameter to reflect
      */
     public function __construct(
-        $unusedFunctionName,
-        $parameterName,
-        Param $parameterNode = null,
-        int $parameterIndex = 0,
-        ?ReflectionFunctionAbstract $declaringFunction = null
+        string|array $unusedFunctionName,
+        string $parameterName,
+        Param $parameterNode,
+        int $parameterIndex,
+        ReflectionFunctionAbstract $declaringFunction
     ) {
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
@@ -105,7 +104,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * Returns an AST-node for parameter
      */
-    public function getNode(): ?Param
+    public function getNode(): Param
     {
         return $this->parameterNode;
     }
@@ -349,20 +348,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isDefaultValueAvailable(): bool
     {
-        if (!isset($this->parameterNode->default)) {
-            return false;
-        }
-
-        // start from PHP 8.1, isDefaultValueAvailable() returns false if next parameter is required
-        // see https://github.com/php/php-src/issues/8090
-        $parameters = $this->declaringFunction->getNode()->getParams();
-        for ($key = $this->parameterIndex + 1; $key < count($parameters); ++$key) {
-            if (! $parameters[$key]->default instanceof Expr) {
-                return false;
-            }
-        }
-
-        return true;
+        return isset($this->parameterNode->default) && $this->allSiblingsAreOptional();
     }
 
     /**
@@ -378,7 +364,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isOptional(): bool
     {
-        return $this->isVariadic() || ($this->isDefaultValueAvailable() && $this->haveSiblingsDefaultValues());
+        return $this->isVariadic() || $this->isDefaultValueAvailable();
     }
 
     /**
@@ -398,15 +384,15 @@ class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
-     * Returns if all following parameters have a default value definition.
+     * Returns true if all following parameters are optional (either have values or variadic)
      */
-    protected function haveSiblingsDefaultValues(): bool
+    private function allSiblingsAreOptional(): bool
     {
-        $function = $this->getDeclaringFunction();
-
-        $remainingParameters = array_slice($function->getParameters(), $this->parameterIndex + 1);
-        foreach ($remainingParameters as $reflectionParameter) {
-            if (!$reflectionParameter->isDefaultValueAvailable() && !$reflectionParameter->isVariadic()) {
+        // start from PHP 8.1, isDefaultValueAvailable() returns false if next parameter is required
+        // see https://github.com/php/php-src/issues/8090
+        $parameters = $this->declaringFunction->getNode()->getParams();
+        for ($nextParamIndex = $this->parameterIndex + 1; $nextParamIndex < count($parameters); ++$nextParamIndex) {
+            if (!isset($parameters[$nextParamIndex]->default) && !$parameters[$nextParamIndex]->variadic) {
                 return false;
             }
         }
