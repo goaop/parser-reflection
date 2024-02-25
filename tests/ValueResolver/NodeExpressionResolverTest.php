@@ -10,14 +10,11 @@ use PhpParser\ParserFactory;
 
 class NodeExpressionResolverTest extends TestCase
 {
-    /**
-     * @var null|Parser
-     */
-    protected $parser = null;
+    protected Parser $parser;
 
     protected function setUp(): void
     {
-        $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $this->parser = (new ParserFactory)->createForHostVersion();
     }
 
     /**

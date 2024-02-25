@@ -15,9 +15,9 @@ use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\PropertyProperty;
 use Reflection;
 use ReflectionProperty as BaseReflectionProperty;
 
@@ -41,7 +41,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Concrete property node
      *
-     * @var PropertyProperty
+     * @var PropertyItem
      */
     private $propertyNode;
 
@@ -58,13 +58,13 @@ class ReflectionProperty extends BaseReflectionProperty
      * @param string            $className    Name of the class with properties
      * @param string            $propertyName Name of the property to reflect
      * @param ?Property         $propertyType Property type definition node
-     * @param ?PropertyProperty $propertyNode Concrete property definition (value, name)
+     * @param ?PropertyItem     $propertyNode Concrete property definition (value, name)
      */
     public function __construct(
         $className,
         $propertyName,
         Property $propertyType = null,
-        PropertyProperty $propertyNode = null
+        PropertyItem $propertyNode = null
     ) {
         $this->className = ltrim($className, '\\');
         if (!$propertyType || !$propertyNode) {
@@ -81,7 +81,7 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Returns an AST-node for property
      *
-     * @return PropertyProperty
+     * @return PropertyItem
      */
     public function getNode()
     {

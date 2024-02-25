@@ -56,26 +56,11 @@ class ReflectionEngine
      */
     protected static $traverser;
 
-    /**
-     * @var null|Lexer
-     */
-    protected static $lexer;
-
     private function __construct() {}
 
     public static function init(LocatorInterface $locator): void
     {
-        self::$lexer = new Lexer(['usedAttributes' => [
-            'comments',
-            'startLine',
-            'endLine',
-            'startTokenPos',
-            'endTokenPos',
-            'startFilePos',
-            'endFilePos'
-        ]]);
-
-        self::$parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, self::$lexer);
+        self::$parser = (new ParserFactory())->createForHostVersion();
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
@@ -191,7 +176,7 @@ class ReflectionEngine
     /**
      * Parses class property
      *
-     * @return array Pair of [Property and PropertyProperty] nodes
+     * @return array Pair of [Property and PropertyItem] nodes
      */
     public static function parseClassProperty(string $fullClassName, string $propertyName): array
     {
@@ -283,13 +268,5 @@ class ReflectionEngine
         }
 
         throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
-    }
-
-    /**
-     * @return Lexer
-     */
-    public static function getLexer(): ?Lexer
-    {
-        return self::$lexer;
     }
 }

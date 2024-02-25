@@ -14,7 +14,6 @@ namespace Go\ParserReflection\NodeVisitor;
 
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
 use PhpParser\Node;
-use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -48,7 +47,7 @@ class StaticVariablesCollector extends NodeVisitorAbstract
     {
         // There may be internal closures, we do not need to look at them
         if ($node instanceof Node\Expr\Closure) {
-            return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+            return self::DONT_TRAVERSE_CHILDREN;
         }
 
         if ($node instanceof Node\Stmt\Static_) {
