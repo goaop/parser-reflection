@@ -15,6 +15,7 @@ use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Property;
@@ -251,11 +252,9 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function setAccessible($accessible): void
+    #[Deprecated(reason: 'This method is no-op starting from PHP 8.1', since: '8.1')]
+    public function setAccessible(bool $accessible): void
     {
-        $this->initializeInternalReflection();
-
-        parent::setAccessible($accessible);
     }
 
     /**

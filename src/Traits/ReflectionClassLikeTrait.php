@@ -891,9 +891,6 @@ trait ReflectionClassLikeTrait
 
         $reflectionProperties = $this->getProperties(ReflectionProperty::IS_STATIC);
         foreach ($reflectionProperties as $reflectionProperty) {
-            if (!$reflectionProperty instanceof ReflectionProperty && !$reflectionProperty->isPublic()) {
-                $reflectionProperty->setAccessible(true);
-            }
             $properties[$reflectionProperty->getName()] = $reflectionProperty->getValue();
         }
 
