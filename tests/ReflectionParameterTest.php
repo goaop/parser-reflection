@@ -78,17 +78,17 @@ class ReflectionParameterTest extends TestCase
 
         $parameters = $parsedFunction->getParameters();
         $this->assertNull($parameters[0 /* array $arrayParam*/]->getClass());
-        $this->assertNull($parameters[3 /* callable $callableParam */]->getClass());
+        $this->assertNull($parameters[1 /* callable $callableParam */]->getClass());
 
-        $objectParam = $parameters[5 /* \stdClass $objectParam */]->getClass();
+        $objectParam = $parameters[2 /* \stdClass $objectParam */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $objectParam);
         $this->assertSame(\stdClass::class, $objectParam->getName());
 
-        $typehintedParamWithNs = $parameters[7 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
+        $typehintedParamWithNs = $parameters[3 /* ReflectionParameter $typehintedParamWithNs */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $typehintedParamWithNs);
         $this->assertSame(ReflectionParameter::class, $typehintedParamWithNs->getName());
 
-        $internalInterfaceParam = $parameters[12 /* \Traversable $traversable */]->getClass();
+        $internalInterfaceParam = $parameters[5 /* \Traversable $traversable */]->getClass();
         $this->assertInstanceOf(\ReflectionClass::class, $internalInterfaceParam);
         $this->assertSame(\Traversable::class, $internalInterfaceParam->getName());
     }
@@ -184,7 +184,7 @@ class ReflectionParameterTest extends TestCase
      * @param string $getterName Name of the getter to call
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('listOfDefaultGetters')]
-    public function testGetDefaultValueThrowsAnException($getterName): void
+    public function testGetDefaultValueThrowsAnException(string $getterName): void
     {
         $originalException = null;
         $parsedException   = null;
@@ -277,10 +277,8 @@ class ReflectionParameterTest extends TestCase
 
     /**
      * Setups file for parsing
-     *
-     * @param string $fileName File name to use
      */
-    private function setUpFile($fileName): void
+    private function setUpFile(string $fileName): void
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

@@ -349,7 +349,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function isDefaultValueAvailable(): bool
     {
-        if (! isset($this->parameterNode->default)) {
+        if (!isset($this->parameterNode->default)) {
             return false;
         }
 

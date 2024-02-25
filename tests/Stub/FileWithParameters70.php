@@ -14,9 +14,9 @@ namespace Go\ParserReflection\Stub;
 function miscScalarParameters(
     int $acceptsInteger,
     string $acceptsString,
-    float $acceptsFloat = \INF,
     bool $acceptsBool,
     int $acceptsVariadicInteger,
+    float $acceptsFloat = \INF,
     string ...$acceptsDefaultString
 ) {
 }
