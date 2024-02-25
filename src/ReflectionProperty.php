@@ -31,26 +31,14 @@ class ReflectionProperty extends BaseReflectionProperty
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;
 
-    /**
-     * Type of property node
-     *
-     * @var Property
-     */
-    private $propertyTypeNode;
+    private Property $propertyNode;
 
-    /**
-     * Concrete property node
-     *
-     * @var PropertyItem
-     */
-    private $propertyNode;
+    private PropertyItem $propertyItem;
 
     /**
      * Name of the class
-     *
-     * @var string
      */
-    private $className;
+    private string $className;
 
     /**
      * Initializes a reflection for the property
@@ -62,7 +50,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function __construct(
         $className,
-        $propertyName,
+        string $propertyName,
         Property $propertyType = null,
         PropertyItem $propertyNode = null
     ) {
@@ -71,31 +59,27 @@ class ReflectionProperty extends BaseReflectionProperty
             [$propertyType, $propertyNode] = ReflectionEngine::parseClassProperty($className, $propertyName);
         }
 
-        $this->propertyTypeNode = $propertyType;
-        $this->propertyNode     = $propertyNode;
+        $this->propertyNode = $propertyType;
+        $this->propertyItem = $propertyNode;
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
     }
 
     /**
-     * Returns an AST-node for property
-     *
-     * @return PropertyItem
+     * Returns an AST-node for property item
      */
-    public function getNode()
+    public function getNode(): PropertyItem
     {
-        return $this->propertyNode;
+        return $this->propertyItem;
     }
 
     /**
      * Returns an AST-node for property type
-     *
-     * @return Property
      */
-    public function getTypeNode()
+    public function getTypeNode(): Property
     {
-        return $this->propertyTypeNode;
+        return $this->propertyNode;
     }
 
     /**
@@ -104,7 +88,7 @@ class ReflectionProperty extends BaseReflectionProperty
     public function __debugInfo(): array
     {
         return [
-            'name'  => isset($this->propertyNode) ? $this->propertyNode->name->toString() : 'unknown',
+            'name'  => isset($this->propertyItem) ? $this->propertyItem->name->toString() : 'unknown',
             'class' => $this->className
         ];
     }
@@ -156,7 +140,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getDocComment(): string|false
     {
-        $docBlock = $this->propertyTypeNode->getDocComment();
+        $docBlock = $this->propertyNode->getDocComment();
 
         return $docBlock ? $docBlock->getText() : false;
     }
@@ -188,7 +172,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getName(): string
     {
-        return $this->propertyNode->name->toString();
+        return $this->propertyItem->name->toString();
     }
 
     /**
@@ -198,10 +182,10 @@ class ReflectionProperty extends BaseReflectionProperty
     {
         if (!isset($object)) {
             $solver = new NodeExpressionResolver($this->getDeclaringClass());
-            if (!isset($this->propertyNode->default)) {
+            if (!isset($this->propertyItem->default)) {
                 return null;
             }
-            $solver->process($this->propertyNode->default);
+            $solver->process($this->propertyItem->default);
 
             return $solver->getValue();
         }
@@ -226,7 +210,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isPrivate(): bool
     {
-        return $this->propertyTypeNode->isPrivate();
+        return $this->propertyNode->isPrivate();
     }
 
     /**
@@ -234,7 +218,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isProtected(): bool
     {
-        return $this->propertyTypeNode->isProtected();
+        return $this->propertyNode->isProtected();
     }
 
     /**
@@ -242,7 +226,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isPublic(): bool
     {
-        return $this->propertyTypeNode->isPublic();
+        return $this->propertyNode->isPublic();
     }
 
     /**
@@ -250,7 +234,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isStatic(): bool
     {
-        return $this->propertyTypeNode->isStatic();
+        return $this->propertyNode->isStatic();
     }
 
     /**
