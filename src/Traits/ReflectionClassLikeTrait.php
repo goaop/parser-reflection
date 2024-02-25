@@ -767,6 +767,16 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritDoc}
      */
+    public function isReadOnly(): bool
+    {
+        $isReadOnly = $this->classLikeNode instanceof Class_ && $this->classLikeNode->isReadonly();
+
+        return $isReadOnly;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function isInstance($object): bool
     {
         if (!is_object($object)) {

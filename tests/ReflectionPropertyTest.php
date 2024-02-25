@@ -138,7 +138,7 @@ class ReflectionPropertyTest extends AbstractTestCase
     {
         $allNameGetters = [
             'isDefault', 'getName', 'getModifiers', 'getDocComment',
-            'isPrivate', 'isProtected', 'isPublic', 'isStatic', '__toString'
+            'isPrivate', 'isProtected', 'isPublic', 'isStatic', 'isReadOnly', '__toString'
         ];
 
         return $allNameGetters;

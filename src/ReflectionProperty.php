@@ -163,6 +163,9 @@ class ReflectionProperty extends BaseReflectionProperty
         if ($this->isStatic()) {
             $modifiers += self::IS_STATIC;
         }
+        if ($this->isReadOnly()) {
+            $modifiers += self::IS_READONLY;
+        }
 
         return $modifiers;
     }
@@ -235,6 +238,14 @@ class ReflectionProperty extends BaseReflectionProperty
     public function isStatic(): bool
     {
         return $this->propertyNode->isStatic();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isReadOnly(): bool
+    {
+        return $this->propertyNode->isReadonly() || $this->getDeclaringClass()->isReadOnly();
     }
 
     /**
