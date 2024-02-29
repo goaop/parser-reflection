@@ -29,7 +29,6 @@ trait AttributeResolverTrait
             $node = $this->getNode();
         }
 
-        $node = $this->getNode();
         $attributes = [];
         $nodeExpressionResolver = new NodeExpressionResolver($this);
 
