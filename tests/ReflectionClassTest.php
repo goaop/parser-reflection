@@ -324,7 +324,7 @@ class ReflectionClassTest extends AbstractTestCase
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable', 'isReadOnly',
             'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
             'getConstants', 'getTraitNames', 'getInterfaceNames', 'getStaticProperties',
-            'getDefaultProperties', 'getTraitAliases'
+            'getDefaultProperties', 'getTraitAliases', 'isEnum'
         ];
 
         return $allNameGetters;
