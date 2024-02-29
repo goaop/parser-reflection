@@ -827,6 +827,14 @@ trait ReflectionClassLikeTrait
      */
     public function isIterateable(): bool
     {
+        return $this->isIterable();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isIterable(): bool
+    {
         return $this->implementsInterface('Traversable');
     }
 

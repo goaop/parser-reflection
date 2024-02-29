@@ -322,7 +322,7 @@ class ReflectionClassTest extends AbstractTestCase
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace',
             'isAbstract', 'isCloneable', 'isFinal', 'isInstantiable', 'isReadOnly',
-            'isInterface', 'isInternal', 'isIterateable', 'isTrait', 'isUserDefined',
+            'isInterface', 'isInternal', 'isIterateable', 'isIterable', 'isTrait', 'isUserDefined',
             'getConstants', 'getTraitNames', 'getInterfaceNames', 'getStaticProperties',
             'getDefaultProperties', 'getTraitAliases', 'isEnum'
         ];
