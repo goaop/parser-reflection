@@ -34,10 +34,10 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Initializes reflection instance
      *
-     * @param string|object $argument      Class name or instance of object
+     * @param object|string $argument      Class name or instance of object
      * @param ?ClassLike    $classLikeNode AST node for class
      */
-    public function __construct($argument, ClassLike $classLikeNode = null)
+    public function __construct(object|string $argument, ?ClassLike $classLikeNode = null)
     {
         $fullClassName   = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts  = explode('\\', $fullClassName);
@@ -63,7 +63,7 @@ class ReflectionClass extends InternalReflectionClass
         $interfaceField = $isInterface ? 'extends' : 'implements';
         $hasInterfaces  = in_array($interfaceField, $classLikeNode->getSubNodeNames(), true);
         $implementsList = $hasInterfaces ? $classLikeNode->$interfaceField : [];
-        if ($implementsList) {
+        if (count($implementsList) > 0) {
             foreach ($implementsList as $implementNode) {
                 if ($implementNode instanceof FullyQualified) {
                     $implementName = $implementNode->toString();
@@ -139,12 +139,11 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Create a ReflectionClass for a given class name.
      *
-     * @param string $className
-     *     The name of the class to create a reflection for.
+     * @param string $className The name of the class to create a reflection for.
      *
      * @return InternalReflectionClass The appropriate reflection object.
      */
-    protected function createReflectionForClass(string $className)
+    protected function createReflectionForClass(string $className): InternalReflectionClass
     {
         return class_exists($className, false) ? new parent($className) : new static($className);
     }
