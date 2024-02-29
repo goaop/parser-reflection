@@ -381,16 +381,17 @@ class ReflectionFileNamespace
                     && $namespaceLevelNode->expr->name instanceof Name
                     && (string)$namespaceLevelNode->expr->name === 'define'
                 ) {
-                    $functionCallNode = $namespaceLevelNode->expr;
-                    $expressionSolver->process($functionCallNode->args[0]->value);
-                    $constantName = $expressionSolver->getValue();
+                    try {
+                        $functionCallNode = $namespaceLevelNode->expr;
+                        $expressionSolver->process($functionCallNode->args[0]->value);
+                        $constantName = $expressionSolver->getValue();
 
-                    // Ignore constants, for which name can't be determined.
-                    if (!empty($constantName)) {
                         $expressionSolver->process($functionCallNode->args[1]->value);
                         $constantValue = $expressionSolver->getValue();
 
                         $constants[$constantName] = $constantValue;
+                    } catch (\Throwable) {
+                        // Ignore all possible errors during evaluation of runtime constants defined in the code
                     }
                 }
             }

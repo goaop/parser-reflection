@@ -16,6 +16,7 @@ function miscScalarParameters(
     string $acceptsString,
     bool $acceptsBool,
     int $acceptsVariadicInteger,
+    array $acceptsArray = ['some' => ['value' => 'for', 'array' => 'to dump']],
     float $acceptsFloat = \INF,
     string ...$acceptsDefaultString
 ) {

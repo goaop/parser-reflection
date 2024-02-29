@@ -19,15 +19,15 @@ define('BOOLEAN_CONST', true);
 test_func_call('AA', 'bb');
 
 define('EXPRESSION_CONST', 5 > 7);
-define('FUNCTION_CONST', mktime(12, 33));
+define('FUNCTION_CONST', mktime(hour: 12, minute: 33, second: 00));
 
 // Conditionally defined constant won't be detected.
 if (true) {
     define('TRUE_CONST', 1);
 }
 
-// Constants with names, that can't be resolved are ignored.
-define(get_name(), true);
+// Constants defined with dynamic names are partially supported
+define(str_repeat('A', times: 10), true);
 
 // Ignore function calls with dynamic function names.
 $define('TEST', 5);

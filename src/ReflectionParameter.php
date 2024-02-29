@@ -69,6 +69,10 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     private Param $parameterNode;
 
+    private bool $isDefaultValueConstExpr;
+
+    private ?string $defaultValueConstExpr;
+
     /**
      * Initializes a reflection for the property
      */
@@ -93,11 +97,14 @@ class ReflectionParameter extends BaseReflectionParameter
                 $context = $declaringFunction;
             }
 
-            $expressionSolver = new NodeExpressionResolver($context, true);
+            $expressionSolver = new NodeExpressionResolver($context);
             $expressionSolver->process($this->parameterNode->default);
+
             $this->defaultValue             = $expressionSolver->getValue();
             $this->isDefaultValueConstant   = $expressionSolver->isConstant();
             $this->defaultValueConstantName = $expressionSolver->getConstantName();
+            $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
+            $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
         }
     }
 
@@ -129,22 +136,13 @@ class ReflectionParameter extends BaseReflectionParameter
         $hasDefaultValue = $this->isDefaultValueAvailable();
         $defaultValue    = '';
         if ($hasDefaultValue) {
-            $defaultValue = $this->getDefaultValue();
-
-            if ($this->parameterNode->default instanceof Array_) {
-                $this->parameterNode->default->setAttribute('kind', Array_::KIND_SHORT);
-                $printer = new Standard(['shortArraySyntax' => true]);
-                $defaultValue = $printer->prettyPrintExpr($this->parameterNode->default);
-            } elseif (($this->parameterNode->default instanceof Concat
-                    || $this->parameterNode->default instanceof ClassConstFetch
-                    || is_string($defaultValue)
-                ) && $this->declaringFunction instanceof \ReflectionMethod
-                ) {
-                    if ($this->parameterNode->default instanceof ClassConstFetch && is_string($defaultValue) && str_contains($defaultValue, '\\')) {
-                        $defaultValue = str_replace('\\', '\\', var_export($defaultValue, true));
-                    }
+            // For constant fetch expressions, PHP renders now expression
+            if ($this->isDefaultValueConstExpr) {
+                $defaultValue = $this->defaultValueConstExpr;
+            } elseif ($this->isDefaultValueConstant){
+                $defaultValue = $this->defaultValueConstantName;
             } else {
-                $defaultValue = var_export($defaultValue, true);
+                $defaultValue = var_export($this->getDefaultValue(), true);
             }
         }
 

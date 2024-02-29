@@ -269,4 +269,9 @@ class ReflectionEngine
 
         throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
     }
+
+    public static function getParser(): ?Parser
+    {
+        return self::$parser;
+    }
 }

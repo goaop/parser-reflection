@@ -41,7 +41,7 @@ class NodeExpressionResolverTest extends TestCase
     public function testResolveConstFetchFromVariableAsClass(): void
     {
         $this->expectException(\Go\ParserReflection\ReflectionException::class);
-        $this->expectExceptionMessage('Method Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveExprVariable() not found trying to resolve class constant');
+        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveExprVariable method');
 
         $expressionNodeTree = $this->parser->parse("<?php \$someVariable::FOO;");
         $expressionSolver = new NodeExpressionResolver(NULL);
@@ -56,7 +56,7 @@ class NodeExpressionResolverTest extends TestCase
     public function testResolveConstFetchFromNonExprAsClass(): void
     {
         $this->expectException(\Go\ParserReflection\ReflectionException::class);
-        $this->expectExceptionMessage('Unable to resolve class constant');
+        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveStmtIf method');
 
         $expressionNodeTree = $this->parser->parse("<?php ClassNameToReplace::Bar;");
         $notAnExpressionNodeTree = $this->parser->parse("<?php if (true) { \$baz = 3; }");

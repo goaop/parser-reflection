@@ -108,7 +108,7 @@ class ReflectionFileNamespaceTest extends TestCase
         $reflectionFileNamespace = $reflectionFile->getFileNamespace('');
 
         $this->assertSame(
-            array(
+            [
                 // Scalar types are handled.
                 'INT_CONST' => 5,
                 'STRING_CONST' => 'text',
@@ -116,8 +116,9 @@ class ReflectionFileNamespaceTest extends TestCase
 
                 // Expressions are handled partially.
                 'EXPRESSION_CONST' => false,
-                'FUNCTION_CONST' => null,
-            ),
+                'FUNCTION_CONST' => mktime(hour: 12, minute: 33, second: 00),
+                'AAAAAAAAAA' => true
+            ],
             $reflectionFileNamespace->getConstants(true)
         );
     }
