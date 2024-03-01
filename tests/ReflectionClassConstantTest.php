@@ -11,10 +11,7 @@ use Go\ParserReflection\Stub\ClassWithPhp71Features;
 
 class ReflectionClassConstantTest extends TestCase
 {
-    /**
-     * @var ReflectionFile
-     */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -31,6 +28,7 @@ class ReflectionClassConstantTest extends TestCase
             'isPrivate',
             'isProtected',
             'isPublic',
+            'isFinal',
             '__toString'
         ];
 

@@ -31,32 +31,21 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
     /**
      * Concrete class constant node
-     *
-     * @var ClassConst
      */
-    private $classConstantNode;
+    private ClassConst $classConstantNode;
 
-    /**
-     * @var Const_
-     */
-    private $constNode;
+    private Const_ $constNode;
 
-    /**
-     * Name of the class
-     *
-     * @var string
-     */
-    private $className;
+    private string $className;
+
+    private mixed $value;
 
     /**
      * Parses class constants from the concrete class node
      *
-     * @param ClassLike $classLikeNode Class-like node
-     * @param string $reflectionClassName FQN of the class
-     *
-     * @return array|ReflectionClassConstant[]
+     * @return ReflectionClassConstant[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, string $reflectionClassName): array
+    public static function collectFromClassNode(ClassLike $classLikeNode, string $reflectionClassFQN): array
     {
         $classConstants = [];
 
@@ -65,7 +54,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
                 foreach ($classLevelNode->consts as $const) {
                     $classConstName = $const->name->toString();
                     $classConstants[$classConstName] = new ReflectionClassConstant(
-                        $reflectionClassName,
+                        $reflectionClassFQN,
                         $classConstName,
                         $classLevelNode,
                         $const
@@ -79,17 +68,12 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
     /**
      * Initializes a reflection for the class constant
-     *
-     * @param string      $className         Name of the class
-     * @param string      $classConstantName Name of the class constant to reflect
-     * @param ?ClassConst $classConstNode    ClassConstant definition node
-     * @param Const_|null $constNode         Concrete const definition node
      */
     public function __construct(
         string $className,
         string $classConstantName,
-        ClassConst $classConstNode = null,
-        Const_ $constNode = null
+        ?ClassConst $classConstNode = null,
+        ?Const_ $constNode = null
     ) {
         $this->className = ltrim($className, '\\');
 
@@ -101,6 +85,11 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
         $this->classConstantNode = $classConstNode;
         $this->constNode = $constNode;
+
+        $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
+        $expressionSolver->process($this->constNode->value);
+
+        $this->value = $expressionSolver->getValue();
     }
 
     /**
@@ -139,13 +128,16 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     {
         $modifiers = 0;
         if ($this->isPublic()) {
-            $modifiers += ReflectionMethod::IS_PUBLIC;
+            $modifiers += BaseReflectionClassConstant::IS_PUBLIC;
         }
         if ($this->isProtected()) {
-            $modifiers += ReflectionMethod::IS_PROTECTED;
+            $modifiers += BaseReflectionClassConstant::IS_PROTECTED;
         }
         if ($this->isPrivate()) {
-            $modifiers += ReflectionMethod::IS_PRIVATE;
+            $modifiers += BaseReflectionClassConstant::IS_PRIVATE;
+        }
+        if ($this->isFinal()) {
+            $modifiers += BaseReflectionClassConstant::IS_FINAL;
         }
 
         return $modifiers;
@@ -164,9 +156,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function getValue(): mixed
     {
-        $solver = new NodeExpressionResolver($this->getDeclaringClass());
-        $solver->process($this->constNode->value);
-        return $solver->getValue();
+        return $this->value;
     }
 
     /**
@@ -191,6 +181,14 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     public function isPublic(): bool
     {
         return $this->classConstantNode->isPublic();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isFinal(): bool
+    {
+        return $this->classConstantNode->isFinal();
     }
 
     /**
