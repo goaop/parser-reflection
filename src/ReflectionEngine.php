@@ -226,7 +226,7 @@ class ReflectionEngine
      *
      * @return Node[]
      */
-    public static function parseFile(string $fileName, ?string $fileContent = null)
+    public static function parseFile(string $fileName, ?string $fileContent = null): array
     {
         $fileName = PathResolver::realpath($fileName);
         if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
@@ -240,12 +240,12 @@ class ReflectionEngine
         if (!isset($fileContent)) {
             $fileContent = file_get_contents($fileName);
         }
-        $treeNode = self::$parser->parse($fileContent);
-        $treeNode = self::$traverser->traverse($treeNode);
+        $treeNodes = self::$parser->parse($fileContent);
+        $treeNodes = self::$traverser->traverse($treeNodes);
 
-        self::$parsedFiles[$fileName] = $treeNode;
+        self::$parsedFiles[$fileName] = $treeNodes;
 
-        return $treeNode;
+        return $treeNodes;
     }
 
     /**

@@ -43,8 +43,9 @@ class ReflectionFileTest extends TestCase
         $reflectionFileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
         $this->assertInstanceOf(ReflectionFileNamespace::class, $reflectionFileNamespace);
 
-        $reflectionFileNamespace = $this->parsedRefFile->getFileNamespace('Unknown');
-        $this->assertFalse($reflectionFileNamespace);
+        $this->expectException(ReflectionException::class);
+        $this->expectExceptionMessageMatches('/^Could not find the namespace Unknown in the file/');
+        $this->parsedRefFile->getFileNamespace('Unknown');
     }
 
     public function testHasFileNamespace(): void

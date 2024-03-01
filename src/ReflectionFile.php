@@ -26,30 +26,27 @@ class ReflectionFile
 
     /**
      * Name of the file for reflection
-     *
-     * @var string
      */
-    protected $fileName;
+    protected string $fileName;
 
     /**
      * List of namespaces in the file
      *
-     * @var ReflectionFileNamespace[]|array
+     * @var ReflectionFileNamespace[]
      */
-    protected $fileNamespaces;
+    protected array $fileNamespaces;
 
     /**
      * Top-level nodes for the file
      *
      * @var Node[]
      */
-    private $topLevelNodes;
+    private array $topLevelNodes;
 
     /**
      * ReflectionFile constructor.
      *
-     * @param string            $fileName      Name of the file to reflect
-     * @param null|array|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
+     * @param null|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
      */
     public function __construct(string $fileName, ?array $topLevelNodes = null)
     {
@@ -61,22 +58,21 @@ class ReflectionFile
     /**
      * Returns a namespace from the file or false if no such a namespace
      *
-     *
-     * @return bool|ReflectionFileNamespace
+     * @throws ReflectionException If namespace doesn't exists in the file
      */
-    public function getFileNamespace(string $namespaceName)
+    public function getFileNamespace(string $namespaceName): ReflectionFileNamespace
     {
         if ($this->hasFileNamespace($namespaceName)) {
             return $this->fileNamespaces[$namespaceName];
         }
 
-        return false;
+        throw new ReflectionException("Could not find the namespace " . $namespaceName . " in the file " . $this->fileName);
     }
 
     /**
      * Gets the list of namespaces in the file
      *
-     * @return array|ReflectionFileNamespace[]
+     * @return ReflectionFileNamespace[]
      */
     public function getFileNamespaces(): array
     {
@@ -100,7 +96,7 @@ class ReflectionFile
      *
      * @return Node[]
      */
-    public function getNodes(): ?array
+    public function getNodes(): array
     {
         return $this->topLevelNodes;
     }
