@@ -49,7 +49,9 @@ class ReflectionNamedType extends BaseReflectionNamedType
      */
     public function __toString(): string
     {
-        return $this->type;
+        $allowsNull = $this->allowsNull && $this->type !== 'null';
+
+        return $allowsNull ? '?' . $this->type : $this->type;
     }
 
     /**
