@@ -18,7 +18,7 @@ use Go\ParserReflection\ReflectionClassConstant;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;

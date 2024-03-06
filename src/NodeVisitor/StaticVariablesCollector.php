@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection\NodeVisitor;
 
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
 

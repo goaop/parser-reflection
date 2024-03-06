@@ -39,7 +39,11 @@ class ReflectionClassTest extends AbstractTestCase
             $parsedModifiers   = $parsedRefClass->getModifiers() & $mask;
             $originalModifiers = $originalRefClass->getModifiers() & $mask;
 
-            $this->assertSame($originalModifiers, $parsedModifiers);
+            $this->assertSame(
+                $originalModifiers,
+                $parsedModifiers,
+                "Modifiers for the {$parsedRefClass->name} should be equal"
+            );
         }
     }
 

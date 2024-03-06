@@ -13,7 +13,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;

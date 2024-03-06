@@ -14,10 +14,13 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use JetBrains\PhpStorm\Deprecated;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Property;
 use Reflection;
 use ReflectionProperty as BaseReflectionProperty;
@@ -41,6 +44,18 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     private string $className;
 
+    private \ReflectionUnionType|\ReflectionNamedType|null|\ReflectionIntersectionType $type = null;
+
+    private mixed $defaultValue = null;
+
+    private bool $isDefaultValueConstant = false;
+
+    private ?string $defaultValueConstantName;
+
+    private bool $isDefaultValueConstExpr = false;
+
+    private ?string $defaultValueConstExpr;
+
     /**
      * Initializes a reflection for the property
      *
@@ -62,6 +77,24 @@ class ReflectionProperty extends BaseReflectionProperty
 
         $this->propertyNode = $propertyType;
         $this->propertyItem = $propertyNode;
+
+        if ($this->hasType()) {
+            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver->process($this->propertyNode->type);
+
+            $this->type = $typeResolver->getType();
+        }
+
+        if (isset($this->propertyItem->default)) {
+            $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
+            $expressionSolver->process($this->propertyItem->default);
+
+            $this->defaultValue             = $expressionSolver->getValue();
+            $this->isDefaultValueConstant   = $expressionSolver->isConstant();
+            $this->defaultValueConstantName = $expressionSolver->getConstantName();
+            $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
+            $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
+        }
 
         // Let's unset original read-only properties to have a control over them via __get
         unset($this->name, $this->class);
@@ -99,32 +132,26 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function __toString(): string
     {
-        $defaultValueDisplay = '';
-
-        if ($this->isDefault()) {
-            $this->__initialize();
-            $defaultValue = $this->getDefaultValue();
-
-            $originalDisplay = parent::__toString();
-
-            // @see https://3v4l.org/7q1LT
-            $list = explode(' = ', $originalDisplay);
-            array_shift($list);
-
-            $defaultValueFromDisplay = implode(' = ', $list);
-
-            $defaultValueDisplay = '= ' . rtrim($defaultValueFromDisplay, ' ]' . PHP_EOL);
-
-            if (is_array($defaultValue) && str_starts_with($defaultValueDisplay, '= [')) {
-                $defaultValueDisplay .= ']';
+        $propertyType    = $this->getType();
+        $hasDefaultValue = $this->hasDefaultValue();
+        $defaultValue    = '';
+        if ($hasDefaultValue) {
+            // For constant fetch expressions, PHP renders now expression
+            if ($this->isDefaultValueConstant) {
+                $defaultValue = $this->defaultValueConstantName;
+            } elseif (is_array($this->getDefaultValue())) {
+                $defaultValue = $this->defaultValueConstExpr;
+            } else {
+                $defaultValue = var_export($this->getDefaultValue(), true);
             }
         }
 
         return sprintf(
-            "Property [ %s $%s %s ]\n",
+            "Property [ %s %s$%s%s ]\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
+            $propertyType ? ReflectionType::convertToDisplayType($propertyType) . ' ' : '',
             $this->getName(),
-            $defaultValueDisplay
+            $hasDefaultValue ? (' = ' . $defaultValue) : ''
         );
     }
 
@@ -185,18 +212,45 @@ class ReflectionProperty extends BaseReflectionProperty
     public function getValue(object|null $object = null): mixed
     {
         if (!isset($object)) {
-            $solver = new NodeExpressionResolver($this->getDeclaringClass());
-            if (!isset($this->propertyItem->default)) {
-                return null;
-            }
-            $solver->process($this->propertyItem->default);
-
-            return $solver->getValue();
+            return $this->getDefaultValue();
         }
 
+        // With object we should call original reflection to determine property value
         $this->initializeInternalReflection();
 
         return parent::getValue($object);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
+    {
+        return $this->type;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasType(): bool
+    {
+        return isset($this->propertyNode->type);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function hasDefaultValue(): bool
+    {
+        return isset($this->propertyItem->default) || !$this->hasType();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDefaultValue(): mixed
+    {
+        return $this->defaultValue;
     }
 
     /**
@@ -260,11 +314,11 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
-    public function setValue($object, $value = null): void
+    public function setValue(mixed $objectOrValue, mixed $value = null): void
     {
         $this->initializeInternalReflection();
 
-        parent::setValue($object, $value);
+        parent::setValue($objectOrValue, $value);
     }
 
     /**
@@ -273,9 +327,9 @@ class ReflectionProperty extends BaseReflectionProperty
      * @param ClassLike $classLikeNode Class-like node
      * @param string    $fullClassName FQN of the class
      *
-     * @return array|ReflectionProperty[]
+     * @return ReflectionProperty[]
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, $fullClassName)
+    public static function collectFromClassNode(ClassLike $classLikeNode, string $fullClassName): array
     {
         $properties = [];
 

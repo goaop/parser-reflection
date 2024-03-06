@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;

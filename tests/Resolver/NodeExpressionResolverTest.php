@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Go\ParserReflection\ValueResolver;
+namespace Go\ParserReflection\Resolver;
 
 
 use PHPUnit\Framework\TestCase;
@@ -41,7 +41,7 @@ class NodeExpressionResolverTest extends TestCase
     public function testResolveConstFetchFromVariableAsClass(): void
     {
         $this->expectException(\Go\ParserReflection\ReflectionException::class);
-        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveExprVariable method');
+        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\Resolver\NodeExpressionResolver::resolveExprVariable method');
 
         $expressionNodeTree = $this->parser->parse("<?php \$someVariable::FOO;");
         $expressionSolver = new NodeExpressionResolver(NULL);
@@ -56,7 +56,7 @@ class NodeExpressionResolverTest extends TestCase
     public function testResolveConstFetchFromNonExprAsClass(): void
     {
         $this->expectException(\Go\ParserReflection\ReflectionException::class);
-        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveStmtIf method');
+        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\Resolver\NodeExpressionResolver::resolveStmtIf method');
 
         $expressionNodeTree = $this->parser->parse("<?php ClassNameToReplace::Bar;");
         $notAnExpressionNodeTree = $this->parser->parse("<?php if (true) { \$baz = 3; }");

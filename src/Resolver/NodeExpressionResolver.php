@@ -10,7 +10,7 @@ declare(strict_types=1);
  * with this source code in the file LICENSE.
  */
 
-namespace Go\ParserReflection\ValueResolver;
+namespace Go\ParserReflection\Resolver;
 
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
@@ -31,7 +31,7 @@ use ReflectionMethod;
 
 /**
  * Tries to resolve expression into value
- * @see \Go\ParserReflection\ValueResolver\NodeExpressionResolverTest
+ * @see \Go\ParserReflection\Resolver\NodeExpressionResolverTest
  */
 class NodeExpressionResolver
 {

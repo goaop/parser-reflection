@@ -66,17 +66,13 @@ abstract class AbstractTestCase extends TestCase
 
     /**
      * Provides a list of files for analysis
-     *
-     * @return array
      */
-    public static function getFilesToAnalyze()
+    public static function getFilesToAnalyze(): \Generator
     {
-        $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php']];
-        $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithClasses56.php'];
-        $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithClasses70.php'];
-        $files['PHP7.1'] = [__DIR__ . '/Stub/FileWithClasses71.php'];
-
-        return $files;
+        yield 'PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php'];
+        yield 'PHP5.6' => [__DIR__ . '/Stub/FileWithClasses56.php'];
+        yield 'PHP7.0' => [__DIR__ . '/Stub/FileWithClasses70.php'];
+        yield 'PHP7.1' => [__DIR__ . '/Stub/FileWithClasses71.php'];
     }
 
     /**
