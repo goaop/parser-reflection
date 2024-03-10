@@ -64,3 +64,30 @@ enum HTTPStatus: int
     }
 }
 
+/**
+ * @see https://php.watch/versions/8.1/intersection-types
+ */
+class ClassWithPhp81IntersectionType implements \Countable
+{
+    private \Iterator&\Countable $countableIterator;
+
+    public function __construct(\Iterator&\Countable $countableIterator)
+    {
+        $this->countableIterator = $countableIterator;
+    }
+
+    public function count(): int
+    {
+        return count($this->countableIterator);
+    }
+}
+
+/**
+ * @see https://php.watch/versions/8.1/intersection-types
+ */
+function functionWithPhp81IntersectionType(\Iterator&\Countable $value): \Iterator&\Countable {
+    foreach($value as $val) {}
+    count($value);
+
+    return $value;
+}

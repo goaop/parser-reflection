@@ -15,6 +15,7 @@ namespace Go\ParserReflection\Resolver;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\ReflectionIntersectionType;
 use Go\ParserReflection\ReflectionNamedType;
 use Go\ParserReflection\ReflectionUnionType;
 use PhpParser\Node;
@@ -107,6 +108,16 @@ class TypeExpressionResolver
         );
 
         return new ReflectionUnionType(...$resolvedTypes);
+    }
+
+    private function resolveIntersectionType(Node\IntersectionType $intersectionType): ReflectionIntersectionType
+    {
+        $resolvedTypes = array_map(
+            fn(Identifier|IntersectionType|Name $singleType) => $this->resolve($singleType),
+            $intersectionType->types
+        );
+
+        return new ReflectionIntersectionType(...$resolvedTypes);
     }
 
     private function resolveNullableType(Node\NullableType $node): ReflectionNamedType

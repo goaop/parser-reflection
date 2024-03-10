@@ -27,11 +27,9 @@ class ReflectionFunctionTest extends TestCase
         $allNameGetters = [
             'getStartLine', 'getEndLine', 'getDocComment', 'getExtension', 'getExtensionName',
             'getName', 'getNamespaceName', 'getShortName', 'inNamespace', 'getStaticVariables',
-            'getNumberOfParameters', 'getNumberOfRequiredParameters', '__toString',
-            'returnsReference', 'getClosureScopeClass', 'getClosureThis'
+            'getNumberOfParameters', 'getNumberOfRequiredParameters',
+            'returnsReference', 'getClosureScopeClass', 'getClosureThis', 'hasReturnType', '__toString'
         ];
-
-        $allNameGetters[] = 'hasReturnType';
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
