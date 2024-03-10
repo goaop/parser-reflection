@@ -39,10 +39,9 @@ class ReflectionMethodTest extends AbstractTestCase
         $this->assertSame($expectedValue, $parsedRefMethod->__debugInfo());
     }
 
-    public function testSetAccessibleMethod(): void
+    public function testCallProtectedMethod(): void
     {
         $refMethod = $this->parsedRefClass->getMethod('protectedStaticFunc');
-        $refMethod->setAccessible(true);
         $retValue = $refMethod->invokeArgs(null, []);
         $this->assertEquals(null, $retValue);
     }
@@ -55,7 +54,6 @@ class ReflectionMethodTest extends AbstractTestCase
 
         $prototype = $refMethod->getPrototype();
         $this->assertInstanceOf(\ReflectionMethod::class, $prototype);
-        $prototype->setAccessible(true);
         $retValue  = $prototype->invokeArgs(null, []);
         $this->assertNotSame($this->parsedRefClass->getName(), $retValue);
     }

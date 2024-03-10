@@ -91,10 +91,9 @@ class ReflectionPropertyTest extends AbstractTestCase
         }
     }
 
-    public function testSetAccessibleMethod(): void
+    public function testGetProtectedValue(): void
     {
         $parsedProperty = $this->parsedRefClass->getProperty('protectedStaticProperty');
-        $parsedProperty->setAccessible(true);
 
         $value = $parsedProperty->getValue();
         $this->assertSame('foo', $value);
@@ -103,7 +102,6 @@ class ReflectionPropertyTest extends AbstractTestCase
     public function testGetSetValueForObjectMethods(): void
     {
         $parsedProperty = $this->parsedRefClass->getProperty('protectedProperty');
-        $parsedProperty->setAccessible(true);
 
         $className = $this->parsedRefClass->getName();
         $obj       = new $className;
