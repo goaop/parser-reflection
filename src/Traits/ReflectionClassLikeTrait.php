@@ -260,6 +260,10 @@ trait ReflectionClassLikeTrait
                 $propertyName         = $property->getName();
                 $isInternalReflection = $property::class === \ReflectionProperty::class;
 
+                if (!$property->hasDefaultValue()) {
+                    continue;
+                }
+
                 if (!$isInternalReflection || $isStaticProperty) {
                     $defaultValues[$propertyName] = $property->getValue();
                 } elseif (!$isStaticProperty) {
@@ -729,7 +733,7 @@ trait ReflectionClassLikeTrait
      */
     public function isCloneable(): bool
     {
-        if ($this->isInterface() || $this->isTrait() || $this->isAbstract()) {
+        if ($this->isInterface() || $this->isTrait() || $this->isAbstract() || $this->isEnum()) {
             return false;
         }
 
@@ -745,7 +749,9 @@ trait ReflectionClassLikeTrait
      */
     public function isFinal(): bool
     {
-        return $this->classLikeNode instanceof Class_ && $this->classLikeNode->isFinal();
+        $isFinalClass = $this->classLikeNode instanceof Class_ && $this->classLikeNode->isFinal();
+
+        return $isFinalClass || $this->isEnum();
     }
 
     /**
@@ -771,7 +777,7 @@ trait ReflectionClassLikeTrait
      */
     public function isInstantiable(): bool
     {
-        if ($this->isInterface() || $this->isTrait() || $this->isAbstract()) {
+        if ($this->isInterface() || $this->isTrait() || $this->isAbstract() || $this->isEnum()) {
             return false;
         }
 

@@ -29,6 +29,7 @@ class ReflectionClassConstantTest extends TestCase
             'isProtected',
             'isPublic',
             'isFinal',
+            'isEnumCase',
             '__toString'
         ];
 

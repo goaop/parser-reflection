@@ -18,6 +18,7 @@ use PhpParser\Node;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\EnumCase;
 use Reflection;
 use ReflectionClassConstant as BaseReflectionClassConstant;
 
@@ -32,9 +33,9 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Concrete class constant node
      */
-    private ClassConst $classConstantNode;
+    private ClassConst|EnumCase $classConstantNode;
 
-    private Const_ $constNode;
+    private ?Const_ $constNode;
 
     private string $className;
 
@@ -53,13 +54,22 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             if ($classLevelNode instanceof ClassConst) {
                 foreach ($classLevelNode->consts as $const) {
                     $classConstName = $const->name->toString();
-                    $classConstants[$classConstName] = new ReflectionClassConstant(
+                    $classConstants[$classConstName] = new static(
                         $reflectionClassFQN,
                         $classConstName,
                         $classLevelNode,
                         $const
                     );
                 }
+            }
+            // Enum cases are reported as constants too
+            if ($classLevelNode instanceof Node\Stmt\EnumCase) {
+                $enumCaseName = $classLevelNode->name->toString();
+                $classConstants[$enumCaseName] = new static (
+                    $reflectionClassFQN,
+                    $enumCaseName,
+                    $classLevelNode
+                );
             }
         }
 
@@ -72,12 +82,12 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     public function __construct(
         string $className,
         string $classConstantName,
-        ?ClassConst $classConstNode = null,
+        ClassConst|EnumCase|null $classConstNode = null,
         ?Const_ $constNode = null
     ) {
         $this->className = ltrim($className, '\\');
 
-        if (!$classConstNode || !$constNode) {
+        if (!$classConstNode) {
             [$classConstNode, $constNode] = ReflectionEngine::parseClassConstant($className, $classConstantName);
         }
         // Let's unset original read-only property to have a control over it via __get
@@ -87,9 +97,12 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         $this->constNode = $constNode;
 
         $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
-        $expressionSolver->process($this->constNode->value);
 
-        $this->value = $expressionSolver->getValue();
+        // We can statically resolve value only fot ClassConst, as for EnumCase we need to have object itself as default
+        if ($classConstNode instanceof ClassConst) {
+            $expressionSolver->process($this->constNode->value);
+            $this->value = $expressionSolver->getValue();
+        }
     }
 
     /**
@@ -162,9 +175,17 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
+    public function isEnumCase(): bool
+    {
+        return $this->classConstantNode instanceof EnumCase;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function isPrivate(): bool
     {
-        return $this->classConstantNode->isPrivate();
+        return $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isPrivate();
     }
 
     /**
@@ -172,7 +193,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isProtected(): bool
     {
-        return $this->classConstantNode->isProtected();
+        return $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isProtected();
     }
 
     /**
@@ -180,7 +201,10 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isPublic(): bool
     {
-        return $this->classConstantNode->isPublic();
+        $isPublicClassConst = $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isPublic();
+        $isEnumCase         = $this->classConstantNode instanceof EnumCase;
+
+        return $isPublicClassConst || $isEnumCase;
     }
 
     /**
@@ -188,7 +212,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isFinal(): bool
     {
-        return $this->classConstantNode->isFinal();
+        return $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isFinal();
     }
 
     /**
@@ -218,7 +242,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         );
     }
 
-    public function getNode(): Node\Stmt\ClassConst
+    public function getNode(): ClassConst|EnumCase
     {
         return $this->classConstantNode;
     }

@@ -14,6 +14,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
@@ -73,6 +74,8 @@ class ReflectionParameter extends BaseReflectionParameter
 
     private ?string $defaultValueConstExpr;
 
+    private \ReflectionUnionType|\ReflectionNamedType|\ReflectionIntersectionType|null $type = null;
+
     /**
      * Initializes a reflection for the property
      */
@@ -90,13 +93,13 @@ class ReflectionParameter extends BaseReflectionParameter
         $this->parameterIndex    = $parameterIndex;
         $this->declaringFunction = $declaringFunction;
 
-        if ($this->isDefaultValueAvailable()) {
-            if ($declaringFunction instanceof \ReflectionMethod) {
-                $context = $declaringFunction->getDeclaringClass();
-            } else {
-                $context = $declaringFunction;
-            }
+        if ($declaringFunction instanceof \ReflectionMethod) {
+            $context = $declaringFunction->getDeclaringClass();
+        } else {
+            $context = $declaringFunction;
+        }
 
+        if ($this->isDefaultValueAvailable()) {
             $expressionSolver = new NodeExpressionResolver($context);
             $expressionSolver->process($this->parameterNode->default);
 
@@ -105,6 +108,13 @@ class ReflectionParameter extends BaseReflectionParameter
             $this->defaultValueConstantName = $expressionSolver->getConstantName();
             $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
             $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
+        }
+
+        if ($this->hasType()) {
+            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver->process($this->parameterNode->type);
+
+            $this->type = $typeResolver->getType();
         }
     }
 
@@ -284,29 +294,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function getType(): ?\ReflectionType
     {
-        $isBuiltin     = false;
-        $parameterType = $this->parameterNode->type;
-        if ($parameterType instanceof NullableType) {
-            $parameterType = $parameterType->type;
-        }
-
-        $allowsNull = $this->allowsNull();
-        if ($parameterType instanceof Identifier) {
-            $isBuiltin = true;
-            $parameterType = $parameterType->toString();
-        } elseif (is_object($parameterType)) {
-            $parameterType = $parameterType->toString();
-        } elseif (is_string($parameterType)) {
-            $isBuiltin = true;
-        } else {
-            return null;
-        }
-
-        if ($parameterType === 'iterable') {
-            $parameterType = 'Traversable|array';
-        }
-
-        return new ReflectionNamedType($parameterType, $allowsNull, $isBuiltin);
+        return $this->type;
     }
 
     /**
@@ -314,9 +302,7 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function hasType(): bool
     {
-        $hasType = isset($this->parameterNode->type);
-
-        return $hasType;
+        return isset($this->parameterNode->type);
     }
 
     /**

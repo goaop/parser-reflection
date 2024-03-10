@@ -14,8 +14,11 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
+use PhpParser\Node\UnionType;
 use Reflection;
 use ReflectionMethod as BaseReflectionMethod;
 
@@ -320,6 +323,16 @@ class ReflectionMethod extends BaseReflectionMethod
             }
         }
 
+        // Enum has special `cases` (and `from`/`tryFrom` for Backed Enums) methods
+        if ($classLikeNode instanceof Enum_) {
+            $methods['cases'] = self::createEnumCasesMethod($reflectionClass);
+            // Backed enum methods emulation
+            if (isset($classLikeNode->scalarType)) {
+                $methods['from']    = self::createEnumFromMethod($reflectionClass);
+                $methods['tryFrom'] = self::createEnumTryFromMethod($reflectionClass);
+            }
+        }
+
         return $methods;
     }
 
@@ -331,6 +344,65 @@ class ReflectionMethod extends BaseReflectionMethod
         parent::__construct($this->className, $this->getName());
     }
 
+    /**
+     * Ad-Hoc constructor of Enum `cases` method, which emulates PHP behaviour
+     */
+    private static function createEnumCasesMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    {
+        $casesMethodNode = (new \PhpParser\Builder\Method('cases'))
+            ->makeStatic()
+            ->makePublic()
+            ->setReturnType('array')
+            ->getNode();
+        
+        return new static(
+            $reflectionClass->name,
+            'cases',
+            $casesMethodNode,
+            $reflectionClass
+        );
+    }
+
+    private static function createEnumFromMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    {
+        $valueParam = (new \PhpParser\Builder\Param('value'))
+            ->setType(new UnionType([new Identifier('string'), new Identifier('int')]))
+            ->getNode();
+        $fromMethodNode = (new \PhpParser\Builder\Method('from'))
+            ->makeStatic()
+            ->makePublic()
+            ->addParam($valueParam)
+            ->setReturnType('static')
+            ->getNode();
+
+        return new static(
+            $reflectionClass->name,
+            'from',
+            $fromMethodNode,
+            $reflectionClass
+        );
+    }
+
+    private static function createEnumTryFromMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    {
+        $valueParam = (new \PhpParser\Builder\Param('value'))
+            ->setType(new UnionType([new Identifier('string'), new Identifier('int')]))
+            ->getNode();
+        $fromMethodNode = (new \PhpParser\Builder\Method('tryFrom'))
+            ->makeStatic()
+            ->makePublic()
+            ->addParam($valueParam)
+            ->setReturnType('?static')
+            ->getNode();
+
+        return new static(
+            $reflectionClass->name,
+            'tryFrom',
+            $fromMethodNode,
+            $reflectionClass
+        );
+    }
+    
     /**
      * Returns ClassMethod node to prevent all possible type checks with instanceof
      */

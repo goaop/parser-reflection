@@ -21,6 +21,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Property;
 use Reflection;
 use ReflectionProperty as BaseReflectionProperty;
@@ -344,6 +345,34 @@ class ReflectionProperty extends BaseReflectionProperty
                         $classPropertyNode
                     );
                 }
+            }
+        }
+
+        // Enum has special `name` (and `value` for Backed Enums) properties
+        if ($classLikeNode instanceof Enum_) {
+            $namePropertyNode = (new \PhpParser\Builder\Property('name'))
+                ->makeReadonly()
+                ->makePublic()
+                ->setType('string')
+                ->getNode();
+            $properties['name'] = new static(
+                $fullClassName,
+                'name',
+                $namePropertyNode,
+                $namePropertyNode->props[0]
+            );
+            if (isset($classLikeNode->scalarType)) {
+                $valuePropertyNode = (new \PhpParser\Builder\Property('value'))
+                    ->makeReadonly()
+                    ->makePublic()
+                    ->setType($classLikeNode->scalarType)
+                    ->getNode();
+                $properties['value'] = new static(
+                    $fullClassName,
+                    'value',
+                    $valuePropertyNode,
+                    $valuePropertyNode->props[0]
+                );
             }
         }
 

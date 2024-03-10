@@ -124,6 +124,11 @@ class TypeExpressionResolver
         return new ReflectionNamedType($typeString, $allowsNull, true);
     }
 
+    private function resolveName(Name $node): ReflectionNamedType
+    {
+        return new ReflectionNamedType($node->toString(), false, false);
+    }
+
     private function resolveNameFullyQualified(Name\FullyQualified $node): ReflectionNamedType
     {
         return new ReflectionNamedType((string) $node, false, false);
