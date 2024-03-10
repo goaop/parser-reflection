@@ -91,3 +91,22 @@ function functionWithPhp81IntersectionType(\Iterator&\Countable $value): \Iterat
 
     return $value;
 }
+
+/**
+ * @see https://php.watch/versions/8.1/never-return-type
+ */
+class ClassWithPhp81NeverReturnType
+{
+    public static function doThis(): never
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+}
+
+/**
+ * @see https://php.watch/versions/8.1/never-return-type
+ */
+function functionWithPhp81NeverReturnType(): never
+{
+    throw new \RuntimeException('Not implemented');
+}

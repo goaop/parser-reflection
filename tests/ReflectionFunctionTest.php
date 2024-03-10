@@ -102,7 +102,7 @@ class ReflectionFunctionTest extends TestCase
         $fileName = stream_resolve_include_path(__DIR__ . self::STUB_FILE70);
 
         $reflectionFile = new ReflectionFile($fileName);
-        include $fileName;
+        include_once $fileName;
 
         foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
             foreach ($fileNamespace->getFunctions() as $refFunction) {
@@ -118,8 +118,7 @@ class ReflectionFunctionTest extends TestCase
                     $parsedReturnType   = $refFunction->getReturnType();
                     $originalReturnType = $originalRefFunction->getReturnType();
                     $this->assertSame($originalReturnType->allowsNull(), $parsedReturnType->allowsNull());
-                    $this->assertSame($originalReturnType->isBuiltin(), $parsedReturnType->isBuiltin());
-                    $this->assertSame($originalReturnType->getName(), $parsedReturnType->__toString());
+                    $this->assertSame($originalReturnType->__toString(), $parsedReturnType->__toString());
                 } else {
                     $this->assertSame(
                         $originalRefFunction->getReturnType(),
