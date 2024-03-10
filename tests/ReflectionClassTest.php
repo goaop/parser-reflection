@@ -18,7 +18,7 @@ class ReflectionClassTest extends AbstractTestCase
      *
      * @var string
      */
-    protected static $reflectionClassToTest = \ReflectionClass::class;
+    protected static string $reflectionClassToTest = \ReflectionClass::class;
 
     /**
      * Tests getModifier() method

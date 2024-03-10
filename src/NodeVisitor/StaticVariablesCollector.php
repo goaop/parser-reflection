@@ -23,19 +23,17 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 {
     /**
      * Reflection context, eg. ReflectionClass, ReflectionMethod, etc
-     *
-     * @var mixed
      */
-    private $context;
+    private mixed $context;
 
-    private $staticVariables = [];
+    private array $staticVariables = [];
 
     /**
      * Default constructor
      *
      * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      */
-    public function __construct($context)
+    public function __construct(mixed $context)
     {
         $this->context = $context;
     }

@@ -20,7 +20,7 @@ use PhpParser\NodeVisitorAbstract;
  */
 class GeneratorDetector extends NodeVisitorAbstract
 {
-    private $isGenerator = false;
+    private bool $isGenerator = false;
 
     /**
      * {@inheritDoc}

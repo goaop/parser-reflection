@@ -5,7 +5,7 @@ namespace Go\ParserReflection;
 
 class ReflectionMethodTest extends AbstractTestCase
 {
-    protected static $reflectionClassToTest = \ReflectionMethod::class;
+    protected static string $reflectionClassToTest = \ReflectionMethod::class;
 
     public function testGetClosureMethod(): void
     {

@@ -202,6 +202,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
+    #[Deprecated(reason: "Use ReflectionParameter::getType() and the ReflectionType APIs should be used instead.", since: "8.0")]
     public function getClass(): ?\ReflectionClass
     {
         $parameterType = $this->parameterNode->type;
@@ -292,7 +293,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    public function getType(): ?\ReflectionType
+    public function getType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
         return $this->type;
     }

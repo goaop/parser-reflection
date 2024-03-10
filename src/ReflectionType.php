@@ -28,11 +28,6 @@ class ReflectionType extends BaseReflectionType
     private bool $allowsNull;
 
     /**
-     * Is type built-in or not
-     */
-    private bool $isBuiltin;
-
-    /**
      * Type name
      */
     private string $type;
@@ -40,11 +35,10 @@ class ReflectionType extends BaseReflectionType
     /**
      * Initializes reflection data
      */
-    public function __construct(string $type, bool $allowsNull, bool $isBuiltin)
+    public function __construct(string $type, bool $allowsNull)
     {
         $this->type       = $type;
         $this->allowsNull = $allowsNull;
-        $this->isBuiltin  = $isBuiltin;
     }
 
     /**
@@ -53,14 +47,6 @@ class ReflectionType extends BaseReflectionType
     public function allowsNull(): bool
     {
         return $this->allowsNull;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function isBuiltin(): bool
-    {
-        return $this->isBuiltin;
     }
 
     /**

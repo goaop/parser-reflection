@@ -49,15 +49,6 @@ class ReflectionIntersectionType extends BaseReflectionIntersectionType
     /**
      * @inheritDoc
      */
-    public function isBuiltin(): bool
-    {
-        // Intersection-type could not be built-in
-        return false;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function __toString(): string
     {
         $stringTypes = array_map(fn(\ReflectionNamedType $namedType) => (string) $namedType, $this->types);

@@ -13,14 +13,14 @@ class ReflectionPropertyTest extends AbstractTestCase
      *
      * @var string
      */
-    protected static $reflectionClassToTest = \ReflectionProperty::class;
+    protected static string $reflectionClassToTest = \ReflectionProperty::class;
 
     /**
      * Class to load
      *
      * @var string
      */
-    protected static $defaultClassToLoad = ClassWithProperties::class;
+    protected static string $defaultClassToLoad = ClassWithProperties::class;
 
     /**
      * Performs method-by-method comparison with original reflection

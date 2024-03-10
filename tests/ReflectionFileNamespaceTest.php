@@ -32,12 +32,13 @@ class ReflectionFileNamespaceTest extends TestCase
 
     public function testGetClass(): void
     {
-        $refClass = $this->parsedRefFileNamespace->getClass('Unknown');
-        $this->assertFalse($refClass);
-
         $refClass = $this->parsedRefFileNamespace->getClass(TestNamespaceClassFoo::class);
         $this->assertInstanceOf(\ReflectionClass::class, $refClass);
         $this->assertSame(TestNamespaceClassFoo::class, $refClass->name);
+
+        $this->expectException(ReflectionException::class);
+        $this->expectExceptionMessageMatches('/^Could not find the class Unknown in the file/');
+        $this->parsedRefFileNamespace->getClass('Unknown');
     }
 
     public function testGetClasses(): void
@@ -48,12 +49,13 @@ class ReflectionFileNamespaceTest extends TestCase
 
     public function testGetConstant(): void
     {
-        $constValue = $this->parsedRefFileNamespace->getConstant('Unknown');
-        $this->assertFalse($constValue);
-
         $constValue = $this->parsedRefFileNamespace->getConstant('NAMESPACE_NAME');
         $this->assertNotFalse($constValue);
         $this->assertSame(\Go\ParserReflection\Stub\NAMESPACE_NAME, $constValue);
+
+        $this->expectException(ReflectionException::class);
+        $this->expectExceptionMessageMatches('/^Could not find the constant Unknown in the file/');
+        $this->parsedRefFileNamespace->getConstant('Unknown');
     }
 
     public function testGetConstants(): void
@@ -97,7 +99,9 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertTrue($this->parsedRefFileNamespace->hasConstant('FILE_NAME'), 'Namespaced constant found.');
 
         $this->assertFalse($this->parsedRefFileNamespace->hasConstant('INT_CONST'), 'Global constant not found.');
-        $this->assertFalse($this->parsedRefFileNamespace->getConstant('INT_CONST'), 'Global constant not found.');
+        $this->expectException(ReflectionException::class);
+        $this->expectExceptionMessageMatches('/^Could not find the constant INT_CONST in the file/');
+        $this->parsedRefFileNamespace->getConstant('INT_CONST');
     }
 
     public function testGetGlobalConstants(): void
@@ -143,12 +147,13 @@ class ReflectionFileNamespaceTest extends TestCase
 
     public function testGetFunction(): void
     {
-        $refFunction = $this->parsedRefFileNamespace->getFunction('Unknown');
-        $this->assertFalse($refFunction);
-
         $refFunction = $this->parsedRefFileNamespace->getFunction('testFunctionBar');
         $this->assertInstanceOf(\ReflectionFunction::class, $refFunction);
         $this->assertSame('testFunctionBar', $refFunction->name);
+
+        $this->expectException(ReflectionException::class);
+        $this->expectExceptionMessageMatches('/^Could not find the function Unknown in the file/');
+        $this->parsedRefFileNamespace->getFunction('Unknown');
     }
 
     public function testGetFunctions(): void

@@ -14,6 +14,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -34,31 +35,25 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * Name of the class
-     *
-     * @var string
      */
-    private $className;
+    private string $className;
 
     /**
      * Optional declaring class reference
-     *
-     * @var ReflectionClass
      */
-    private $declaringClass;
+    private ?ReflectionClass $declaringClass;
 
     /**
      * Initializes reflection instance for the method node
      *
-     * @param string           $className       Name of the class
-     * @param string           $methodName      Name of the method
      * @param ?ClassMethod     $classMethodNode AST-node for method
      * @param ?ReflectionClass $declaringClass  Optional declaring class
      */
     public function __construct(
-        $className,
-        $methodName,
-        ClassMethod $classMethodNode = null,
-        ReflectionClass $declaringClass = null
+        string $className,
+        string $methodName,
+        ?ClassMethod $classMethodNode = null,
+        ?ReflectionClass $declaringClass = null
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = ltrim($className, '\\');
@@ -195,12 +190,7 @@ class ReflectionMethod extends BaseReflectionMethod
             throw new ReflectionException("No prototype");
         }
 
-        $prototypeMethod = $parent->getMethod($this->getName());
-        if (!$prototypeMethod) {
-            throw new ReflectionException("No prototype");
-        }
-
-        return $prototypeMethod;
+        return $parent->getMethod($this->getName());
     }
 
     /**
@@ -290,11 +280,9 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function setAccessible($accessible): void
+    #[Deprecated(reason: "Usage of ReflectionMethod::setAccessible() has no effect.", since: "8.1")]
+    public function setAccessible(bool $accessible): void
     {
-        $this->initializeInternalReflection();
-
-        parent::setAccessible($accessible);
     }
 
     /**

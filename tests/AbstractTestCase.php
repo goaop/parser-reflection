@@ -17,29 +17,19 @@ abstract class AbstractTestCase extends TestCase
 {
     public const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
 
-    /**
-     * @var ReflectionFileNamespace
-     */
-    protected $parsedRefFileNamespace;
+    protected ReflectionFileNamespace $parsedRefFileNamespace;
 
-    /**
-     * @var ReflectionClass
-     */
-    protected $parsedRefClass;
+    protected ?ReflectionClass $parsedRefClass = null;
 
     /**
      * Name of the class to compare
-     *
-     * @var string
      */
-    protected static $reflectionClassToTest = \Reflection::class;
+    protected static string $reflectionClassToTest = \Reflection::class;
 
     /**
      * Name of the class to load for default tests
-     *
-     * @var string
      */
-    protected static $defaultClassToLoad = AbstractClassWithMethods::class;
+    protected static string $defaultClassToLoad = AbstractClassWithMethods::class;
 
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testCoverAllMethods(): void
@@ -98,7 +88,9 @@ abstract class AbstractTestCase extends TestCase
 
         $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
         $this->parsedRefFileNamespace = $parsedFileNamespace;
-        $this->parsedRefClass         = $parsedFileNamespace->getClass(static::$defaultClassToLoad);
+        if ($parsedFileNamespace->hasClass(static::$defaultClassToLoad)) {
+            $this->parsedRefClass = $parsedFileNamespace->getClass(static::$defaultClassToLoad);
+        }
 
         include_once $fileName;
     }

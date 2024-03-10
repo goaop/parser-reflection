@@ -50,15 +50,6 @@ class ReflectionUnionType extends BaseReflectionUnionType
     /**
      * @inheritDoc
      */
-    public function isBuiltin(): bool
-    {
-        // Union-type could not be built-in
-        return false;
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function __toString(): string
     {
         $stringTypes = array_map(fn(\ReflectionNamedType $namedType) => (string) $namedType, $this->types);

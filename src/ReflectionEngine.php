@@ -31,30 +31,18 @@ use PhpParser\ParserFactory;
  */
 class ReflectionEngine
 {
-    /**
-     * @var null|LocatorInterface
-     */
-    protected static $locator;
+    protected static ?LocatorInterface $locator;
 
     /**
-     * @var array|Node[]
+     * @var Node[][]
      */
-    protected static $parsedFiles = [];
+    protected static array $parsedFiles = [];
 
-    /**
-     * @var null|int
-     */
-    protected static $maximumCachedFiles;
+    protected static ?int $maximumCachedFiles;
 
-    /**
-     * @var null|Parser
-     */
-    protected static $parser;
+    protected static Parser $parser;
 
-    /**
-     * @var null|NodeTraverser
-     */
-    protected static $traverser;
+    protected static NodeTraverser $traverser;
 
     private function __construct() {}
 
@@ -270,7 +258,7 @@ class ReflectionEngine
         throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
     }
 
-    public static function getParser(): ?Parser
+    public static function getParser(): Parser
     {
         return self::$parser;
     }

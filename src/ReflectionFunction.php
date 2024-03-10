@@ -32,10 +32,10 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * Initializes reflection instance for given AST-node
      *
-     * @param string|Closure $functionName The name of the function to reflect or a closure.
+     * @param string $functionName The name of the function to reflect.
      * @param Function_ $functionNode Function node AST
      */
-    public function __construct($functionName, Function_ $functionNode)
+    public function __construct(string $functionName, Function_ $functionNode)
     {
         $namespaceParts = explode('\\', $functionName);
         // Remove the last one part with function name
