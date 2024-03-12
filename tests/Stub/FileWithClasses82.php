@@ -37,3 +37,28 @@ class ClassWithPhp82DNFType
     }
 }
 
+/**
+ * @see https://php.watch/versions/8.2/null-false-types
+ * @see https://php.watch/versions/8.2/true-type
+ */
+class ClassWithPhp82NullFalseTypes
+{
+    private true $isTrue = true;
+    private false $isFalse = false;
+    private null $isNull = null;
+
+    public function returnsFalse(): false
+    {
+        return false;
+    }
+
+    public function returnsTrue(): true
+    {
+        return true;
+    }
+
+    public function returnsNullExplicitly(): null
+    {
+        return null;
+    }
+}
