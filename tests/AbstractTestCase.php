@@ -65,6 +65,7 @@ abstract class AbstractTestCase extends TestCase
         yield 'PHP7.1' => [__DIR__ . '/Stub/FileWithClasses71.php'];
         yield 'PHP8.0' => [__DIR__ . '/Stub/FileWithClasses80.php'];
         yield 'PHP8.1' => [__DIR__ . '/Stub/FileWithClasses81.php'];
+        yield 'PHP8.2' => [__DIR__ . '/Stub/FileWithClasses82.php'];
     }
 
     /**

@@ -20,14 +20,14 @@ use ReflectionUnionType as BaseReflectionUnionType;
 class ReflectionUnionType extends BaseReflectionUnionType
 {
     /**
-     * @var ReflectionNamedType[]
+     * @var ReflectionNamedType[]|ReflectionIntersectionType[]
      */
     private readonly array $types;
 
     /**
      * Initializes reflection data
      */
-    public function __construct(ReflectionNamedType ...$types)
+    public function __construct(ReflectionNamedType|ReflectionIntersectionType ...$types)
     {
         $this->types = $types;
     }
@@ -52,7 +52,12 @@ class ReflectionUnionType extends BaseReflectionUnionType
      */
     public function __toString(): string
     {
-        $stringTypes = array_map(fn(\ReflectionNamedType $namedType) => (string) $namedType, $this->types);
+        $stringTypes = array_map(function(ReflectionNamedType|ReflectionIntersectionType $type) {
+            return match (true) {
+                $type instanceof ReflectionNamedType => (string) $type,
+                $type instanceof ReflectionIntersectionType => '(' . $type . ')',
+            };
+        }, $this->types);
 
         // Special iterable type is already union Traversable|array, thus should be replaced
         $iterableIndex = array_search('iterable', $stringTypes, true);
