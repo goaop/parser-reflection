@@ -18,6 +18,7 @@ use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Param;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -36,16 +37,16 @@ class ReflectionProperty extends BaseReflectionProperty
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;
 
-    private Property $propertyNode;
+    private Property|Param $propertyOrPromotedParam;
 
-    private PropertyItem $propertyItem;
+    private PropertyItem|Param $propertyItemOrPromotedParam;
 
     /**
      * Name of the class
      */
     private string $className;
 
-    private \ReflectionUnionType|\ReflectionNamedType|null|\ReflectionIntersectionType $type = null;
+    private \ReflectionUnionType|\ReflectionNamedType|\ReflectionIntersectionType|null $type = null;
 
     private mixed $defaultValue = null;
 
@@ -60,35 +61,35 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Initializes a reflection for the property
      *
-     * @param string            $className    Name of the class with properties
-     * @param string            $propertyName Name of the property to reflect
-     * @param ?Property         $propertyType Property type definition node
-     * @param ?PropertyItem     $propertyNode Concrete property definition (value, name)
+     * @param Property|Param|null $propertyOrPromotedParam Property type definition node
+     * @param PropertyItem|Param|null $propertyItemOrPromotedParam Concrete property definition (value, name)
+     * @throws ReflectionException
      */
     public function __construct(
-        $className,
-        string $propertyName,
-        Property $propertyType = null,
-        PropertyItem $propertyNode = null
+        string             $className,
+        string             $propertyName,
+        Property|Param     $propertyOrPromotedParam = null,
+        PropertyItem|Param $propertyItemOrPromotedParam = null
     ) {
         $this->className = ltrim($className, '\\');
-        if (!$propertyType || !$propertyNode) {
-            [$propertyType, $propertyNode] = ReflectionEngine::parseClassProperty($className, $propertyName);
+        if (!$propertyOrPromotedParam || !$propertyItemOrPromotedParam) {
+            [$propertyOrPromotedParam, $propertyItemOrPromotedParam] = ReflectionEngine::parseClassProperty($className, $propertyName);
         }
 
-        $this->propertyNode = $propertyType;
-        $this->propertyItem = $propertyNode;
+        $this->propertyOrPromotedParam     = $propertyOrPromotedParam;
+        $this->propertyItemOrPromotedParam = $propertyItemOrPromotedParam;
 
         if ($this->hasType()) {
             $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
-            $typeResolver->process($this->propertyNode->type);
+            $typeResolver->process($this->propertyOrPromotedParam->type);
 
             $this->type = $typeResolver->getType();
         }
 
-        if (isset($this->propertyItem->default)) {
+        // Both PropertyItem and Param has `default` property
+        if (isset($this->propertyItemOrPromotedParam->default) && $this->hasDefaultValue()) {
             $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
-            $expressionSolver->process($this->propertyItem->default);
+            $expressionSolver->process($this->propertyItemOrPromotedParam->default);
 
             $this->defaultValue             = $expressionSolver->getValue();
             $this->isDefaultValueConstant   = $expressionSolver->isConstant();
@@ -104,17 +105,17 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * Returns an AST-node for property item
      */
-    public function getNode(): PropertyItem
+    public function getNode(): PropertyItem|Param
     {
-        return $this->propertyItem;
+        return $this->propertyItemOrPromotedParam;
     }
 
     /**
      * Returns an AST-node for property type
      */
-    public function getTypeNode(): Property
+    public function getTypeNode(): Property|Param
     {
-        return $this->propertyNode;
+        return $this->propertyOrPromotedParam;
     }
 
     /**
@@ -123,7 +124,7 @@ class ReflectionProperty extends BaseReflectionProperty
     public function __debugInfo(): array
     {
         return [
-            'name'  => isset($this->propertyItem) ? $this->propertyItem->name->toString() : 'unknown',
+            'name'  => isset($this->propertyItemOrPromotedParam) ? $this->propertyItemOrPromotedParam->name->toString() : 'unknown',
             'class' => $this->className
         ];
     }
@@ -169,7 +170,7 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getDocComment(): string|false
     {
-        $docBlock = $this->propertyNode->getDocComment();
+        $docBlock = $this->propertyOrPromotedParam->getDocComment();
 
         return $docBlock ? $docBlock->getText() : false;
     }
@@ -204,7 +205,12 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function getName(): string
     {
-        return $this->propertyItem->name->toString();
+        $node = $this->propertyItemOrPromotedParam;
+
+        return match (true) {
+            $node instanceof PropertyItem => $node->name->toString(),
+            $node instanceof Param => (string) $node->var->name
+        };
     }
 
     /**
@@ -232,18 +238,26 @@ class ReflectionProperty extends BaseReflectionProperty
 
     /**
      * @inheritDoc
+     *
+     * @see Property::$type
+     * @see Param::$type
      */
     public function hasType(): bool
     {
-        return isset($this->propertyNode->type);
+        return isset($this->propertyOrPromotedParam->type);
     }
 
     /**
      * @inheritDoc
+     *
+     * @see PropertyItem::$default
+     * @see Param::$default
+     *
+     * @see https://bugs.php.net/bug.php?id=81386 For corner-case with promoted properties and default values
      */
     public function hasDefaultValue(): bool
     {
-        return isset($this->propertyItem->default) || !$this->hasType();
+        return (isset($this->propertyItemOrPromotedParam->default) && !$this->isPromoted()) || !$this->hasType();
     }
 
     /**
@@ -266,42 +280,67 @@ class ReflectionProperty extends BaseReflectionProperty
 
     /**
      * {@inheritDoc}
+     *
+     * @see Property::isPrivate()
+     * @see Param::isPrivate()
      */
     public function isPrivate(): bool
     {
-        return $this->propertyNode->isPrivate();
+        return $this->propertyOrPromotedParam->isPrivate();
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @see Property::isProtected()
+     * @see Param::isProtected()
      */
     public function isProtected(): bool
     {
-        return $this->propertyNode->isProtected();
+        return $this->propertyOrPromotedParam->isProtected();
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @see Property::isPublic()
+     * @see Param::isPublic()
      */
     public function isPublic(): bool
     {
-        return $this->propertyNode->isPublic();
+        return $this->propertyOrPromotedParam->isPublic();
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @see Property::isStatic()
      */
     public function isStatic(): bool
     {
-        return $this->propertyNode->isStatic();
+        // All promoted properties are dynamic and not static
+        return !$this->isPromoted() && $this->propertyOrPromotedParam->isStatic();
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @see Param::isPromoted()
+     */
+    public function isPromoted(): bool
+    {
+        return $this->propertyOrPromotedParam instanceof Param;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see Property::isReadonly()
+     * @see Param::isReadonly()
      */
     public function isReadOnly(): bool
     {
-        return $this->propertyNode->isReadonly() || $this->getDeclaringClass()->isReadOnly();
+        return $this->propertyOrPromotedParam->isReadonly() || $this->getDeclaringClass()->isReadOnly();
     }
 
     /**
@@ -335,6 +374,8 @@ class ReflectionProperty extends BaseReflectionProperty
         $properties = [];
 
         foreach ($classLikeNode->stmts as $classLevelNode) {
+
+            // Old-fashioned properties
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classPropertyNode) {
                     $propertyName = $classPropertyNode->name->toString();
@@ -346,33 +387,29 @@ class ReflectionProperty extends BaseReflectionProperty
                     );
                 }
             }
+
+            // We might also have promoted properties inside constructor
+            if ($classLevelNode instanceof ClassMethod && $classLevelNode->name->toString() === '__construct') {
+                foreach ($classLevelNode->getParams() as $paramNode) {
+                    if ($paramNode->isPromoted()) {
+                        $propertyName = (string) $paramNode->var->name;
+                        $properties[$propertyName] = new static(
+                            $fullClassName,
+                            $propertyName,
+                            $paramNode,
+                            $paramNode
+                        );
+                    }
+                 }
+            }
         }
 
         // Enum has special `name` (and `value` for Backed Enums) properties
         if ($classLikeNode instanceof Enum_) {
-            $namePropertyNode = (new \PhpParser\Builder\Property('name'))
-                ->makeReadonly()
-                ->makePublic()
-                ->setType('string')
-                ->getNode();
-            $properties['name'] = new static(
-                $fullClassName,
-                'name',
-                $namePropertyNode,
-                $namePropertyNode->props[0]
-            );
+            $properties['name'] = self::createEnumNameProperty($fullClassName);
             if (isset($classLikeNode->scalarType)) {
-                $valuePropertyNode = (new \PhpParser\Builder\Property('value'))
-                    ->makeReadonly()
-                    ->makePublic()
-                    ->setType($classLikeNode->scalarType)
-                    ->getNode();
-                $properties['value'] = new static(
-                    $fullClassName,
-                    'value',
-                    $valuePropertyNode,
-                    $valuePropertyNode->props[0]
-                );
+                $valueProperty = self::createEnumValueProperty($classLikeNode, $fullClassName);
+                $properties['value'] = $valueProperty;
             }
         }
 
@@ -385,5 +422,37 @@ class ReflectionProperty extends BaseReflectionProperty
     protected function __initialize(): void
     {
         parent::__construct($this->className, $this->getName());
+    }
+
+    private static function createEnumNameProperty(string $fullClassName): ReflectionProperty
+    {
+        $namePropertyNode = (new \PhpParser\Builder\Property('name'))
+            ->makeReadonly()
+            ->makePublic()
+            ->setType('string')
+            ->getNode();
+
+        return new static(
+            $fullClassName,
+            'name',
+            $namePropertyNode,
+            $namePropertyNode->props[0]
+        );
+    }
+
+    private static function createEnumValueProperty(Enum_ $classLikeNode, string $fullClassName): ReflectionProperty
+    {
+        $valuePropertyNode = (new \PhpParser\Builder\Property('value'))
+            ->makeReadonly()
+            ->makePublic()
+            ->setType($classLikeNode->scalarType)
+            ->getNode();
+
+        return new static(
+            $fullClassName,
+            'value',
+            $valuePropertyNode,
+            $valuePropertyNode->props[0]
+        );
     }
 }
