@@ -82,3 +82,13 @@ trait TraitWithPhp82Constant
         }
     }
 }
+
+class ClassWithPhp82SensitiveAttribute
+{
+    private string $secret;
+
+    public function __construct(#[\SensitiveParameter] string $secret = 'password')
+    {
+        $this->secret = $secret;
+    }
+}
