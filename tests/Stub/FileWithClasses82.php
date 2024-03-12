@@ -66,3 +66,19 @@ class ClassWithPhp82NullFalseTypes
     public function acceptsFalse(false $acceptsFalse): void {}
     public function acceptsNull(null $acceptsNull): void {}
 }
+
+/**
+ * @see https://php.watch/versions/8.2/constants-in-traits
+ */
+trait TraitWithPhp82Constant
+{
+    protected const CURRENT_VERSION = '2.6';
+    final protected const MIN_VERSION = '2.5';
+
+    protected function ensureVersion(): void
+    {
+        if (self::CURRENT_VERSION < self::MIN_VERSION) {
+            throw new \Exception('Current version is too old');
+        }
+    }
+}
