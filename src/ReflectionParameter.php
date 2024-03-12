@@ -173,22 +173,17 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function allowsNull(): bool
     {
-        // Enable 7.1 nullable types support
-        if ($this->parameterNode->type instanceof NullableType) {
-            return true;
-        }
-
         $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
         if ($hasDefaultNull) {
             return true;
         }
 
+        // All non-typed parameters allows null by default
         if (!isset($this->parameterNode->type)) {
             return true;
         }
 
-        return $this->parameterNode->default instanceof ConstFetch
-            && strtolower($this->parameterNode->default->name->toString()) === 'null';
+        return $this->type->allowsNull();
     }
 
     /**

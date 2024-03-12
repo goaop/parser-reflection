@@ -31,8 +31,17 @@ class ReflectionParameterTest extends TestCase
         ]);
 
         foreach ($this->parsedRefFile->getFileNamespaces() as $fileNamespace) {
-            foreach ($fileNamespace->getFunctions() as $refFunction) {
-                $functionName = $refFunction->getName();
+            // Combine both functions and methods from namespace
+            $refFunctions = $fileNamespace->getFunctions();
+            foreach ($fileNamespace->getClasses() as $reflectionClass) {
+                $refFunctions = array_merge($refFunctions, $reflectionClass->getMethods());
+            }
+            foreach ($refFunctions as $refFunction) {
+                if ($refFunction instanceof \ReflectionMethod) {
+                    $functionName = [$refFunction->class, $refFunction->getName()];
+                } else {
+                    $functionName = $refFunction->getName();
+                }
                 foreach ($refFunction->getParameters() as $refParameter) {
                     $parameterName        = $refParameter->getName();
                     $originalRefParameter = new \ReflectionParameter($functionName, $parameterName);
@@ -45,14 +54,15 @@ class ReflectionParameterTest extends TestCase
                         }
                         $expectedValue = $originalRefParameter->$getterName();
                         $actualValue   = $refParameter->$getterName();
+                        $displayableName = is_array($functionName) ? join ('->', $functionName) : $functionName;
                         // I would like to completely stop maintaining the __toString method
                         if ($expectedValue !== $actualValue && $getterName === '__toString') {
-                            $this->markTestSkipped("__toString for parameter {$functionName}::{$parameterName} is not equal:\n{$expectedValue}\n{$actualValue}");
+                            $this->markTestSkipped("__toString for parameter {$displayableName}(\${$parameterName}) is not equal:\n{$expectedValue}\n{$actualValue}");
                         }
                         $this->assertSame(
                             $expectedValue,
                             $actualValue,
-                            "{$getterName}() for parameter {$functionName}:{$parameterName} should be equal"
+                            "{$getterName}() for parameter {$displayableName}(\${$parameterName}) should be equal"
                         );
                     }
                 }
@@ -62,16 +72,16 @@ class ReflectionParameterTest extends TestCase
 
     /**
      * Provides a list of files for analysis
-     *
-     * @return array
      */
-    public static function fileProvider()
+    public static function fileProvider(): \Generator
     {
-        $files = ['PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php']];
-        $files['PHP5.6'] = [__DIR__ . '/Stub/FileWithParameters56.php'];
-        $files['PHP7.0'] = [__DIR__ . '/Stub/FileWithParameters70.php'];
+        yield 'PHP5.5' => [__DIR__ . '/Stub/FileWithParameters55.php'];
+        yield 'PHP5.6' => [__DIR__ . '/Stub/FileWithParameters56.php'];
+        yield 'PHP7.0' => [__DIR__ . '/Stub/FileWithParameters70.php'];
 
-        return $files;
+        yield 'PHP8.0' => [__DIR__ . '/Stub/FileWithClasses80.php'];
+        yield 'PHP8.1' => [__DIR__ . '/Stub/FileWithClasses81.php'];
+        yield 'PHP8.2' => [__DIR__ . '/Stub/FileWithClasses82.php'];
     }
 
     public function testGetClassMethod(): void
