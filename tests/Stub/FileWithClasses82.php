@@ -61,4 +61,8 @@ class ClassWithPhp82NullFalseTypes
     {
         return null;
     }
+
+    public function acceptsTrue(true $acceptsTrue): void {}
+    public function acceptsFalse(false $acceptsFalse): void {}
+    public function acceptsNull(null $acceptsNull): void {}
 }
