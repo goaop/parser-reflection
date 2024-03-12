@@ -110,3 +110,10 @@ function functionWithPhp81NeverReturnType(): never
 {
     throw new \RuntimeException('Not implemented');
 }
+
+/**
+ * @see https://php.watch/versions/8.1/final-class-const
+ */
+class ClassWithPhp81FinalClassConst {
+    final public const TEST = '1';
+}
