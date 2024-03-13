@@ -185,12 +185,39 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getPrototype(): \ReflectionMethod
     {
+        $allKnownParents = [];
+
         $parent = $this->getDeclaringClass()->getParentClass();
-        if (!$parent) {
-            throw new ReflectionException("No prototype");
+        if ($parent instanceof \ReflectionClass) {
+            $allKnownParents[] = $parent;
+        }
+        $allKnownParents = array_merge($allKnownParents, $this->getDeclaringClass()->getInterfaces());
+        $methodName      = $this->getName();
+        foreach ($allKnownParents as $knownParent) {
+            if ($knownParent->hasMethod($methodName)) {
+                return $knownParent->getMethod($methodName);
+            }
         }
 
-        return $parent->getMethod($this->getName());
+        throw new ReflectionException("Method " . $this->getDeclaringClass()->getName() . "::" . $methodName . "() does not have prototype");
+    }
+
+    public function hasPrototype(): bool
+    {
+        $allKnownParents = [];
+
+        $parent = $this->getDeclaringClass()->getParentClass();
+        if ($parent instanceof \ReflectionClass) {
+            $allKnownParents[] = $parent;
+        }
+        $allKnownParents = array_merge($allKnownParents, $this->getDeclaringClass()->getInterfaces());
+        foreach ($allKnownParents as $knownParent) {
+            if ($knownParent->hasMethod($this->getName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
