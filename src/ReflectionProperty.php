@@ -124,7 +124,7 @@ class ReflectionProperty extends BaseReflectionProperty
     public function __debugInfo(): array
     {
         return [
-            'name'  => isset($this->propertyItemOrPromotedParam) ? $this->propertyItemOrPromotedParam->name->toString() : 'unknown',
+            'name'  => $this->getName(),
             'class' => $this->className
         ];
     }
@@ -209,7 +209,8 @@ class ReflectionProperty extends BaseReflectionProperty
 
         return match (true) {
             $node instanceof PropertyItem => $node->name->toString(),
-            $node instanceof Param => (string) $node->var->name
+            $node instanceof Param => (string) $node->var->name,
+            default => 'unknown'
         };
     }
 
