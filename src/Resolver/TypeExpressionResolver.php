@@ -130,7 +130,7 @@ class TypeExpressionResolver
     private function resolveIdentifier(Node\Identifier $node): ReflectionNamedType
     {
         $typeString = $node->toString();
-        $allowsNull = $typeString === 'null';
+        $allowsNull = in_array($typeString, ['null', 'mixed'], true);
 
         return new ReflectionNamedType($typeString, $allowsNull, true);
     }
