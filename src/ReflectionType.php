@@ -72,7 +72,8 @@ class ReflectionType extends BaseReflectionType
 
         $displayType = ltrim($displayType, '\\');
 
-        if ($type->allowsNull() && ! $type instanceof ReflectionUnionType) {
+        $specialNullableTypes = in_array($displayType, ['mixed', 'null'], true);
+        if ($type->allowsNull() && !$type instanceof ReflectionUnionType && !$specialNullableTypes) {
             $displayType = '?' . $displayType;
         }
 
