@@ -97,12 +97,26 @@ class ReflectionMethod extends BaseReflectionMethod
         $paramFormat      = $paramsNeeded ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $returnFormat     = $hasReturnType ? "\n  - Return [ %s ]" : '';
         $methodParameters = $this->getParameters();
-        try {
-            $prototype = $this->getPrototype();
-        } catch (\ReflectionException $e) {
-            $prototype = null;
+
+        $protoString = '';
+        if ($this->hasPrototype()) {
+            $prototype      = $this->getPrototype();
+            $prototypeClass = $prototype->getDeclaringClass()->name;
+            $parentClass    = $this->getDeclaringClass()->getParentClass();
+            // If we have the same method in parent, then we override it as well, otherwise it is prototype
+            $overrideProto = $parentClass && $parentClass->hasMethod($this->getName());
+            if ($overrideProto) {
+                $protoString .= ", overwrites {$prototypeClass}";
+            }
+            $protoString .= ", prototype {$prototypeClass}";
         }
-        $prototypeClass = $prototype ? $prototype->getDeclaringClass()->name : '';
+
+        $fileString = '';
+        if ($this->getFileName()) {
+            $fileString .= "\n  @@ " . $this->getFileName();
+            $fileString .= ' ' . $this->getStartLine();
+            $fileString .= ' - ' . $this->getEndLine();
+        }
 
         $paramString = '';
         $indentation = str_repeat(' ', 4);
@@ -111,9 +125,10 @@ class ReflectionMethod extends BaseReflectionMethod
         }
 
         return sprintf(
-            "%sMethod [ <user%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}{$returnFormat}\n}\n",
+            "%sMethod [ <%s%s%s>%s%s%s %s method %s ] {%s{$paramFormat}{$returnFormat}\n}\n",
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
-            $prototype ? ", overwrites {$prototypeClass}, prototype {$prototypeClass}" : '',
+            $this->isInternal() ? 'internal' : 'user',
+            $protoString,
             $this->isConstructor() ? ', ctor' : '',
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
@@ -125,9 +140,7 @@ class ReflectionMethod extends BaseReflectionMethod
                 )
             ),
             $this->getName(),
-            $this->getFileName(),
-            $this->getStartLine(),
-            $this->getEndLine(),
+            $fileString,
             count($methodParameters),
             $paramString,
             $returnType ? ReflectionType::convertToDisplayType($returnType) : ''
