@@ -33,13 +33,13 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Concrete class constant node
      */
-    private ClassConst|EnumCase $classConstantNode;
+    private ClassConst|EnumCase $classConstOrEnumCaseNode;
 
-    private ?Const_ $constNode;
+    private Const_|EnumCase $constOrEnumCaseNode;
 
     private string $className;
 
-    private mixed $value;
+    private mixed $value = null;
 
     /**
      * Parses class constants from the concrete class node
@@ -68,6 +68,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
                 $classConstants[$enumCaseName] = new static (
                     $reflectionClassFQN,
                     $enumCaseName,
+                    $classLevelNode,
                     $classLevelNode
                 );
             }
@@ -83,7 +84,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         string $className,
         string $classConstantName,
         ClassConst|EnumCase|null $classConstNode = null,
-        ?Const_ $constNode = null
+        Const_|EnumCase|null $constNode = null
     ) {
         $this->className = ltrim($className, '\\');
 
@@ -93,14 +94,14 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name, $this->class);
 
-        $this->classConstantNode = $classConstNode;
-        $this->constNode = $constNode;
+        $this->classConstOrEnumCaseNode = $classConstNode;
+        $this->constOrEnumCaseNode = $constNode;
 
         $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
 
         // We can statically resolve value only fot ClassConst, as for EnumCase we need to have object itself as default
         if ($classConstNode instanceof ClassConst) {
-            $expressionSolver->process($this->constNode->value);
+            $expressionSolver->process($this->constOrEnumCaseNode->value);
             $this->value = $expressionSolver->getValue();
         }
     }
@@ -129,7 +130,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function getDocComment(): string|false
     {
-        $docBlock = $this->classConstantNode->getDocComment();
+        $docBlock = $this->classConstOrEnumCaseNode->getDocComment();
 
         return $docBlock ? $docBlock->getText() : false;
     }
@@ -161,7 +162,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function getName(): string
     {
-        return $this->constNode->name->toString();
+        return $this->constOrEnumCaseNode->name->toString();
     }
 
     /**
@@ -177,7 +178,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isEnumCase(): bool
     {
-        return $this->classConstantNode instanceof EnumCase;
+        return $this->classConstOrEnumCaseNode instanceof EnumCase;
     }
 
     /**
@@ -185,7 +186,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isPrivate(): bool
     {
-        return $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isPrivate();
+        return $this->classConstOrEnumCaseNode instanceof ClassConst && $this->classConstOrEnumCaseNode->isPrivate();
     }
 
     /**
@@ -193,7 +194,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isProtected(): bool
     {
-        return $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isProtected();
+        return $this->classConstOrEnumCaseNode instanceof ClassConst && $this->classConstOrEnumCaseNode->isProtected();
     }
 
     /**
@@ -201,8 +202,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isPublic(): bool
     {
-        $isPublicClassConst = $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isPublic();
-        $isEnumCase         = $this->classConstantNode instanceof EnumCase;
+        $isPublicClassConst = $this->classConstOrEnumCaseNode instanceof ClassConst && $this->classConstOrEnumCaseNode->isPublic();
+        $isEnumCase         = $this->classConstOrEnumCaseNode instanceof EnumCase;
 
         return $isPublicClassConst || $isEnumCase;
     }
@@ -212,7 +213,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
      */
     public function isFinal(): bool
     {
-        return $this->classConstantNode instanceof ClassConst && $this->classConstantNode->isFinal();
+        return $this->classConstOrEnumCaseNode instanceof ClassConst && $this->classConstOrEnumCaseNode->isFinal();
     }
 
     /**
@@ -226,24 +227,29 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             'boolean' => 'bool',
             'double'  => 'float',
         ];
-        $value = $this->getValue();
+        $value = $this->isEnumCase() ? 'Object' : $this->getValue();
         $type  = gettype($value);
         if (isset($typeMap[$type])) {
             $type = $typeMap[$type];
+        }
+        $type = strtolower($type);
+
+        if ($this->isEnumCase()) {
+            $type = $this->className;
         }
         $valueType = new ReflectionType($type, false, true);
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
-            strtolower((string) ReflectionType::convertToDisplayType($valueType)),
+            ReflectionType::convertToDisplayType($valueType),
             $this->getName(),
-            (string) $value
+            $value
         );
     }
 
     public function getNode(): ClassConst|EnumCase
     {
-        return $this->classConstantNode;
+        return $this->classConstOrEnumCaseNode;
     }
 }
