@@ -107,7 +107,7 @@ trait ReflectionClassLikeTrait
 
         $staticProperties = $staticMethods = $defaultProperties = $dynamicProperties = $methods = [];
 
-        $format = "%s [ <user> %sclass %s%s%s ] {\n";
+        $format = "%s%s [ <user> %sclass %s%s%s ] {\n";
         $format .= "  @@ %s %d-%d\n\n";
         $format .= "  - Constants [%d] {%s\n  }\n\n";
         $format .= "  - Static properties [%d] {%s\n  }\n\n";
@@ -169,6 +169,7 @@ trait ReflectionClassLikeTrait
 
         $string = sprintf(
             $format,
+            $this->getDocComment() ? $this->getDocComment() . "\n" : '',
             ($isObject ? 'Object of class' : 'Class'),
             $modifiers,
             $this->getName(),
