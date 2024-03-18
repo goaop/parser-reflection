@@ -41,9 +41,6 @@ abstract class AbstractTestCase extends TestCase
         $allMissedMethods   = [];
 
         foreach ($allInternalMethods as $internalMethodName) {
-            if ('export' === $internalMethodName) {
-                continue;
-            }
             $refMethod    = new \ReflectionMethod(__NAMESPACE__ . '\\' . static::$reflectionClassToTest, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
             if (!str_starts_with($definerClass, __NAMESPACE__)) {
