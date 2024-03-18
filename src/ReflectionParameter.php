@@ -201,6 +201,10 @@ class ReflectionParameter extends BaseReflectionParameter
     public function getClass(): ?\ReflectionClass
     {
         $parameterType = $this->parameterNode->type;
+        if ($parameterType instanceof Identifier && $parameterType->name === 'iterable') {
+            // This is how PHP represents iterable pseudo-class
+            $parameterType = new Name\FullyQualified(\Traversable::class);
+        }
         if ($parameterType instanceof Name) {
             if (!$parameterType instanceof Name\FullyQualified) {
                 $parameterTypeName = $parameterType->toString();
