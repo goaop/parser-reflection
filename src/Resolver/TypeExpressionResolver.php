@@ -130,7 +130,7 @@ class TypeExpressionResolver
     {
         $type = $this->resolve($node->type);
 
-        return new ReflectionNamedType((string) $type, true, false);
+        return new ReflectionNamedType($type->getName(), true, false);
     }
 
     private function resolveIdentifier(Node\Identifier $node): ReflectionNamedType
