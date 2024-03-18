@@ -49,7 +49,7 @@ abstract class AbstractTestCase extends TestCase
         }
 
         if (count($allMissedMethods) > 0) {
-            $this->markTestIncomplete('Methods ' . join(', ', $allMissedMethods) . ' are not implemented');
+            $this->markTestIncomplete('Methods ' . join(', ', $allMissedMethods) . ' are not implemented for ' . static::$reflectionClassToTest);
         }
     }
 
