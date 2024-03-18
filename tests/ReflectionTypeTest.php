@@ -22,7 +22,7 @@ class ReflectionTypeTest extends TestCase
      */
     public function testTypeConvertToDisplayTypeWithNativeType(): void
     {
-        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
+        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp70ScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
         $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();
@@ -43,7 +43,7 @@ class ReflectionTypeTest extends TestCase
      */
     public function testTypeConvertToDisplayTypeWithNullableNativeType(): void
     {
-        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithNullableScalarTypeHints');
+        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp71NullableScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsDefaultString');
         $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();
@@ -64,7 +64,7 @@ class ReflectionTypeTest extends TestCase
      */
     public function testTypeConvertToDisplayTypeImplicitlyNullable(): void
     {
-        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithScalarTypeHints');
+        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp70ScalarTypeHints');
         $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringDefaultToNull');
         $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
         $nativeParamRefArr = $nativeMethodRef->getParameters();

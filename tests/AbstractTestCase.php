@@ -12,7 +12,7 @@ namespace Go\ParserReflection;
 
 use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\TestCase;
-use Go\ParserReflection\Stub\AbstractClassWithMethods;
+use Go\ParserReflection\Stub\SimplePhp50AbstractClassWithMethods;
 
 abstract class AbstractTestCase extends TestCase
 {
@@ -32,7 +32,7 @@ abstract class AbstractTestCase extends TestCase
     /**
      * Name of the class to load for default tests
      */
-    protected static string $defaultClassToLoad = AbstractClassWithMethods::class;
+    protected static string $defaultClassToLoad = SimplePhp50AbstractClassWithMethods::class;
 
     #[DoesNotPerformAssertions]
     final public function testCoverAllMethods(): void

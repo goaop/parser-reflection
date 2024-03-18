@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\Stub\ClassWithProperties;
+use Go\ParserReflection\Stub\SimplePhp50ClassWithProperties;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ReflectionPropertyTest extends AbstractTestCase
@@ -16,7 +16,7 @@ class ReflectionPropertyTest extends AbstractTestCase
     /**
      * Class to load
      */
-    protected static string $defaultClassToLoad = ClassWithProperties::class;
+    protected static string $defaultClassToLoad = SimplePhp50ClassWithProperties::class;
 
     /**
      * Performs method-by-method comparison with original reflection

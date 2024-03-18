@@ -26,7 +26,7 @@ class ClassWithPhp81ReadOnlyProperties
 /**
  * @see https://php.watch/versions/8.1/enums
  */
-enum Suit {
+enum SimplePhp81EnumWithSuit {
     case Clubs;
     case Diamonds;
     case Hearts;
@@ -36,7 +36,7 @@ enum Suit {
 /**
  * @see https://php.watch/versions/8.1/enums#enums-backed
  */
-enum HTTPMethods: string
+enum BackedPhp81EnumHTTPMethods: string
 {
     case GET = 'get';
     case POST = 'post';
@@ -45,7 +45,7 @@ enum HTTPMethods: string
 /**
  * @see https://php.watch/versions/8.1/enums#enum-methods
  */
-enum HTTPStatus: int
+enum BackedPhp81EnumHTTPStatusWithMethod: int
 {
     case OK = 200;
     case ACCESS_DENIED = 403;
@@ -57,9 +57,9 @@ enum HTTPStatus: int
 
     public static function getLabel(self $value): string {
         return match ($value) {
-            HTTPStatus::OK => 'OK',
-            HTTPStatus::ACCESS_DENIED => 'Access Denied',
-            HTTPStatus::NOT_FOUND => 'Page Not Found',
+            self::OK => 'OK',
+            self::ACCESS_DENIED => 'Access Denied',
+            self::NOT_FOUND => 'Page Not Found',
         };
     }
 }
