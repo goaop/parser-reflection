@@ -29,24 +29,24 @@ namespace Go\ParserReflection\Stub {
 
     function miscParameters(
         array $arrayParam,
-        array $arrayParamWithDefault = array(1, 2, 3),
-        array $arrayNullable = null,
         callable $callableParam,
-        callable $callableNullable = null,
         \stdClass $objectParam,
-        \stdClass $objectNullable = null,
         ReflectionParameter $typehintedParamWithNs,
         &$byReferenceParam,
-        &$byReferenceNullable = __CLASS__,
+        \Traversable $traversable,
+        array $arrayParamWithDefault = array(1, 2, 3),
+        array $arrayNullable = null,
+        callable $callableNullable = null,
+        \stdClass $objectNullable = null,
+        &$byReferenceNullable = __FUNCTION__,
         $constParam = TEST_PARAMETER,
         $constValueParam = __NAMESPACE__, // This line is long and should be truncated
-        \Traversable $traversable
     ) {
     }
 
     class Foo
     {
-        const CLASS_CONST = __CLASS__;
+        public const CLASS_CONST = __CLASS__;
 
         public function methodParam($firstParam, $optionalParam = null)
         {
@@ -63,7 +63,7 @@ namespace Go\ParserReflection\Stub {
 
     class SubFoo extends Foo
     {
-        const ANOTHER_CLASS_CONST = __CLASS__;
+        public const ANOTHER_CLASS_CONST = __CLASS__;
 
         public function anotherMethodParam(self $selfParam, parent $parentParam)
         {

@@ -15,7 +15,10 @@ use Go\ParserReflection\{ReflectionMethod, ReflectionProperty as P};
 
 // PHP 7.1+ code
 
-class ClassWithNullableScalarTypeHints
+/**
+ * @see https://www.php.net/manual/en/migration71.new-features.php#migration71.new-features.nullable-types
+ */
+class ClassWithPhp71NullableScalarTypeHints
 {
     public function acceptsInteger(?int $value) {}
     public function acceptsString(?string $value) {}
@@ -25,7 +28,7 @@ class ClassWithNullableScalarTypeHints
     public function acceptsDefaultString(?string $class = ReflectionMethod::class, ?string $name = P::class) {}
 }
 
-class ClassWithNullableReturnTypeHints
+class ClassWithPhp71NullableReturnTypeHints
 {
     public function returnsInteger() : ?int {}
     public function returnsString() : ?string {}
@@ -35,7 +38,10 @@ class ClassWithNullableReturnTypeHints
     public function returnsNamedObject() : ?P {}
 }
 
-class ClassWithPhp71Features
+/**
+ * @see https://www.php.net/manual/en/migration71.new-features.php#migration71.new-features.class-constant-visibility
+ */
+class ClassWithPhp71ClassConstantVisibility
 {
     /**
      * Description for PUBLIC_CONST_A
@@ -58,7 +64,30 @@ class ClassWithPhp71Features
     private const PRIVATE_CONST = 4;
 
     public const CALCULATED_CONST = 1 + 1;
+}
 
-    public function returnsVoid() : void {}
+/**
+ * @see https://www.php.net/manual/en/migration71.new-features.php#migration71.new-features.void-functions
+ */
+class ClassWithPhp71VoidReturnType
+{
+    public function returnsVoid(): void {}
+}
+
+/**
+ * @see https://www.php.net/manual/en/migration71.new-features.php#migration71.new-features.void-functions
+ */
+function functionWithPhp71VoidReturnType(): void {}
+
+/**
+ * @see https://www.php.net/manual/en/language.types.iterable.php
+ */
+class ClassWithPhp71IterablePseudoType
+{
     public function acceptsIterable(iterable $iterable) : iterable {}
 }
+
+/**
+ * @see https://www.php.net/manual/en/language.types.iterable.php
+ */
+function functionWithPhp71IterableType(iterable $iterable) : iterable {}

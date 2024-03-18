@@ -2,7 +2,7 @@
 
 namespace Go\ParserReflection\Stub;
 
-class ClassWithArrayConstants
+class ClassWithPhp56ArrayConstants
 {
     const A = [10, 11];
     const B = array(42.0, 43.0);
@@ -10,10 +10,10 @@ class ClassWithArrayConstants
 
 const NS_CONST56 = 'test';
 
-class ClassWithComplexConstantsAndInheritance extends ClassWithArrayConstants
+class ClassWithPhp56ComplexConstantsAndInheritance extends ClassWithPhp56ArrayConstants
 {
     const K = array(1, NS_CONST56);
-    const L = [self::class, ClassWithArrayConstants::A, parent::B, self::A];
+    const L = [self::class, ClassWithPhp56ArrayConstants::A, parent::B, self::A];
     const M = \DateTime::ATOM;
 }
 
@@ -49,8 +49,10 @@ const ONE = 1;
  * xor - Boolean XOR
  *
  * Also supported is grouping static operations: (1 + 2) * 3.
+ *
+ * @see https://wiki.php.net/rfc/const_scalar_exprs
  */
-class ClassWithConstantExpressions
+class ClassWithPhp56ConstantExpressions
 {
     const ADDITION            = ONE + 1;
     const SUBTRACTION         = 2 - ONE;

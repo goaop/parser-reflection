@@ -31,51 +31,24 @@ use PhpParser\ParserFactory;
  */
 class ReflectionEngine
 {
-    /**
-     * @var null|LocatorInterface
-     */
-    protected static $locator;
+    protected static ?LocatorInterface $locator;
 
     /**
-     * @var array|Node[]
+     * @var Node[][]
      */
-    protected static $parsedFiles = [];
+    protected static array $parsedFiles = [];
 
-    /**
-     * @var null|int
-     */
-    protected static $maximumCachedFiles;
+    protected static ?int $maximumCachedFiles;
 
-    /**
-     * @var null|Parser
-     */
-    protected static $parser;
+    protected static Parser $parser;
 
-    /**
-     * @var null|NodeTraverser
-     */
-    protected static $traverser;
-
-    /**
-     * @var null|Lexer
-     */
-    protected static $lexer;
+    protected static NodeTraverser $traverser;
 
     private function __construct() {}
 
     public static function init(LocatorInterface $locator): void
     {
-        self::$lexer = new Lexer(['usedAttributes' => [
-            'comments',
-            'startLine',
-            'endLine',
-            'startTokenPos',
-            'endTokenPos',
-            'startFilePos',
-            'endFilePos'
-        ]]);
-
-        self::$parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, self::$lexer);
+        self::$parser = (new ParserFactory())->createForHostVersion();
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver());
@@ -191,7 +164,7 @@ class ReflectionEngine
     /**
      * Parses class property
      *
-     * @return array Pair of [Property and PropertyProperty] nodes
+     * @return array Pair of [Property and PropertyItem] nodes
      */
     public static function parseClassProperty(string $fullClassName, string $propertyName): array
     {
@@ -214,8 +187,6 @@ class ReflectionEngine
     /**
      * Parses class constants
      *
-     * @param string $fullClassName
-     * @param string $constantName
      * @return array Pair of [ClassConst and Const_] nodes
      */
     public static function parseClassConstant(string $fullClassName, string $constantName): array
@@ -243,7 +214,7 @@ class ReflectionEngine
      *
      * @return Node[]
      */
-    public static function parseFile(string $fileName, ?string $fileContent = null)
+    public static function parseFile(string $fileName, ?string $fileContent = null): array
     {
         $fileName = PathResolver::realpath($fileName);
         if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
@@ -257,12 +228,12 @@ class ReflectionEngine
         if (!isset($fileContent)) {
             $fileContent = file_get_contents($fileName);
         }
-        $treeNode = self::$parser->parse($fileContent);
-        $treeNode = self::$traverser->traverse($treeNode);
+        $treeNodes = self::$parser->parse($fileContent);
+        $treeNodes = self::$traverser->traverse($treeNodes);
 
-        self::$parsedFiles[$fileName] = $treeNode;
+        self::$parsedFiles[$fileName] = $treeNodes;
 
-        return $treeNode;
+        return $treeNodes;
     }
 
     /**
@@ -287,11 +258,8 @@ class ReflectionEngine
         throw new ReflectionException("Namespace $namespaceName was not found in the file $fileName");
     }
 
-    /**
-     * @return Lexer
-     */
-    public static function getLexer(): ?Lexer
+    public static function getParser(): Parser
     {
-        return self::$lexer;
+        return self::$parser;
     }
 }

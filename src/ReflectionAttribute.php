@@ -12,16 +12,16 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
-use ReflectionAttribute as BaseReflectionAttribute;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\Node\Param;
+use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Property;
-use PhpParser\Node\Stmt\PropertyProperty;
+use ReflectionAttribute as BaseReflectionAttribute;
 
 /**
  * ref original usage https://3v4l.org/duaQI
@@ -38,11 +38,11 @@ class ReflectionAttribute extends BaseReflectionAttribute
 
     public function getNode(): Node\Attribute
     {
-        /** @var Class_|ClassMethod|PropertyProperty|ClassConst|Function_|Param $node  */
+        /** @var Class_|ClassMethod|PropertyItem|ClassConst|Function_|Param $node  */
         $node = $this->reflector->getNode();
 
         // attrGroups only exists in Property Stmt
-        if ($node instanceof PropertyProperty) {
+        if ($node instanceof PropertyItem) {
             $node = $this->reflector->getTypeNode();
         }
 

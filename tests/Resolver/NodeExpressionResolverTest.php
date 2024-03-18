@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Go\ParserReflection\ValueResolver;
+namespace Go\ParserReflection\Resolver;
 
 
 use PHPUnit\Framework\TestCase;
@@ -10,14 +10,11 @@ use PhpParser\ParserFactory;
 
 class NodeExpressionResolverTest extends TestCase
 {
-    /**
-     * @var null|Parser
-     */
-    protected $parser = null;
+    protected Parser $parser;
 
     protected function setUp(): void
     {
-        $this->parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
+        $this->parser = (new ParserFactory)->createForHostVersion();
     }
 
     /**
@@ -26,14 +23,14 @@ class NodeExpressionResolverTest extends TestCase
      * We're already testing constant fetch with a explicit class name
      * elsewhere.
      */
-    public function testResolveConstFetchFromExpressionAsClass()
+    public function testResolveConstFetchFromExpressionAsClass(): void
     {
         $expressionNodeTree = $this->parser->parse("<?php ('\\\\Date' . 'Time')::ATOM;");
         $expressionSolver = new NodeExpressionResolver(NULL);
         $expressionSolver->process($expressionNodeTree[0]);
-        $this->assertEquals(\DateTime::ATOM, $expressionSolver->getValue());
+        $this->assertSame(\DateTime::ATOM, $expressionSolver->getValue());
         $this->assertTrue($expressionSolver->isConstant());
-        $this->assertEquals('DateTime::ATOM', $expressionSolver->getConstantName());
+        $this->assertSame('DateTime::ATOM', $expressionSolver->getConstantName());
     }
 
     /**
@@ -41,10 +38,10 @@ class NodeExpressionResolverTest extends TestCase
      *
      * Evaluating a run-time value like a variable should throw an exception.
      */
-    public function testResolveConstFetchFromVariableAsClass()
+    public function testResolveConstFetchFromVariableAsClass(): void
     {
         $this->expectException(\Go\ParserReflection\ReflectionException::class);
-        $this->expectExceptionMessage('Method Go\ParserReflection\ValueResolver\NodeExpressionResolver::resolveExprVariable() not found trying to resolve class constant');
+        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\Resolver\NodeExpressionResolver::resolveExprVariable method');
 
         $expressionNodeTree = $this->parser->parse("<?php \$someVariable::FOO;");
         $expressionSolver = new NodeExpressionResolver(NULL);
@@ -56,10 +53,10 @@ class NodeExpressionResolverTest extends TestCase
      *
      * Non-expressions should be invalid.
      */
-    public function testResolveConstFetchFromNonExprAsClass()
+    public function testResolveConstFetchFromNonExprAsClass(): void
     {
         $this->expectException(\Go\ParserReflection\ReflectionException::class);
-        $this->expectExceptionMessage('Unable to resolve class constant');
+        $this->expectExceptionMessage('Could not find handler for the Go\ParserReflection\Resolver\NodeExpressionResolver::resolveStmtIf method');
 
         $expressionNodeTree = $this->parser->parse("<?php ClassNameToReplace::Bar;");
         $notAnExpressionNodeTree = $this->parser->parse("<?php if (true) { \$baz = 3; }");

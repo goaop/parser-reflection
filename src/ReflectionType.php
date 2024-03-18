@@ -18,52 +18,35 @@ use ReflectionUnionType;
 
 /**
  * ReflectionType implementation
+ * @see \Go\ParserReflection\ReflectionTypeTest
  */
 class ReflectionType extends BaseReflectionType
 {
     /**
      * If type allows null or not
-     *
-     * @var bool
      */
-    private $allowsNull;
+    private bool $allowsNull;
 
     /**
-     * Is type built-in or not
-     *
-     * @var
+     * Type name
      */
-    private $isBuiltin;
-
-    /**
-     * @var string Type name
-     */
-    private $type;
+    private string $type;
 
     /**
      * Initializes reflection data
      */
-    public function __construct($type, $allowsNull, $isBuiltin)
+    public function __construct(string $type, bool $allowsNull)
     {
         $this->type       = $type;
         $this->allowsNull = $allowsNull;
-        $this->isBuiltin  = $isBuiltin;
     }
 
     /**
      * @inheritDoc
      */
-    public function allowsNull()
+    public function allowsNull(): bool
     {
         return $this->allowsNull;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function isBuiltin(): bool
-    {
-        return $this->isBuiltin;
     }
 
     /**
@@ -78,12 +61,8 @@ class ReflectionType extends BaseReflectionType
      * PHP reflection has it's own rules, so 'int' type will be displayed as 'integer', etc...
      *
      * @see https://3v4l.org/nZFiT
-     *
-     * @param BaseReflectionType $type Type to display
-     *
-     * @return string
      */
-    public static function convertToDisplayType(BaseReflectionType $type)
+    public static function convertToDisplayType(BaseReflectionType $type): string
     {
         if ($type instanceof ReflectionNamedType) {
             $displayType = $type->getName();
@@ -93,7 +72,8 @@ class ReflectionType extends BaseReflectionType
 
         $displayType = ltrim($displayType, '\\');
 
-        if ($type->allowsNull() && ! $type instanceof ReflectionUnionType) {
+        $specialNullableTypes = in_array($displayType, ['mixed', 'null'], true);
+        if ($type->allowsNull() && !$type instanceof ReflectionUnionType && !$specialNullableTypes) {
             $displayType = '?' . $displayType;
         }
 

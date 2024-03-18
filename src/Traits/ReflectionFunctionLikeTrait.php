@@ -15,8 +15,9 @@ namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
-use Go\ParserReflection\ReflectionNamedType;
+use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionParameter;
+use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
@@ -34,22 +35,17 @@ trait ReflectionFunctionLikeTrait
 {
     use InitializationTrait;
 
-    /**
-     * @var FunctionLike
-     */
-    protected $functionLikeNode;
+    protected FunctionLike|Function_|ClassMethod $functionLikeNode;
 
     /**
      * Namespace name
-     *
-     * @var string
      */
-    protected $namespaceName = '';
+    protected string $namespaceName = '';
 
     /**
-     * @var array|ReflectionParameter[]
+     * @var ReflectionParameter[]
      */
-    protected $parameters;
+    protected array $parameters;
 
     /**
      * {@inheritDoc}
@@ -78,9 +74,13 @@ trait ReflectionFunctionLikeTrait
         return $docComment ? $docComment->getText() : false;
     }
 
-    public function getEndLine(): int
+    public function getEndLine(): int|false
     {
-        return $this->functionLikeNode->getAttribute('endLine');
+        if ($this->functionLikeNode->hasAttribute('endLine')) {
+            return $this->functionLikeNode->getAttribute('endLine');
+        }
+
+        return false;
     }
 
     public function getExtension(): ?ReflectionExtension
@@ -95,7 +95,11 @@ trait ReflectionFunctionLikeTrait
 
     public function getFileName(): string|false
     {
-        return $this->functionLikeNode->getAttribute('fileName');
+        if ($this->functionLikeNode->hasAttribute('fileName')) {
+            return $this->functionLikeNode->getAttribute('fileName');
+        }
+
+        return false;
     }
 
     /**
@@ -178,31 +182,16 @@ trait ReflectionFunctionLikeTrait
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.getreturntype.php
      */
-    public function getReturnType(): ?\ReflectionType
+    public function getReturnType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
-        $isBuiltin  = false;
-        $returnType = $this->functionLikeNode->getReturnType();
-        $isNullable = $returnType instanceof NullableType;
+        if ($this->hasReturnType()) {
+            $typeResolver = new TypeExpressionResolver($this);
+            $typeResolver->process($this->functionLikeNode->getReturnType(), false);
 
-        if ($isNullable) {
-            $returnType = $returnType->type;
-        }
-        if ($returnType instanceof Identifier) {
-            $isBuiltin  = true;
-            $returnType = $returnType->toString();
-        } elseif (is_object($returnType)) {
-            $returnType = $returnType->toString();
-        } elseif (is_string($returnType)) {
-            $isBuiltin = true;
-        } else {
-            return null;
+            return $typeResolver->getType();
         }
 
-        if ($returnType === 'iterable') {
-            $returnType = 'Traversable|array';
-        }
-
-        return new ReflectionNamedType($returnType, $isNullable, $isBuiltin);
+        return null;
     }
 
     /**
@@ -217,7 +206,7 @@ trait ReflectionFunctionLikeTrait
         throw new ReflectionException('unable to get short name');
     }
 
-    public function getStartLine(): int
+    public function getStartLine(): int|false
     {
         if ($this->functionLikeNode->attrGroups !== []) {
             $attrGroups = $this->functionLikeNode->attrGroups;
@@ -226,7 +215,11 @@ trait ReflectionFunctionLikeTrait
             return $lastAttrGroupsEndLine + 1;
         }
 
-        return $this->functionLikeNode->getAttribute('startLine');
+        if ($this->functionLikeNode->hasAttribute('startLine')) {
+            return $this->functionLikeNode->getAttribute('startLine');
+        }
+
+        return false;
     }
 
     /**
@@ -247,7 +240,6 @@ trait ReflectionFunctionLikeTrait
     /**
      * Checks if the function has a specified return type
      *
-     * @return bool
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.hasreturntype.php
      */
@@ -303,8 +295,9 @@ trait ReflectionFunctionLikeTrait
      */
     public function isInternal(): bool
     {
-        // never can be an internal method
-        return false;
+        // never can be an internal method, except for the Enum magic methods
+        $isEnumMethod = $this instanceof ReflectionMethod && $this->getDeclaringClass()->isEnum();
+        return $isEnumMethod && in_array($this->getName(), ['cases', 'tryFrom', 'from']);
     }
 
     /**
@@ -312,8 +305,9 @@ trait ReflectionFunctionLikeTrait
      */
     public function isUserDefined(): bool
     {
-        // always defined by user, because we parse the source code
-        return true;
+        // always user-defined method, except for the Enum magic methods
+        $isEnumMethod = $this instanceof ReflectionMethod && $this->getDeclaringClass()->isEnum();
+        return !($isEnumMethod && in_array($this->getName(), ['cases', 'tryFrom', 'from']));
     }
 
     /**

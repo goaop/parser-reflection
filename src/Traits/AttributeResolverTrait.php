@@ -14,7 +14,7 @@ namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
 use Go\ParserReflection\ReflectionProperty;
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 
 trait AttributeResolverTrait
 {
@@ -29,7 +29,6 @@ trait AttributeResolverTrait
             $node = $this->getNode();
         }
 
-        $node = $this->getNode();
         $attributes = [];
         $nodeExpressionResolver = new NodeExpressionResolver($this);
 

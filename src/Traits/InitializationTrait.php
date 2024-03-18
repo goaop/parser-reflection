@@ -17,10 +17,8 @@ trait InitializationTrait
 {
     /**
      * Is internal reflection is initialized or not
-     *
-     * @var bool
      */
-    private $isInitialized = false;
+    private bool $isInitialized = false;
 
     /**
      * Initializes internal reflection for calling misc runtime methods
@@ -43,8 +41,6 @@ trait InitializationTrait
 
     /**
      * Implementation of internal reflection initialization
-     *
-     * @return void
      */
     abstract protected function __initialize(): void;
 }

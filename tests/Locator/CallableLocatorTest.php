@@ -7,11 +7,9 @@ use PHPUnit\Framework\TestCase;
 
 class CallableLocatorTest extends TestCase
 {
-    public function testLocateClass()
+    public function testLocateClass(): void
     {
-        $callable = function ($class) {
-            return ltrim($class, '\\') . '.php';
-        };
+        $callable = fn($class) => ltrim($class, '\\') . '.php';
 
         $locator = new CallableLocator($callable);
 

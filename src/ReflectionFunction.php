@@ -15,11 +15,13 @@ use Closure;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Stmt\Function_;
 use ReflectionFunction as BaseReflectionFunction;
 
 /**
  * AST-based reflection for function
+ * @see \Go\ParserReflection\ReflectionFunctionTest
  */
 class ReflectionFunction extends BaseReflectionFunction
 {
@@ -30,10 +32,10 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * Initializes reflection instance for given AST-node
      *
-     * @param string|Closure $functionName The name of the function to reflect or a closure.
+     * @param string $functionName The name of the function to reflect.
      * @param Function_ $functionNode Function node AST
      */
-    public function __construct($functionName, Function_ $functionNode)
+    public function __construct(string $functionName, Function_ $functionNode)
     {
         $namespaceParts = explode('\\', $functionName);
         // Remove the last one part with function name
@@ -79,7 +81,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function invoke(mixed ...$args)
+    public function invoke(mixed ...$args): mixed
     {
         $this->initializeInternalReflection();
 
@@ -89,7 +91,7 @@ class ReflectionFunction extends BaseReflectionFunction
     /**
      * {@inheritDoc}
      */
-    public function invokeArgs(array $args)
+    public function invokeArgs(array $args): mixed
     {
         $this->initializeInternalReflection();
 
@@ -102,6 +104,7 @@ class ReflectionFunction extends BaseReflectionFunction
      * Only internal functions can be disabled using disable_functions directive.
      * User-defined functions are unaffected.
      */
+    #[Deprecated('ReflectionFunction::isDisabled() is deprecated', since: "8.0")]
     public function isDisabled(): bool
     {
         return false;
@@ -123,9 +126,7 @@ class ReflectionFunction extends BaseReflectionFunction
             $this->getStartLine(),
             $this->getEndLine(),
             count($this->getParameters()),
-            array_reduce($this->getParameters(), static function ($str, ReflectionParameter $param) {
-                return $str . "\n    " . $param;
-            }, '')
+            array_reduce($this->getParameters(), static fn($str, ReflectionParameter $param) => $str . "\n    " . $param, '')
         );
     }
 

@@ -10,7 +10,7 @@ class Locator implements LocatorInterface
     /**
      * @inheritdoc
      */
-    public function locateClass(string $className)
+    public function locateClass(string $className): false|string
     {
         if (ltrim($className, '\\') === ClassWithNamespace::class) {
             return __DIR__ . '/ClassWithNamespace.php';

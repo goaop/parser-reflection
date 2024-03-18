@@ -19,8 +19,6 @@ trait InternalPropertiesEmulationTrait
 {
     /**
      * Magic method that should be defined to provide an info about internal properties
-     *
-     * @return array
      */
     abstract public function __debugInfo(): array;
 

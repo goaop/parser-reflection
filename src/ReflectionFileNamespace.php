@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Instrument\PathResolver;
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
@@ -25,69 +25,58 @@ use PhpParser\Node\Stmt\Use_;
 
 /**
  * AST-based reflection for the concrete namespace in the file
+ * @see \Go\ParserReflection\ReflectionFileNamespaceTest
  */
 class ReflectionFileNamespace
 {
     /**
      * List of classes in the namespace
      *
-     * @var array|ReflectionClass[]
+     * @var ReflectionClass[]
      */
-    protected $fileClasses;
+    protected array $fileClasses;
 
     /**
      * List of functions in the namespace
      *
-     * @var array|ReflectionFunction[]
+     * @var ReflectionFunction[]
      */
-    protected $fileFunctions;
+    protected array $fileFunctions;
 
     /**
-     * List of constants in the namespace
-     *
-     * @var array
+     * Map of constants in the namespace
      */
-    protected $fileConstants;
+    protected array $fileConstants;
 
     /**
-     * List of constants in the namespace including defined via "define(...)"
-     *
-     * @var array
+     * Map of constants in the namespace including defined via "define(...)"
      */
-    protected $fileConstantsWithDefined;
+    protected array $fileConstantsWithDefined;
 
     /**
      * List of imported namespaces (aliases)
-     *
-     * @var array
      */
-    protected $fileNamespaceAliases;
+    protected array $fileNamespaceAliases;
 
     /**
      * Namespace node
-     *
-     * @var Namespace_
      */
-    private $namespaceNode;
+    private Namespace_ $namespaceNode;
 
     /**
      * Name of the file
-     *
-     * @var string
      */
-    private $fileName;
+    private string $fileName;
 
     /**
      * File namespace constructor
      *
-     * @param string          $fileName      Name of the file
-     * @param string          $namespaceName Name of the namespace
      * @param Namespace_|null $namespaceNode Optional AST-node for this namespace block
      */
     public function __construct(string $fileName, string $namespaceName, ?Namespace_ $namespaceNode = null)
     {
         $fileName = PathResolver::realpath($fileName);
-        if (!$namespaceNode) {
+        if (!isset($namespaceNode)) {
             $namespaceNode = ReflectionEngine::parseFileNamespace($fileName, $namespaceName);
         }
         $this->namespaceNode = $namespaceNode;
@@ -95,17 +84,17 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Returns the concrete class from the file namespace or false if there is no class
+     * Returns the concrete class from the file namespace
      *
-     * @return bool|ReflectionClass
+     * @throws ReflectionException if there is no such class
      */
-    public function getClass(string $className)
+    public function getClass(string $className): ReflectionClass
     {
-        if ($this->hasClass($className)) {
-            return $this->fileClasses[$className];
+        if (!$this->hasClass($className)) {
+            throw new ReflectionException("Could not find the class " . $className . " in the file " . $this->fileName);
         }
 
-        return false;
+        return $this->fileClasses[$className];
     }
 
     /**
@@ -123,25 +112,23 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Returns a value for the constant
+     * Returns a value for the given constant
      *
-     * @return bool|mixed
+     * @throws ReflectionException if there is no such constant in the file's namespace
      */
-    public function getConstant(string $constantName)
+    public function getConstant(string $constantName): mixed
     {
-        if ($this->hasConstant($constantName)) {
-            return $this->fileConstants[$constantName];
+        if (!$this->hasConstant($constantName)) {
+            throw new ReflectionException("Could not find the constant " . $constantName . " in the file " . $this->fileName);
         }
 
-        return false;
+        return $this->fileConstants[$constantName];
     }
 
     /**
      * Returns a list of defined constants in the namespace
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
-     *
-     * @return array
      */
     public function getConstants(bool $withDefined = false): array
     {
@@ -161,9 +148,7 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Gets doc comments from a class.
-     *
-     * @return string|false The doc comment if it exists, otherwise "false"
+     * Gets doc comments from a namespace node if it exists, otherwise "false"
      */
     public function getDocComment(): string|false
     {
@@ -178,11 +163,15 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Gets starting line number
+     * Gets starting line number or false if information is not available
      */
-    public function getEndLine(): int
+    public function getEndLine(): int|false
     {
-        return $this->namespaceNode->getAttribute('endLine');
+        if ($this->namespaceNode->hasAttribute('endLine')) {
+            return $this->namespaceNode->getAttribute('endLine');
+        }
+
+        return false;
     }
 
     /**
@@ -194,17 +183,17 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Returns the concrete function from the file namespace or false if there is no function
+     * Returns the concrete function from the file namespace
      *
-     * @return bool|ReflectionFunction
+     * @throws ReflectionException if there is no function
      */
-    public function getFunction(string $functionName)
+    public function getFunction(string $functionName): ReflectionFunction
     {
-        if ($this->hasFunction($functionName)) {
-            return $this->fileFunctions[$functionName];
+        if (!$this->hasFunction($functionName)) {
+            throw new ReflectionException("Could not find the function " . $functionName . " in the file " . $this->fileName);
         }
 
-        return false;
+        return $this->fileFunctions[$functionName];
     }
 
     /**
@@ -246,7 +235,7 @@ class ReflectionFileNamespace
     /**
      * Returns an AST-node for namespace
      */
-    public function getNode(): ?Namespace_
+    public function getNode(): Namespace_
     {
         return $this->namespaceNode;
     }
@@ -256,7 +245,7 @@ class ReflectionFileNamespace
      *
      * This method is useful because namespace can be declared with braces or without them
      */
-    public function getLastTokenPosition()
+    public function getLastTokenPosition(): int
     {
         $endNamespaceTokenPosition = $this->namespaceNode->getAttribute('endTokenPos');
 
@@ -268,11 +257,15 @@ class ReflectionFileNamespace
     }
 
     /**
-     * Gets starting line number
+     * Gets starting line number or false if information is not available
      */
-    public function getStartLine(): int
+    public function getStartLine(): int|false
     {
-        return $this->namespaceNode->getAttribute('startLine');
+        if ($this->namespaceNode->hasAttribute('startLine')) {
+            return $this->namespaceNode->getAttribute('startLine');
+        }
+
+        return false;
     }
 
     /**
@@ -356,8 +349,6 @@ class ReflectionFileNamespace
      * Searches for constants in the given AST
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
-     *
-     * @return array
      */
     private function findConstants(bool $withDefined = false): array
     {
@@ -384,16 +375,17 @@ class ReflectionFileNamespace
                     && $namespaceLevelNode->expr->name instanceof Name
                     && (string)$namespaceLevelNode->expr->name === 'define'
                 ) {
-                    $functionCallNode = $namespaceLevelNode->expr;
-                    $expressionSolver->process($functionCallNode->args[0]->value);
-                    $constantName = $expressionSolver->getValue();
+                    try {
+                        $functionCallNode = $namespaceLevelNode->expr;
+                        $expressionSolver->process($functionCallNode->args[0]->value);
+                        $constantName = $expressionSolver->getValue();
 
-                    // Ignore constants, for which name can't be determined.
-                    if (!empty($constantName)) {
                         $expressionSolver->process($functionCallNode->args[1]->value);
                         $constantValue = $expressionSolver->getValue();
 
                         $constants[$constantName] = $constantValue;
+                    } catch (\Throwable) {
+                        // Ignore all possible errors during evaluation of runtime constants defined in the code
                     }
                 }
             }
@@ -415,7 +407,7 @@ class ReflectionFileNamespace
                 $useAliases = $namespaceLevelNode->uses;
                 if (!empty($useAliases)) {
                     foreach ($useAliases as $useNode) {
-                        $namespaceAliases[$useNode->name->toString()] = (string) $useNode->getAlias();
+                        $namespaceAliases[$useNode->name->toString()] = $useNode->getAlias()->toString();
                     }
                 }
             }

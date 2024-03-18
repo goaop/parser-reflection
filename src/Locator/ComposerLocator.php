@@ -19,6 +19,7 @@ use Go\ParserReflection\ReflectionException;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
+ * @see \Go\ParserReflection\Locator\ComposerLocatorTest
  */
 class ComposerLocator implements LocatorInterface
 {
@@ -48,10 +49,8 @@ class ComposerLocator implements LocatorInterface
      * Returns a path to the file for given class name
      *
      * @param string $className Name of the class
-     *
-     * @return string|false Path to the file with given class or false if not found
-     */
-    public function locateClass(string $className)
+     **/
+    public function locateClass(string $className): false|string
     {
         $filePath = $this->loader->findFile(ltrim($className, '\\'));
         if (!empty($filePath)) {

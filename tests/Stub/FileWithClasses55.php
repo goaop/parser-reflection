@@ -2,9 +2,15 @@
 
 namespace Go\ParserReflection\Stub;
 
-abstract class ExplicitAbstractClass {}
+/**
+ * @see https://www.php.net/manual/en/language.oop5.abstract.php
+ */
+abstract class ClassWithPhp50ExplicitAbstractKeyword {}
 
-abstract class ImplicitAbstractClass
+/**
+ * @see https://www.php.net/manual/en/language.oop5.abstract.php
+ */
+abstract class ClassWithPhp50ImplicitAbstractKeyword
 {
     private $a = 'foo';
     protected $b = 'bar';
@@ -14,9 +20,9 @@ abstract class ImplicitAbstractClass
 }
 
 /**
- * Some docblock for the class
+ * @see https://www.php.net/manual/en/language.oop5.final.php
  */
-final class FinalClass
+final class ClassWithPhp50FinalKeyword
 {
     public $args = [];
     public function __construct($a = null, &$b = null)
@@ -25,7 +31,7 @@ final class FinalClass
     }
 }
 
-class BaseClass
+class SimplePhp50BaseClass
 {
     protected static function prototypeMethod()
     {
@@ -36,9 +42,9 @@ class BaseClass
 /**
  * @link https://bugs.php.net/bug.php?id=70957 self::class can not be resolved with reflection for abstract class
  */
-abstract class AbstractClassWithMethods extends BaseClass
+abstract class SimplePhp50AbstractClassWithMethods extends SimplePhp50BaseClass
 {
-    const TEST = 5;
+    public const TEST = 5;
 
     public function __construct(){}
     public function __destruct(){}
@@ -97,7 +103,7 @@ abstract class AbstractClassWithMethods extends BaseClass
     private function testParam($a, $b = null, $d = self::TEST, $d2 = self::TEST . '_append', $e = M_PI, $f = \M_PI, $g = ['test'], $h = false, $i = true, $j = array('yoo')) {}
 }
 
-class ClassWithProperties
+class SimplePhp50ClassWithProperties
 {
     private $privateProperty = 123;
     protected $protectedProperty = 'a';
@@ -113,7 +119,7 @@ class ClassWithProperties
     public static $publicStaticProperty = M_PI;
 }
 
-abstract class ClassWithMethodsAndProperties
+abstract class SimplePhp50ClassWithMethodsAndProperties
 {
     public $publicProperty;
     protected $protectedProperty;
@@ -136,43 +142,44 @@ abstract class ClassWithMethodsAndProperties
 
     final public function publicFinalMethod() {}
     final protected function protectedFinalMethod() {}
-    final private function privateFinalMethod() {}
 }
 
-interface SimpleInterface {}
+/**
+ * @see https://www.php.net/manual/en/language.oop5.interfaces.php
+ */
+interface SimplePhp50Interface {}
 
-interface InterfaceWithMethod {
+interface SimplePhp50InterfaceWithMethod {
     function foo();
 }
 
-trait SimpleTrait
+/**
+ * @see https://www.php.net/manual/en/language.oop5.traits.php
+ */
+trait SimplePhp54Trait
 {
     function foo() { return __CLASS__; }
 }
 
-trait ConflictedSimpleTrait
+trait SimplePhp54ConflictedTrait
 {
     function foo() { return 'BAZ'; }
 }
 
-class SimpleInheritance extends ExplicitAbstractClass {}
+class SimplePhp50ClassInheritance extends ClassWithPhp50ExplicitAbstractKeyword {}
 
-/*
- * Current implementation returns wrong __toString description for the parent methods
- * @see https://github.com/goaop/parser-reflection/issues/55
-abstract class SimpleAbstractInheritance extends ImplicitAbstractClass
+abstract class SimplePhp50AbstractClassInheritance extends ClassWithPhp50ImplicitAbstractKeyword
 {
     public $b = 'bar1';
     public $d = 'foobar';
     private $e = 'foobaz';
 }
-*/
 
-class ClassWithInterface implements SimpleInterface {}
+class ClassWithPhp50Interface implements SimplePhp50Interface {}
 
-class ClassWithTrait
+class ClassWithPhp54Trait
 {
-    use SimpleTrait;
+    use SimplePhp54Trait;
 }
 
 /*
@@ -199,29 +206,24 @@ class ClassWithTraitAndConflict
 /*
  * Logic of prototype methods for interface and traits was changed since 7.0.6
  * @see https://github.com/goaop/parser-reflection/issues/56
-class ClassWithTraitAndInterface implements InterfaceWithMethod
+
+class ClassWithTraitAndInterface implements SimplePhp50InterfaceWithMethod
 {
-    use SimpleTrait;
+    use SimplePhp54Trait;
 }
 */
 
-class NoCloneable
+class SimplePhp50NoCloneableClass
 {
     private function __clone() {}
 }
 
-class NoInstantiable
+class SimplePhp50NoInstantiableClass
 {
     private function __construct() {}
 }
 
-interface AbstractInterface
-{
-    public function foo();
-    public function bar();
-}
-
-class ClassWithScalarConstants
+class ClassWithPhp50ScalarConstants
 {
     const A = 10, A1 = 11;
     const B = 42.0;
@@ -230,7 +232,7 @@ class ClassWithScalarConstants
     const E = null;
 }
 
-class ClassWithMagicConstants
+class ClassWithPhp50MagicConstants
 {
     const A = __DIR__;
     const B = __FILE__;
@@ -245,7 +247,7 @@ class ClassWithMagicConstants
 
 const NS_CONST = 'test';
 
-class ClassWithConstantsAndInheritance extends ClassWithMagicConstants
+class ClassWithPhp50ConstantsAndInheritance extends ClassWithPhp50MagicConstants
 {
     const A = 'overridden';
     const H = M_PI;
@@ -254,7 +256,7 @@ class ClassWithConstantsAndInheritance extends ClassWithMagicConstants
     public static $h = self::H;
 }
 
-trait TraitWithProperties
+trait TraitWithPhp54Properties
 {
     private $a = 'foo';
     protected $b = 'bar';

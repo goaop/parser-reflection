@@ -14,7 +14,7 @@ namespace Go\ParserReflection\Stub;
 // PHP 7+ code
 use Go\ParserReflection\{ReflectionMethod, ReflectionProperty as P};
 
-class ClassWithScalarTypeHints
+class ClassWithPhp70ScalarTypeHints
 {
     public function acceptsInteger(int $value) {}
     public function acceptsString(string $value) {}
@@ -25,7 +25,7 @@ class ClassWithScalarTypeHints
     public function acceptsStringDefaultToNull(string $someName = null) {}
 }
 
-class ClassWithReturnTypeHints
+class ClassWithPhp70ReturnTypeHints
 {
     public function returnsInteger() : int {}
     public function returnsString() : string {}

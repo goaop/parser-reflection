@@ -16,6 +16,7 @@ use Go\ParserReflection\LocatorInterface;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
+ * @see \Go\ParserReflection\Locator\CallableLocatorTest
  */
 class CallableLocator implements LocatorInterface
 {
@@ -33,10 +34,8 @@ class CallableLocator implements LocatorInterface
      * Returns a path to the file for given class name
      *
      * @param string $className Name of the class
-     *
-     * @return string|false Path to the file with given class or false if not found
      */
-    public function locateClass(string $className)
+    public function locateClass(string $className): false|string
     {
         return call_user_func($this->callable, ltrim($className, '\\'));
     }

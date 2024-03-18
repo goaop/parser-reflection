@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Go\ParserReflection\NodeVisitor;
 
 use PhpParser\Node;
-use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 /**
@@ -21,7 +20,7 @@ use PhpParser\NodeVisitorAbstract;
  */
 class GeneratorDetector extends NodeVisitorAbstract
 {
-    private $isGenerator = false;
+    private bool $isGenerator = false;
 
     /**
      * {@inheritDoc}
@@ -30,7 +29,7 @@ class GeneratorDetector extends NodeVisitorAbstract
     {
         // There may be internal generators in closures, we do not need to look at them
         if ($node instanceof Node\Expr\Closure) {
-            return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+            return self::DONT_TRAVERSE_CHILDREN;
         }
 
         if ($node instanceof Node\Expr\Yield_ || $node instanceof Node\Expr\YieldFrom) {
