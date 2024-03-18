@@ -79,13 +79,6 @@ class ReflectionProperty extends BaseReflectionProperty
         $this->propertyOrPromotedParam     = $propertyOrPromotedParam;
         $this->propertyItemOrPromotedParam = $propertyItemOrPromotedParam;
 
-        if ($this->hasType()) {
-            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
-            $typeResolver->process($this->propertyOrPromotedParam->type);
-
-            $this->type = $typeResolver->getType();
-        }
-
         // Both PropertyItem and Param has `default` property
         if (isset($this->propertyItemOrPromotedParam->default) && $this->hasDefaultValue()) {
             $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
@@ -96,6 +89,16 @@ class ReflectionProperty extends BaseReflectionProperty
             $this->defaultValueConstantName = $expressionSolver->getConstantName();
             $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
             $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
+        }
+
+        if ($this->hasType()) {
+            // If we have null value, this handled internally as nullable type too
+            $hasDefaultNull = $this->hasDefaultValue() && $this->getDefaultValue() === null;
+
+            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver->process($this->propertyOrPromotedParam->type, $hasDefaultNull);
+
+            $this->type = $typeResolver->getType();
         }
 
         // Let's unset original read-only properties to have a control over them via __get

@@ -44,6 +44,11 @@ class TypeExpressionResolver
         \ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
 
     /**
+     * Whether this type has explicit null value set
+     */
+    private bool $hasDefaultNull = false;
+
+    /**
      * Node resolving level, 1 = top-level
      */
     private int $nodeLevel = 0;
@@ -63,11 +68,12 @@ class TypeExpressionResolver
     /**
      * @throws ReflectionException If node could not be resolved
      */
-    final public function process(Node $node): void
+    final public function process(Node $node, bool $hasDefaultNull): void
     {
-        $this->nodeLevel    = 0;
-        $this->nodeStack    = [$node]; // Always keep the root node
-        $this->type         = $this->resolve($node);
+        $this->hasDefaultNull = $hasDefaultNull;
+        $this->nodeLevel      = 0;
+        $this->nodeStack      = [$node]; // Always keep the root node
+        $this->type           = $this->resolve($node);
     }
 
     final public function getType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
@@ -130,19 +136,19 @@ class TypeExpressionResolver
     private function resolveIdentifier(Node\Identifier $node): ReflectionNamedType
     {
         $typeString = $node->toString();
-        $allowsNull = in_array($typeString, ['null', 'mixed'], true);
+        $allowsNull = $this->hasDefaultNull || in_array($typeString, ['null', 'mixed'], true);
 
         return new ReflectionNamedType($typeString, $allowsNull, true);
     }
 
     private function resolveName(Name $node): ReflectionNamedType
     {
-        return new ReflectionNamedType($node->toString(), false, false);
+        return new ReflectionNamedType($node->toString(), $this->hasDefaultNull, false);
     }
 
     private function resolveNameFullyQualified(Name\FullyQualified $node): ReflectionNamedType
     {
-        return new ReflectionNamedType((string) $node, false, false);
+        return new ReflectionNamedType((string) $node, $this->hasDefaultNull, false);
     }
 
     private function getDispatchMethodFor(Node $node): string

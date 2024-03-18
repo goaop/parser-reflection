@@ -186,7 +186,7 @@ trait ReflectionFunctionLikeTrait
     {
         if ($this->hasReturnType()) {
             $typeResolver = new TypeExpressionResolver($this);
-            $typeResolver->process($this->functionLikeNode->getReturnType());
+            $typeResolver->process($this->functionLikeNode->getReturnType(), false);
 
             return $typeResolver->getType();
         }

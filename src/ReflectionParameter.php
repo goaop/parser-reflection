@@ -111,8 +111,11 @@ class ReflectionParameter extends BaseReflectionParameter
         }
 
         if ($this->hasType()) {
+            // If we have null value, this handled internally as nullable type too
+            $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
+
             $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
-            $typeResolver->process($this->parameterNode->type);
+            $typeResolver->process($this->parameterNode->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();
         }
@@ -173,13 +176,8 @@ class ReflectionParameter extends BaseReflectionParameter
      */
     public function allowsNull(): bool
     {
-        $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
-        if ($hasDefaultNull) {
-            return true;
-        }
-
         // All non-typed parameters allows null by default
-        if (!isset($this->parameterNode->type)) {
+        if (!$this->hasType()) {
             return true;
         }
 

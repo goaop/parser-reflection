@@ -54,11 +54,25 @@ class ReflectionUnionType extends BaseReflectionUnionType
     {
         $stringTypes = array_map(function(ReflectionNamedType|ReflectionIntersectionType $type) {
             return match (true) {
-                $type instanceof ReflectionNamedType => (string) $type,
+                $type instanceof ReflectionNamedType => $type->getName(),
                 $type instanceof ReflectionIntersectionType => '(' . $type . ')',
             };
         }, $this->types);
 
+        $allowsNull = array_reduce(
+            $this->types,
+            fn(bool $allowsNull, \ReflectionType $type) => $allowsNull || $type->allowsNull(),
+            false
+        );
+        $hasExplicitNull = array_reduce(
+            $this->types,
+            fn(bool $hasExplicitNull, \ReflectionType $type) => $hasExplicitNull || in_array((string) $type, ['null', 'mixed']),
+            false
+        );
+
+        if ($allowsNull && !$hasExplicitNull) {
+            $stringTypes[] = 'null';
+        }
         // Special iterable type is already union Traversable|array, thus should be replaced
         $iterableIndex = array_search('iterable', $stringTypes, true);
         if ($iterableIndex !== false) {
