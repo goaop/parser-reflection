@@ -81,10 +81,14 @@ class ReflectionClassConstantTest extends AbstractTestCase
      */
     static protected function getGettersToCheck(): array
     {
+        $php83Getters = [];
+        if (PHP_VERSION_ID >= 80300) {
+            $php83Getters[] = 'hasType';
+        }
         return [
             'getDocComment', 'getModifiers', 'getName', 'getValue',
             'isPrivate', 'isProtected', 'isPublic', 'isFinal', 'isEnumCase',
-            '__toString'
+            '__toString', ...$php83Getters
         ];
     }
 }

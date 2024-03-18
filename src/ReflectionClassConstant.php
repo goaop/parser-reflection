@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
@@ -40,6 +41,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     private string $className;
 
     private mixed $value = null;
+
+    private \ReflectionUnionType|\ReflectionNamedType|\ReflectionIntersectionType|null $type = null;
 
     /**
      * Parses class constants from the concrete class node
@@ -103,6 +106,16 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         if ($classConstNode instanceof ClassConst) {
             $expressionSolver->process($this->constOrEnumCaseNode->value);
             $this->value = $expressionSolver->getValue();
+        }
+
+        if ($this->hasType()) {
+            // If we have null value, this handled internally as nullable type too
+            $hasDefaultNull = $this->getValue() === null;
+
+            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver->process($this->classConstOrEnumCaseNode->type, $hasDefaultNull);
+
+            $this->type = $typeResolver->getType();
         }
     }
 
@@ -219,6 +232,19 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      */
+    public function hasType(): bool
+    {
+        return $this->classConstOrEnumCaseNode instanceof ClassConst && isset($this->classConstOrEnumCaseNode->type);
+    }
+
+    public function getType(): ?\ReflectionType
+    {
+        return $this->type;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function __toString(): string
     {
         # Starting from PHP7.3 gettype returns different names, need to remap them
@@ -228,23 +254,27 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             'double'  => 'float',
         ];
         $value = $this->isEnumCase() ? 'Object' : $this->getValue();
-        $type  = gettype($value);
-        if (isset($typeMap[$type])) {
-            $type = $typeMap[$type];
-        }
-        $type = strtolower($type);
+        if (!$this->hasType()) {
+            $type  = gettype($value);
+            if (isset($typeMap[$type])) {
+                $type = $typeMap[$type];
+            }
+            $type = strtolower($type);
 
-        if ($this->isEnumCase()) {
-            $type = $this->className;
+            if ($this->isEnumCase()) {
+                $type = $this->className;
+            }
+            $valueType = new ReflectionType($type, false);
+        } else {
+            $valueType = $this->type;
         }
-        $valueType = new ReflectionType($type, false, true);
 
         return sprintf(
             "Constant [ %s %s %s ] { %s }\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
             ReflectionType::convertToDisplayType($valueType),
             $this->getName(),
-            $value
+            is_object($value) ? 'Object' : $value
         );
     }
 
