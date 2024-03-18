@@ -155,6 +155,10 @@ class NodeExpressionResolver
         try {
             $this->nodeStack[] = $node;
             ++$this->nodeLevel;
+            if ($this->nodeLevel > 1 && $this->isConstant) {
+                $this->isConstant   = false;
+                $this->constantName = null;
+            }
 
             $methodName = $this->getDispatchMethodFor($node);
             if (!method_exists($this, $methodName)) {
@@ -342,11 +346,15 @@ class NodeExpressionResolver
             }
         }
 
+        $isRealConstant = !isset(self::$notConstants[$constantName]);
         if (!$isResolved && defined($constantName)) {
             $constantValue = constant($constantName);
+            if (!$isFQNConstant) {
+                $constantName  = $this->context->getNamespaceName() . '\\' . $constantName;
+            }
         }
 
-        if ($this->nodeLevel === 1 && !isset(self::$notConstants[$constantName])) {
+        if ($this->nodeLevel === 1 && $isRealConstant) {
             $this->isConstant   = true;
             $this->isConstExpr  = true;
             $this->constantName = $constantName;
