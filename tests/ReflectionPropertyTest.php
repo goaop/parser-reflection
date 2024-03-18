@@ -56,6 +56,10 @@ class ReflectionPropertyTest extends AbstractTestCase
         $allNameGetters = self::getGettersToCheck();
         foreach (self::propertiesDataProvider() as $prefix => [$parsedClass, $classProperty]) {
             foreach ($allNameGetters as $getterName) {
+                // We could check isInitialized only for static properties
+                if ($getterName === 'isInitialized' && !$classProperty->isStatic()) {
+                    continue;
+                }
                 yield $prefix . ', ' . $getterName => [
                     $parsedClass,
                     $classProperty,
@@ -173,7 +177,7 @@ class ReflectionPropertyTest extends AbstractTestCase
     {
         return [
             'isDefault', 'getName', 'getModifiers', 'getDocComment',
-            'isPrivate', 'isProtected', 'isPublic', 'isStatic', 'isReadOnly',
+            'isPrivate', 'isProtected', 'isPublic', 'isStatic', 'isReadOnly', 'isInitialized',
             'hasType', 'hasDefaultValue', 'getDefaultValue', '__toString'
         ];
     }

@@ -350,6 +350,22 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
+    public function isInitialized(?object $object = null): bool
+    {
+        // If we have already object, we should proceed to original implementation
+        if (isset($object)) {
+            $this->initializeInternalReflection();
+
+            return parent::isInitialized($object);
+        }
+
+        // For static properties, we could check if we have default value
+        return $this->hasDefaultValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     #[Deprecated(reason: 'This method is no-op starting from PHP 8.1', since: '8.1')]
     public function setAccessible(bool $accessible): void
     {

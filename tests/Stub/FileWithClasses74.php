@@ -35,4 +35,11 @@ class ClassWithPhp74TypedProperties
     public float $initializedFloatProperty = 42.0;
     public array $initializedArrayProperty = [10, 20];
     public ?object $initializedNullableObjectProperty = null;
+
+    public static int $initializedStaticIntProperty = 10;
+    public static string $initializedStaticStringProperty = 'foo';
+    public static bool $initializedStaticBoolProperty = true;
+    public static float $initializedStaticFloatProperty = 42.0;
+    public static array $initializedStaticArrayProperty = [10, 20];
+    public static ?object $initializedStaticNullableObjectProperty = null;
 }
