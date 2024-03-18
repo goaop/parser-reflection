@@ -406,6 +406,10 @@ trait ReflectionClassLikeTrait
             $modifiers += \ReflectionClass::IS_FINAL;
         }
 
+        if ($this->isReadOnly()) {
+            $modifiers += \ReflectionClass::IS_READONLY;
+        }
+
         if ($this->classLikeNode instanceof Class_ && $this->classLikeNode->isAbstract()) {
             $modifiers += \ReflectionClass::IS_EXPLICIT_ABSTRACT;
         }
