@@ -44,7 +44,7 @@ class ClassWithPHP80NamedCall
 /**
  * @see https://php.watch/versions/8.0/attributes
  */
-#[Attribute(Attribute::TARGET_ALL)]
+#[Attribute(Attribute::TARGET_ALL | Attribute::IS_REPEATABLE)]
 readonly class ClassPHP80Attribute
 {
     private string $value;
@@ -66,6 +66,10 @@ readonly class ClassPHP80Attribute
 #[ClassPHP80Attribute('class')]
 class ClassPHP80WithAttribute
 {
+    #[ClassPHP80Attribute('first')]
+    #[ClassPHP80Attribute('second')]
+    public const PUBLIC_CONST = 1;
+
     #[ClassPHP80Attribute('property')]
     private string $privateProperty = 'foo';
 

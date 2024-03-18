@@ -4,34 +4,29 @@ declare(strict_types=1);
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\ClassWithProperties;
-use PhpParser\Lexer;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ReflectionPropertyTest extends AbstractTestCase
 {
     /**
      * Class to test
-     *
-     * @var string
      */
     protected static string $reflectionClassToTest = \ReflectionProperty::class;
 
     /**
      * Class to load
-     *
-     * @var string
      */
     protected static string $defaultClassToLoad = ClassWithProperties::class;
 
     /**
      * Performs method-by-method comparison with original reflection
      *
-     *
      * @param ReflectionClass     $parsedClass Parsed class
      * @param \ReflectionProperty $refProperty Property to analyze
      * @param string              $getterName  Name of the reflection method to test
      */
-    #[\PHPUnit\Framework\Attributes\DataProvider('caseProvider')]
-    public function testReflectionMethodParity(
+    #[DataProvider('reflectionGetterDataProvider')]
+    public function testReflectionGetterParity(
         ReflectionClass $parsedClass,
         \ReflectionProperty $refProperty,
         string $getterName
@@ -54,49 +49,41 @@ class ReflectionPropertyTest extends AbstractTestCase
     }
 
     /**
-     * Provides full test-case list in the form [ParsedClass, ReflectionMethod, getter name to check]
-     *
-     * @return \Generator
+     * Provides full test-case list in the form [ReflectionClass, \ReflectionProperty, getter name to check]
      */
-    public static function caseProvider(): \Generator
+    public static function reflectionGetterDataProvider(): \Generator
     {
-        $allNameGetters = static::getGettersToCheck();
-
-        $testCases = [];
-        $files     = static::getFilesToAnalyze();
-        foreach ($files as $fileList) {
-            foreach ($fileList as $fileName) {
-                // TODO: Can be replaced with $this->setUpFile() later...
-                $fileName = stream_resolve_include_path($fileName);
-                $fileNode = ReflectionEngine::parseFile($fileName);
-
-                $reflectionFile = new ReflectionFile($fileName, $fileNode);
-                include_once $fileName;
-                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
-                    foreach ($fileNamespace->getClasses() as $parsedClass) {
-                        $originalReflectionClass = new \ReflectionClass($parsedClass->getName());
-                        foreach ($originalReflectionClass->getProperties() as $classProperty) {
-                            $caseName = $parsedClass->getName() . '->' . $classProperty->getName();
-                            foreach ($allNameGetters as $getterName) {
-                                yield $caseName . ', ' . $getterName => [
-                                    $parsedClass,
-                                    $classProperty,
-                                    $getterName
-                                ];
-                            }
-                        }
-                    }
-                }
+        $allNameGetters = self::getGettersToCheck();
+        foreach (self::propertiesDataProvider() as $prefix => [$parsedClass, $classProperty]) {
+            foreach ($allNameGetters as $getterName) {
+                yield $prefix . ', ' . $getterName => [
+                    $parsedClass,
+                    $classProperty,
+                    $getterName
+                ];
             }
         }
     }
 
-    public function testGetProtectedValue(): void
+    #[DataProvider('propertiesDataProvider')]
+    public function testGetDefaultValue(ReflectionClass $parsedRefClass, \ReflectionProperty $originalRefProperty): void
     {
-        $parsedProperty = $this->parsedRefClass->getProperty('protectedStaticProperty');
-
-        $value = $parsedProperty->getValue();
-        $this->assertSame('foo', $value);
+        $propertyName   = $originalRefProperty->getName();
+        $parsedProperty = $parsedRefClass->getProperty($propertyName);
+        $className      = $parsedRefClass->getName();
+        $this->assertSame(
+            $originalRefProperty->hasDefaultValue(),
+            $parsedProperty->hasDefaultValue(),
+            "Presence of default value for property {$className}:{$propertyName} should be equal"
+        );
+        if ($originalRefProperty->isStatic()) {
+            $actualValue = $parsedProperty->getValue();
+            $this->assertSame($originalRefProperty->getValue(), $actualValue);
+        } elseif ($originalRefProperty->hasDefaultValue() && $parsedRefClass->isInstantiable()) {
+            $instance    = $parsedRefClass->newInstanceWithoutConstructor();
+            $actualValue = $parsedProperty->getValue(); // Let's try not to fallback to internal reflection, pure AST
+            $this->assertSame($originalRefProperty->getValue($instance), $actualValue);
+        }
     }
 
     public function testGetSetValueForObjectMethods(): void
@@ -122,55 +109,72 @@ class ReflectionPropertyTest extends AbstractTestCase
         $this->assertSame(M_PI, $originalValue);
     }
 
-    public function testDebugInfoMethod(): void
+    #[DataProvider('propertiesDataProvider')]
+    public function testDebugInfoMethod(ReflectionClass $parsedRefClass, \ReflectionProperty $originalRefProperty): void
     {
-        $parsedRefProperty   = $this->parsedRefClass->getProperty('publicStaticProperty');
-        $originalRefProperty = new \ReflectionProperty($this->parsedRefClass->getName(), 'publicStaticProperty');
-        $expectedValue     = (array) $originalRefProperty;
+        $propertyName      = $originalRefProperty->getName();
+        $className         = $parsedRefClass->getName();
+        $parsedRefProperty = $parsedRefClass->getProperty($propertyName);
+        if (!$parsedRefProperty instanceof ReflectionProperty) {
+            $this->markTestSkipped("Native reflection property {$className}->{$propertyName} represented similarly");
+        }
+        $expectedValue = (array) $originalRefProperty;
         $this->assertSame($expectedValue, $parsedRefProperty->__debugInfo());
     }
 
-    public function testGetTypeMethod(): void
+    #[DataProvider('propertiesDataProvider')]
+    public function testGetTypeMethod(ReflectionClass $parsedRefClass, \ReflectionProperty $originalRefProperty): void
     {
-        foreach ($this->parsedRefClass->getProperties() as $parsedProperty) {
-            $propertyName        = $parsedProperty->getName();
-            $className           = $this->parsedRefClass->getName();
-            $originalRefProperty = new \ReflectionProperty($className, $propertyName);
-            $hasType             = $parsedProperty->hasType();
+        $propertyName      = $originalRefProperty->getName();
+        $className         = $parsedRefClass->getName();
+        $parsedRefProperty = $parsedRefClass->getProperty($propertyName);
+
+        $hasType = $parsedRefProperty->hasType();
+        $this->assertSame(
+            $originalRefProperty->hasType(),
+            $hasType,
+            "Presence of type for property {$className}:{$propertyName} should be equal"
+        );
+        $message= "Type information for {$className}::$propertyName not equals to the original reflection";
+        if ($hasType) {
+            $parsedType   = $parsedRefProperty->getType();
+            $originalType = $originalRefProperty->getType();
+            $this->assertSame($originalType->allowsNull(), $parsedType->allowsNull(), $message);
+            $this->assertSame($originalType->__toString(), $parsedType->__toString(), $message);
+        } else {
             $this->assertSame(
-                $originalRefProperty->hasType(),
-                $hasType,
-                "Presence of type for property {$className}:{$propertyName} should be equal"
+                $originalRefProperty->getType(),
+                $parsedRefProperty->getType(),
+                $message
             );
-            $message= "Parameter {$className}:$propertyName not equals to the original reflection";
-            if ($hasType) {
-                $parsedType   = $parsedProperty->getType();
-                $originalType = $originalRefProperty->getType();
-                $this->assertSame($originalType->allowsNull(), $parsedType->allowsNull(), $message);
-                $this->assertSame($originalType->__toString(), $parsedType->__toString(), $message);
-            } else {
-                $this->assertSame(
-                    $originalRefProperty->getType(),
-                    $parsedProperty->getType(),
-                    $message
-                );
+        }
+    }
+
+    /**
+     * Provides full test-case list in the form [ParsedClass, \ReflectionProperty to check]
+     */
+    public static function propertiesDataProvider(): \Generator
+    {
+        foreach (self::classesDataProvider() as $prefix => [$parsedClass, $refClass]) {
+            foreach ($refClass->getProperties() as $classProperty) {
+                $fullPropertyName = $parsedClass->getName() . '->' . $classProperty->getName();
+                yield $prefix . ' ' . $fullPropertyName => [
+                    $parsedClass,
+                    $classProperty,
+                ];
             }
         }
     }
 
     /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
-     *
-     * @return array
      */
-    protected static function getGettersToCheck()
+    protected static function getGettersToCheck(): array
     {
-        $allNameGetters = [
+        return [
             'isDefault', 'getName', 'getModifiers', 'getDocComment',
             'isPrivate', 'isProtected', 'isPublic', 'isStatic', 'isReadOnly',
             'hasType', 'hasDefaultValue', 'getDefaultValue', '__toString'
         ];
-
-        return $allNameGetters;
     }
 }

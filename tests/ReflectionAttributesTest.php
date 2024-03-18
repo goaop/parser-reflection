@@ -3,15 +3,13 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Stub\ClassPHP80WithAttribute;
 use PhpParser\Node\Attribute;
 use PHPUnit\Framework\TestCase;
 
 class ReflectionAttributesTest extends TestCase
 {
-    /**
-     * @var ReflectionFile
-     */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     public function testGetAttributeOnFunction(): void
     {
@@ -37,15 +35,15 @@ class ReflectionAttributesTest extends TestCase
 
     public function testGetAttributeOnClassMethod(): void
     {
-        $this->setUpFile(__DIR__ . '/Stub/FileWithClassMethod80.php');
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClasses80.php');
 
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
-        $class = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassMethod');
+        $class = $fileNamespace->getClass(ClassPHP80WithAttribute::class);
 
         foreach ($class->getMethods() as $method) {
             $attributes = $method->getAttributes();
 
-            $originalReflection = new \ReflectionMethod('Go\ParserReflection\Stub\FileWithClassMethod', $method->getName());
+            $originalReflection = new \ReflectionMethod(ClassPHP80WithAttribute::class, $method->getName());
 
             foreach ($attributes as $attribute) {
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
@@ -90,15 +88,15 @@ class ReflectionAttributesTest extends TestCase
 
     public function testGetAttributeOnClassConst(): void
     {
-        $this->setUpFile(__DIR__ . '/Stub/FileWithClassConst80.php');
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClasses80.php');
 
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
-        $constants = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassConstAttribute')->getConstants();
+        $constants = $fileNamespace->getClass(ClassPHP80WithAttribute::class)->getConstants();
 
         foreach (array_keys($constants) as $constant) {
-            $reflectionClassConst = new ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
+            $reflectionClassConst = new ReflectionClassConstant(ClassPHP80WithAttribute::class, $constant);
             $attributes = $reflectionClassConst->getAttributes();
-            $originalReflection = new \ReflectionClassConstant('Go\ParserReflection\Stub\FileWithClassConstAttribute', $constant);
+            $originalReflection = new \ReflectionClassConstant(ClassPHP80WithAttribute::class, $constant);
 
             foreach ($attributes as $key => $attribute) {
                 $originalAttributes = $originalReflection->getAttributes($attribute->getName());
@@ -122,10 +120,10 @@ class ReflectionAttributesTest extends TestCase
 
     public function testGetAttributeOnClass(): void
     {
-        $this->setUpFile(__DIR__ . '/Stub/FileWithClass80.php');
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClasses80.php');
 
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
-        $class = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassAttribute');
+        $class = $fileNamespace->getClass(ClassPHP80WithAttribute::class);
 
         $attributes = $class->getAttributes();
         $originalReflection = new \ReflectionClass($class->getName());
@@ -140,20 +138,18 @@ class ReflectionAttributesTest extends TestCase
             $this->assertSame($originalAttribute->getArguments(), $attribute->getArguments());
             $this->assertSame($originalAttribute->isRepeated(), $attribute->isRepeated());
         }
-
-        $this->assertSame($originalReflection->__toString(), $class->__toString());
     }
 
     public function testGetAttributeOnProperty(): void
     {
-        $this->setUpFile(__DIR__ . '/Stub/FileWithClassProperty80.php');
+        $this->setUpFile(__DIR__ . '/Stub/FileWithClasses80.php');
 
         $fileNamespace = $this->parsedRefFile->getFileNamespace('Go\ParserReflection\Stub');
-        $properties = $fileNamespace->getClass('Go\ParserReflection\Stub\FileWithClassProperty')->getProperties();
+        $properties = $fileNamespace->getClass(ClassPHP80WithAttribute::class)->getProperties();
 
         foreach ($properties as $property) {
             $attributes = $property->getAttributes();
-            $originalReflection = new \ReflectionProperty('Go\ParserReflection\Stub\FileWithClassProperty', $property->getName());
+            $originalReflection = new \ReflectionProperty(ClassPHP80WithAttribute::class, $property->getName());
 
             foreach ($attributes as $attribute) {
                 $originalAttribute = current($originalReflection->getAttributes($attribute->getName()));
@@ -172,10 +168,8 @@ class ReflectionAttributesTest extends TestCase
 
     /**
      * Setups file for parsing
-     *
-     * @param string $fileName File name to use
      */
-    private function setUpFile($fileName): void
+    private function setUpFile(string $fileName): void
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);

@@ -3,19 +3,14 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
-use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\TestNamespaceClassFoo;
-use TypeError;
+use PHPUnit\Framework\TestCase;
 
 class ReflectionFileNamespaceTest extends TestCase
 {
     public const STUB_FILE = '/Stub/FileWithNamespaces.php';
     public const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
-
-    /**
-     * @var ReflectionFileNamespace
-     */
-    protected $parsedRefFileNamespace;
+    protected ReflectionFileNamespace $parsedRefFileNamespace;
 
     protected function setUp(): void
     {

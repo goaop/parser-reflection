@@ -11,11 +11,7 @@ class ReflectionFileTest extends TestCase
 {
     public const STUB_FILE        = '/Stub/FileWithNamespaces.php';
     public const STUB_GLOBAL_FILE = '/Stub/FileWithGlobalNamespace.php';
-
-    /**
-     * @var ReflectionFile
-     */
-    protected $parsedRefFile;
+    protected ReflectionFile $parsedRefFile;
 
     protected function setUp(): void
     {
@@ -68,12 +64,9 @@ class ReflectionFileTest extends TestCase
 
     /**
      * Tests if strict mode detected correctly
-     *
-     * @param string $fileName Filename to analyse
-     * @param bool $shouldBeStrict
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('fileNameProvider')]
-    public function testIsStrictType($fileName, $shouldBeStrict): void
+    public function testIsStrictType(string $fileName, bool $shouldBeStrict): void
     {
         $fileName       = stream_resolve_include_path(__DIR__ . $fileName);
         $reflectionFile = new ReflectionFile($fileName);

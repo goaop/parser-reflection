@@ -10,12 +10,15 @@ declare(strict_types=1);
  */
 namespace Go\ParserReflection;
 
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use PHPUnit\Framework\TestCase;
 use Go\ParserReflection\Stub\AbstractClassWithMethods;
 
 abstract class AbstractTestCase extends TestCase
 {
-    public const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
+    protected const DEFAULT_STUB_FILENAME = '/Stub/FileWithClasses55.php';
+
+    protected ReflectionFile $parsedRefFile;
 
     protected ReflectionFileNamespace $parsedRefFileNamespace;
 
@@ -31,8 +34,8 @@ abstract class AbstractTestCase extends TestCase
      */
     protected static string $defaultClassToLoad = AbstractClassWithMethods::class;
 
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public function testCoverAllMethods(): void
+    #[DoesNotPerformAssertions]
+    final public function testCoverAllMethods(): void
     {
         $allInternalMethods = get_class_methods(static::$reflectionClassToTest);
         $allMissedMethods   = [];
@@ -43,49 +46,123 @@ abstract class AbstractTestCase extends TestCase
             }
             $refMethod    = new \ReflectionMethod(__NAMESPACE__ . '\\' . static::$reflectionClassToTest, $internalMethodName);
             $definerClass = $refMethod->getDeclaringClass()->getName();
-            if (strpos($definerClass, __NAMESPACE__) !== 0) {
+            if (!str_starts_with($definerClass, __NAMESPACE__)) {
                 $allMissedMethods[] = $internalMethodName;
             }
         }
 
-        if ($allMissedMethods) {
+        if (count($allMissedMethods) > 0) {
             $this->markTestIncomplete('Methods ' . join(', ', $allMissedMethods) . ' are not implemented');
         }
     }
-
 
     /**
      * Provides a list of files for analysis
      */
     public static function getFilesToAnalyze(): \Generator
     {
-        yield 'PHP5.5' => [__DIR__ . '/Stub/FileWithClasses55.php'];
-        yield 'PHP5.6' => [__DIR__ . '/Stub/FileWithClasses56.php'];
-        yield 'PHP7.0' => [__DIR__ . '/Stub/FileWithClasses70.php'];
+        yield 'PHP5.5' => [
+            __DIR__ . '/Stub/FileWithClasses55.php',
+            __DIR__ . '/Stub/FileWithFunctions55.php',
+            __DIR__ . '/Stub/FileWithParameters55.php',
+        ];
+        yield 'PHP5.6' => [
+            __DIR__ . '/Stub/FileWithClasses56.php',
+            __DIR__ . '/Stub/FileWithParameters56.php'
+        ];
+        yield 'PHP7.0' => [
+            __DIR__ . '/Stub/FileWithClasses70.php',
+            __DIR__ . '/Stub/FileWithParameters70.php',
+            __DIR__ . '/Stub/FileWithFunctions70.php',
+        ];
         yield 'PHP7.1' => [__DIR__ . '/Stub/FileWithClasses71.php'];
-        yield 'PHP8.0' => [__DIR__ . '/Stub/FileWithClasses80.php'];
+        yield 'PHP8.0' => [
+            __DIR__ . '/Stub/FileWithClasses80.php',
+            __DIR__ . '/Stub/FileWithParameters80.php',
+            __DIR__ . '/Stub/FileWithFunction80.php',
+        ];
         yield 'PHP8.1' => [__DIR__ . '/Stub/FileWithClasses81.php'];
         yield 'PHP8.2' => [__DIR__ . '/Stub/FileWithClasses82.php'];
     }
 
     /**
-     * Returns list of ReflectionMethod getters that be checked directly without additional arguments
-     *
-     * @return array
+     * Provides generator list in the form [ParsedFile, ParsedFileNamespace]
      */
-    abstract static protected function getGettersToCheck();
+    public static function getFileNamespacesToAnalyze(): \Generator
+    {
+        foreach (static::getFilesToAnalyze() as $prefix => $fileList) {
+            foreach ($fileList as $fileName) {
+                $fileName = stream_resolve_include_path($fileName);
+                $fileNode = ReflectionEngine::parseFile($fileName);
+
+                $reflectionFile = new ReflectionFile($fileName, $fileNode);
+                include_once $fileName;
+                foreach ($reflectionFile->getFileNamespaces() as $fileNamespace) {
+                    yield $prefix => [$reflectionFile, $fileNamespace];
+                }
+            }
+        }
+    }
+
+    /**
+     * Provides generator list in the form [ParsedClass, ReflectionClass]
+     */
+    public static function classesDataProvider(): \Generator
+    {
+        foreach (static::getFileNamespacesToAnalyze() as $prefix => [$reflectionFile, $fileNamespace]) {
+            foreach ($fileNamespace->getClasses() as $parsedClass) {
+                $refClass = new \ReflectionClass($parsedClass->getName());
+                yield $prefix . ' ' . $refClass->getName() => [$parsedClass, $refClass];
+            }
+        }
+    }
+
+    /**
+     * Provides full test-case list in the form [ParsedClass, ReflectionMethod, \ReflectionMethod to check]
+     */
+    public static function methodsDataProvider(): \Generator
+    {
+        foreach (self::classesDataProvider() as $prefix => [$parsedClass, $refClass]) {
+            foreach ($refClass->getMethods() as $classMethod) {
+                $parsedMethod   = $parsedClass->getMethod($classMethod->getName());
+                $fullMethodName = $parsedClass->getName() . '->' . $classMethod->getName() . '()';
+                yield $prefix . ' ' . $fullMethodName => [
+                    $parsedClass,
+                    $parsedMethod,
+                    $classMethod
+                ];
+            }
+        }
+    }
+
+    /**
+     * Provides generator list in the form [ParsedFunction, ReflectionFunction]
+     */
+    public static function functionsDataProvider(): \Generator
+    {
+        foreach (static::getFileNamespacesToAnalyze() as $prefix => [$reflectionFile, $fileNamespace]) {
+            foreach ($fileNamespace->getFunctions() as $parsedFunction) {
+                $refFunction = new \ReflectionFunction($parsedFunction->getName());
+                yield $prefix . ' ' . $refFunction ->getName() => [$parsedFunction, $refFunction];
+            }
+        }
+    }
+
+    /**
+     * Returns list of ReflectionMethod getters that be checked directly without additional arguments
+     */
+    abstract static protected function getGettersToCheck(): array;
 
     /**
      * Setups file for parsing
-     *
-     * @param string $fileName File to use
      */
-    protected function setUpFile($fileName)
+    protected function setUpFile(string $fileName): void
     {
         $fileName = stream_resolve_include_path($fileName);
         $fileNode = ReflectionEngine::parseFile($fileName);
 
-        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        $reflectionFile      = new ReflectionFile($fileName, $fileNode);
+        $this->parsedRefFile = $reflectionFile;
 
         $parsedFileNamespace          = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
         $this->parsedRefFileNamespace = $parsedFileNamespace;
@@ -98,6 +175,6 @@ abstract class AbstractTestCase extends TestCase
 
     protected function setUp(): void
     {
-        $this->setUpFile(__DIR__ . self::DEFAULT_STUB_FILENAME);
+        $this->setUpFile(__DIR__ . static::DEFAULT_STUB_FILENAME);
     }
 }
