@@ -204,6 +204,11 @@ class ReflectionParameter extends BaseReflectionParameter
             $parameterType = new Name\FullyQualified(\Traversable::class);
         }
         if ($parameterType instanceof Name) {
+            // If we have resolved type name, we should use it instead
+            if ($parameterType->hasAttribute('resolvedName')) {
+                $parameterType = $parameterType->getAttribute('resolvedName');
+            }
+
             if (!$parameterType instanceof Name\FullyQualified) {
                 $parameterTypeName = $parameterType->toString();
 

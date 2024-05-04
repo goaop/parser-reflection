@@ -40,13 +40,18 @@ trait AttributeResolverTrait
                     $arguments[] = $nodeExpressionResolver->getValue();
                 }
 
+                $attributeNameNode = $attr->name;
+                // If we have resoled node name, then we should use it instead
+                if ($attributeNameNode->hasAttribute('resolvedName')) {
+                    $attributeNameNode = $attributeNameNode->getAttribute('resolvedName');
+                }
                 if ($name === null) {
-                    $attributes[] = new ReflectionAttribute($attr->name->toString(), $this, $arguments, $this->isAttributeRepeated($attr->name->toString(), $node->attrGroups));
+                    $attributes[] = new ReflectionAttribute($attributeNameNode->toString(), $this, $arguments, $this->isAttributeRepeated($attributeNameNode->toString(), $node->attrGroups));
 
                     continue;
                 }
 
-                if ($name !== $attr->name->toString()) {
+                if ($name !== $attributeNameNode->toString()) {
                     continue;
                 }
 
@@ -63,7 +68,13 @@ trait AttributeResolverTrait
 
         foreach ($attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
-                if ($attr->name->toString() === $attributeName) {
+                $attributeNameNode = $attr->name;
+                // If we have resoled node name, then we should use it instead
+                if ($attributeNameNode->hasAttribute('resolvedName')) {
+                    $attributeNameNode = $attributeNameNode->getAttribute('resolvedName');
+                }
+
+                if ($attributeNameNode->toString() === $attributeName) {
                     ++$count;
                 }
             }

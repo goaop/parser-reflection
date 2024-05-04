@@ -19,6 +19,7 @@ use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
@@ -450,13 +451,12 @@ trait ReflectionClassLikeTrait
     public function getParentClass(): \ReflectionClass|false
     {
         if (!isset($this->parentClass)) {
-            static $extendsField = 'extends';
 
             $parentClass = false;
-            $hasExtends  = in_array($extendsField, $this->classLikeNode->getSubNodeNames(), true);
-            $extendsNode = $hasExtends ? $this->classLikeNode->$extendsField : null;
-            if ($extendsNode instanceof FullyQualified) {
-                $extendsName = $extendsNode->toString();
+            $extendsNode = $this->classLikeNode->extends ?? null;
+
+            if ($extendsNode instanceof Name && $extendsNode->getAttribute('resolvedName') instanceof FullyQualified) {
+                $extendsName = $extendsNode->getAttribute('resolvedName')->toString();
                 $parentClass = $this->createReflectionForClass($extendsName);
             }
             $this->parentClass = $parentClass;
