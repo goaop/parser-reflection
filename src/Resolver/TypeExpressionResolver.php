@@ -143,6 +143,10 @@ class TypeExpressionResolver
 
     private function resolveName(Name $node): ReflectionNamedType
     {
+        if ($node->hasAttribute('resolvedName')) {
+            $node = $node->getAttribute('resolvedName');
+        }
+
         return new ReflectionNamedType($node->toString(), $this->hasDefaultNull, false);
     }
 
@@ -156,71 +160,5 @@ class TypeExpressionResolver
         $nodeType = $node->getType();
 
         return 'resolve' . str_replace('_', '', $nodeType);
-    }
-
-    /**
-     * Utility method to fetch reflection class instance by name
-     *
-     * Supports:
-     *   'self' keyword
-     *   'parent' keyword
-     *    not-FQN class names
-     *
-     * @param Node\Name $node Class name node
-     *
-     * @return bool|\ReflectionClass
-     *
-     * @throws ReflectionException
-     */
-    private function fetchReflectionClass(Node\Name $node)
-    {
-        $className  = $node->toString();
-        $isFQNClass = $node instanceof Node\Name\FullyQualified;
-        if ($isFQNClass) {
-            // check to see if the class is already loaded and is safe to use
-            // PHP's ReflectionClass to determine if the class is user defined
-            if (class_exists($className, false)) {
-                $refClass = new \ReflectionClass($className);
-                if (!$refClass->isUserDefined()) {
-                    return $refClass;
-                }
-            }
-
-            return new ReflectionClass($className);
-        }
-
-        if ('self' === $className) {
-            if ($this->context instanceof \ReflectionClass) {
-                return $this->context;
-            }
-
-            if (method_exists($this->context, 'getDeclaringClass')) {
-                return $this->context->getDeclaringClass();
-            }
-        }
-
-        if ('parent' === $className) {
-            if ($this->context instanceof \ReflectionClass) {
-                return $this->context->getParentClass();
-            }
-
-            if (method_exists($this->context, 'getDeclaringClass')) {
-                return $this->context->getDeclaringClass()
-                                     ->getParentClass()
-                    ;
-            }
-        }
-
-        if (method_exists($this->context, 'getFileName')) {
-            /** @var ReflectionFileNamespace|null $fileNamespace */
-            $fileName      = $this->context->getFileName();
-            $namespaceName = $this->resolveScalarMagicConstNamespace();
-
-            $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
-
-            return $fileNamespace->getClass($className);
-        }
-
-        throw new ReflectionException("Can not resolve class $className");
     }
 }

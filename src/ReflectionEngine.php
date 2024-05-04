@@ -51,7 +51,13 @@ class ReflectionEngine
         self::$parser = (new ParserFactory())->createForHostVersion();
 
         self::$traverser = $traverser = new NodeTraverser();
-        $traverser->addVisitor(new NameResolver());
+        $traverser->addVisitor(new NameResolver(
+            null,
+            [
+                'preserveOriginalNames' => true,
+                'replaceNodes' => false,
+            ]
+        ));
         $traverser->addVisitor(new RootNamespaceNormalizer());
 
         self::$locator = $locator;

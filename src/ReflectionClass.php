@@ -15,6 +15,7 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
+use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Enum_;
@@ -68,8 +69,8 @@ class ReflectionClass extends InternalReflectionClass
 
         if (count($implementsList) > 0) {
             foreach ($implementsList as $implementNode) {
-                if ($implementNode instanceof FullyQualified) {
-                    $implementName = $implementNode->toString();
+                if ($implementNode instanceof Name && $implementNode->getAttribute('resolvedName') instanceof FullyQualified) {
+                    $implementName = $implementNode->getAttribute('resolvedName')->toString();
                     $interface     = interface_exists($implementName, false)
                         ? new parent($implementName)
                         : new static($implementName);
@@ -108,8 +109,8 @@ class ReflectionClass extends InternalReflectionClass
             foreach ($classLikeNode->stmts as $classLevelNode) {
                 if ($classLevelNode instanceof TraitUse) {
                     foreach ($classLevelNode->traits as $classTraitName) {
-                        if ($classTraitName instanceof FullyQualified) {
-                            $traitName          = $classTraitName->toString();
+                        if ($classTraitName instanceof Name && $classTraitName->getAttribute('resolvedName') instanceof FullyQualified) {
+                            $traitName          = $classTraitName->getAttribute('resolvedName')->toString();
                             $trait              = trait_exists($traitName, false)
                                 ? new parent($traitName)
                                 : new static($traitName);

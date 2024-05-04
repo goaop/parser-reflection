@@ -49,7 +49,12 @@ class ReflectionAttribute extends BaseReflectionAttribute
         $nodeExpressionResolver = new NodeExpressionResolver($this);
         foreach ($node->attrGroups as $attrGroup) {
             foreach ($attrGroup->attrs as $attr) {
-                if ($attr->name->toString() !== $this->attributeName) {
+                $attributeNodeName = $attr->name;
+                // Unpack fully-resolved class name from attribute if we have it
+                if ($attributeNodeName->hasAttribute('resolvedName')) {
+                    $attributeNodeName = $attributeNodeName->getAttribute('resolvedName');
+                }
+                if ($attributeNodeName->toString() !== $this->attributeName) {
                     continue;
                 }
 

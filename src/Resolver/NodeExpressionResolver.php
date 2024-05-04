@@ -15,6 +15,7 @@ namespace Go\ParserReflection\Resolver;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\ReflectionNamedType;
 use PhpParser\Node;
 use PhpParser\Node\Const_;
 use PhpParser\Node\Expr;
@@ -112,12 +113,17 @@ class NodeExpressionResolver
             // Clone node to avoid possible side-effects
             $node = clone $this->nodeStack[$this->nodeLevel];
             if ($node instanceof Expr\ConstFetch) {
-                if ($node->name->isFullyQualified()) {
+                $constantNodeName = $node->name;
+                // Unpack fully-resolved name if we have it inside attribute
+                if ($constantNodeName->hasAttribute('resolvedName')) {
+                    $constantNodeName = $constantNodeName->getAttribute('resolvedName');
+                }
+                if ($constantNodeName->isFullyQualified()) {
                     // For full-qualified names we would like to remove leading "\"
-                    $node->name = new Name(ltrim($node->name->toString(), '\\'));
+                    $node->name = new Name(ltrim($constantNodeName->toString(), '\\'));
                 } else {
                     // For relative names we would like to add namespace prefix
-                    $node->name = new Name($this->resolveScalarMagicConstNamespace() . '\\' . $node->name->toString());
+                    $node->name = new Name($this->resolveScalarMagicConstNamespace() . '\\' . $constantNodeName->toString());
                 }
             }
             // All long array nodes are pretty-printed by PHP in short format
@@ -182,6 +188,15 @@ class NodeExpressionResolver
 
     protected function resolveNameFullyQualified(Name\FullyQualified $node): string
     {
+        return $node->toString();
+    }
+
+    private function resolveName(Name $node): string
+    {
+        if ($node->hasAttribute('resolvedName')) {
+            return $node->getAttribute('resolvedName')->toString();
+        }
+
         return $node->toString();
     }
 
@@ -332,8 +347,13 @@ class NodeExpressionResolver
         $constantValue = null;
         $isResolved    = false;
 
-        $isFQNConstant = $node->name instanceof Node\Name\FullyQualified;
-        $constantName  = $node->name->toString();
+        $nodeConstantName = $node->name;
+        // If we have resolved type name
+        if ($nodeConstantName->hasAttribute('resolvedName')) {
+            $nodeConstantName = $nodeConstantName->getAttribute('resolvedName');
+        }
+        $isFQNConstant = $nodeConstantName instanceof Node\Name\FullyQualified;
+        $constantName  = $nodeConstantName->toString();
 
         if (!$isFQNConstant && method_exists($this->context, 'getFileName')) {
             $fileName      = $this->context->getFileName();
@@ -365,18 +385,29 @@ class NodeExpressionResolver
 
     protected function resolveExprClassConstFetch(Expr\ClassConstFetch $node)
     {
-        $classToReflect = $node->class;
-        if (!($classToReflect instanceof Node\Name)) {
-            $classToReflect = $this->resolve($classToReflect);
-            if (!is_string($classToReflect)) {
+        $classToReflectNodeName = $node->class;
+        if (!($classToReflectNodeName instanceof Node\Name)) {
+            $classToReflectNodeName = $this->resolve($classToReflectNodeName);
+            if (!is_string($classToReflectNodeName)) {
                 throw new ReflectionException("Unable to resolve class constant.");
             }
             // Strings evaluated as class names are always treated as fully
             // qualified.
-            $classToReflect = new Node\Name\FullyQualified(ltrim($classToReflect, '\\'));
+            $classToReflectNodeName = new Node\Name\FullyQualified(ltrim($classToReflectNodeName, '\\'));
         }
-        $refClass     = $this->fetchReflectionClass($classToReflect);
-        $constantName = ($node->name instanceof Expr\Error) ? '' : $node->name->toString();
+        // Unwrap resolved class name if we have it inside attributes
+        if ($classToReflectNodeName->hasAttribute('resolvedName')) {
+            $classToReflectNodeName = $classToReflectNodeName->getAttribute('resolvedName');
+        }
+        $refClass = $this->fetchReflectionClass($classToReflectNodeName);
+        if (($node->name instanceof Expr\Error)) {
+            $constantName = '';
+        } else {
+            $constantName = match (true) {
+                $node->name->hasAttribute('resolvedName') => $node->name->getAttribute('resolvedName')->toString(),
+                default => $node->name->toString(),
+            };
+        }
 
         // special handling of ::class constants
         if ('class' === $constantName) {
@@ -385,7 +416,7 @@ class NodeExpressionResolver
 
         $this->isConstant   = true;
         $this->isConstExpr  = true;
-        $this->constantName = $classToReflect . '::' . $constantName;
+        $this->constantName = $classToReflectNodeName . '::' . $constantName;
 
         return $refClass->getConstant($constantName);
     }
@@ -581,6 +612,10 @@ class NodeExpressionResolver
      */
     private function fetchReflectionClass(Node\Name $node)
     {
+        // If we have already resolved node name, we should use it instead
+        if ($node->hasAttribute('resolvedName')) {
+            $node = $node->getAttribute('resolvedName');
+        }
         $className  = $node->toString();
         $isFQNClass = $node instanceof Node\Name\FullyQualified;
         if ($isFQNClass) {
