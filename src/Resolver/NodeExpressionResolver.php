@@ -589,6 +589,16 @@ class NodeExpressionResolver
         return $this->resolve($node->left) xor $this->resolve($node->right);
     }
 
+    protected function resolveExprUnaryMinus(Expr\UnaryMinus $node): int|float
+    {
+        return -$this->resolve($node->expr);
+    }
+
+    protected function resolveExprUnaryPlus(Expr\UnaryPlus $node): int|float
+    {
+        return $this->resolve($node->expr);
+    }
+
     private function getDispatchMethodFor(Node $node): string
     {
         $nodeType = $node->getType();
