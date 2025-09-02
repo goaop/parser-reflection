@@ -28,7 +28,7 @@ class ComposerLocator implements LocatorInterface
      */
     private $loader;
 
-    public function __construct(ClassLoader $composerLoader = null)
+    public function __construct(?ClassLoader $composerLoader = null)
     {
         if ($composerLoader === null) {
             $loaders = spl_autoload_functions();
