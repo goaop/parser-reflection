@@ -68,8 +68,8 @@ class ReflectionProperty extends BaseReflectionProperty
     public function __construct(
         string             $className,
         string             $propertyName,
-        Property|Param     $propertyOrPromotedParam = null,
-        PropertyItem|Param $propertyItemOrPromotedParam = null
+        Property|Param|null     $propertyOrPromotedParam = null,
+        PropertyItem|Param|null $propertyItemOrPromotedParam = null
     ) {
         $this->className = ltrim($className, '\\');
         if (!$propertyOrPromotedParam || !$propertyItemOrPromotedParam) {
