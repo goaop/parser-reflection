@@ -201,12 +201,9 @@ class ReflectionProperty extends BaseReflectionProperty
         }
 
         // Handle PHP 8.4+ asymmetric visibility modifiers
-        // In PHP 8.4, readonly properties automatically get IS_PRIVATE_SET flag
-        // because readonly properties can't be set after initialization
-        if ($this->isReadOnly() && PHP_VERSION_ID >= 80400) {
-            // PHP 8.4 introduced IS_PRIVATE_SET = 2048 for asymmetric visibility
-            $modifiers += 2048; // ReflectionProperty::IS_PRIVATE_SET
-        }
+        // Note: IS_PRIVATE_SET and IS_PROTECTED_SET are only added for properties with explicit 
+        // asymmetric visibility syntax like "public private(set) $prop", not for regular readonly properties
+        // TODO: Implement when nikic/php-parser supports asymmetric visibility syntax
 
         return $modifiers;
     }
