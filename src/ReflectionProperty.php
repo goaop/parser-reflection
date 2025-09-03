@@ -200,6 +200,11 @@ class ReflectionProperty extends BaseReflectionProperty
             $modifiers += self::IS_READONLY;
         }
 
+        // Handle PHP 8.4+ asymmetric visibility modifiers
+        // Note: IS_PRIVATE_SET and IS_PROTECTED_SET are only added for properties with explicit 
+        // asymmetric visibility syntax like "public private(set) $prop", not for regular readonly properties
+        // TODO: Implement when nikic/php-parser supports asymmetric visibility syntax
+
         return $modifiers;
     }
 
@@ -346,6 +351,7 @@ class ReflectionProperty extends BaseReflectionProperty
     {
         return $this->propertyOrPromotedParam->isReadonly() || $this->getDeclaringClass()->isReadOnly();
     }
+
 
     /**
      * {@inheritDoc}
