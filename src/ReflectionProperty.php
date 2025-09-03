@@ -201,12 +201,11 @@ class ReflectionProperty extends BaseReflectionProperty
         }
 
         // Handle PHP 8.4+ asymmetric visibility modifiers
-        // These constants were introduced in PHP 8.4 for asymmetric property visibility
-        if (defined('ReflectionProperty::IS_PRIVATE_SET') && $this->hasPrivateSetVisibility()) {
-            $modifiers += constant('ReflectionProperty::IS_PRIVATE_SET');
-        }
-        if (defined('ReflectionProperty::IS_PROTECTED_SET') && $this->hasProtectedSetVisibility()) {
-            $modifiers += constant('ReflectionProperty::IS_PROTECTED_SET');
+        // In PHP 8.4, readonly properties automatically get IS_PRIVATE_SET flag
+        // because readonly properties can't be set after initialization
+        if ($this->isReadOnly() && PHP_VERSION_ID >= 80400) {
+            // PHP 8.4 introduced IS_PRIVATE_SET = 2048 for asymmetric visibility
+            $modifiers += 2048; // ReflectionProperty::IS_PRIVATE_SET
         }
 
         return $modifiers;
@@ -356,37 +355,6 @@ class ReflectionProperty extends BaseReflectionProperty
         return $this->propertyOrPromotedParam->isReadonly() || $this->getDeclaringClass()->isReadOnly();
     }
 
-    /**
-     * Checks if property has private setter visibility (asymmetric visibility)
-     * 
-     * This is a PHP 8.4+ feature where properties can have different visibility
-     * for get/set operations, e.g.: public private(set) $prop
-     * 
-     * @return bool Always returns false until nikic/php-parser supports asymmetric visibility syntax
-     * @since PHP 8.4
-     */
-    private function hasPrivateSetVisibility(): bool
-    {
-        // TODO: Implement when nikic/php-parser supports asymmetric visibility syntax
-        // For now, always return false since the parser doesn't support this syntax yet
-        return false;
-    }
-
-    /**
-     * Checks if property has protected setter visibility (asymmetric visibility)
-     * 
-     * This is a PHP 8.4+ feature where properties can have different visibility
-     * for get/set operations, e.g.: public protected(set) $prop
-     * 
-     * @return bool Always returns false until nikic/php-parser supports asymmetric visibility syntax
-     * @since PHP 8.4
-     */
-    private function hasProtectedSetVisibility(): bool
-    {
-        // TODO: Implement when nikic/php-parser supports asymmetric visibility syntax
-        // For now, always return false since the parser doesn't support this syntax yet
-        return false;
-    }
 
     /**
      * {@inheritDoc}
