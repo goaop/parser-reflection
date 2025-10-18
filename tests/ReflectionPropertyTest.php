@@ -175,10 +175,16 @@ class ReflectionPropertyTest extends AbstractTestCase
      */
     protected static function getGettersToCheck(): array
     {
-        return [
+        $getters = [
             'isDefault', 'getName', 'getModifiers', 'getDocComment',
             'isPrivate', 'isProtected', 'isPublic', 'isStatic', 'isReadOnly', 'isInitialized',
             'hasType', 'hasDefaultValue', 'getDefaultValue', '__toString'
         ];
+
+        if (PHP_VERSION_ID >= 80400) {
+            array_push($getters, 'isAbstract', 'isProtectedSet', 'isPrivateSet', 'isFinal');
+        }
+
+        return $getters;
     }
 }

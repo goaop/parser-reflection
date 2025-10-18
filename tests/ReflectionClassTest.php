@@ -5,6 +5,7 @@ namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\ClassWithPhp50ConstantsAndInheritance;
 use Go\ParserReflection\Stub\ClassWithPhp50MagicConstants;
+use Go\ParserReflection\Stub\ClassWithPhp84PropertyHooks;
 use Go\ParserReflection\Stub\SimplePhp50ClassWithMethodsAndProperties;
 use Go\ParserReflection\Stub\ClassWithPhp50ScalarConstants;
 use Go\ParserReflection\Stub\ClassWithPhp50FinalKeyword;
@@ -67,6 +68,12 @@ class ReflectionClassTest extends AbstractTestCase
             $this->markTestSkipped(
                 "getConstants for enum {$className} couldn't be resolved fully from AST.\n" .
                 "See https://github.com/goaop/parser-reflection/issues/132"
+            );
+        }
+        if ($parsedClass->getName() === ClassWithPhp84PropertyHooks::class && in_array($getterName, ['isIterable', 'isIterateable'], true)) {
+            $this->markTestSkipped(
+                "isIterable for class with hooks returns true.\n" .
+                "See https://github.com/php/php-src/issues/20217"
             );
         }
         $this->assertSame(

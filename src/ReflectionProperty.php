@@ -199,9 +199,21 @@ class ReflectionProperty extends BaseReflectionProperty
         if ($this->isReadOnly()) {
             $modifiers += self::IS_READONLY;
         }
+        if (PHP_VERSION_ID >= 80400 && $this->isAbstract()) {
+            $modifiers += self::IS_ABSTRACT;
+        }
+        if (PHP_VERSION_ID >= 80400 && $this->isFinal()) {
+            $modifiers += self::IS_FINAL;
+        }
+        if (PHP_VERSION_ID >= 80400 && $this->isProtectedSet()) {
+            $modifiers += self::IS_PROTECTED_SET;
+        }
+        if (PHP_VERSION_ID >= 80400 && $this->isPrivateSet()) {
+            $modifiers += self::IS_PRIVATE_SET;
+        }
 
         // Handle PHP 8.4+ asymmetric visibility modifiers
-        // Note: IS_PRIVATE_SET and IS_PROTECTED_SET are only added for properties with explicit 
+        // Note: IS_PRIVATE_SET and IS_PROTECTED_SET are only added for properties with explicit
         // asymmetric visibility syntax like "public private(set) $prop", not for regular readonly properties
         // TODO: Implement when nikic/php-parser supports asymmetric visibility syntax
 
@@ -280,11 +292,39 @@ class ReflectionProperty extends BaseReflectionProperty
     /**
      * @inheritDoc
      */
+    public function isAbstract(): bool
+    {
+        if ($this->propertyOrPromotedParam instanceof Property) {
+            return $this->propertyOrPromotedParam->isAbstract();
+        }
+
+        return false;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function isDefault(): bool
     {
         // TRUE if the property was declared at compile-time
 
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @see Property::isFinal()
+     */
+    public function isFinal(): bool
+    {
+        $explicitFinal = false;
+        if ($this->propertyOrPromotedParam instanceof Property) {
+            $explicitFinal = $this->propertyOrPromotedParam->isFinal();
+        }
+
+        // Property with private(set) modifier is implicitly final
+        return $explicitFinal || $this->isPrivateSet();
     }
 
     /**
@@ -299,6 +339,17 @@ class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
+     * @inheritDoc
+     *
+     * @see Property::isPrivateSet()
+     * @see Param::isPrivateSet()
+     */
+    public function isPrivateSet(): bool
+    {
+        return ($this->propertyOrPromotedParam->isPrivateSet() && !$this->propertyOrPromotedParam->isPrivate());
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see Property::isProtected()
@@ -307,6 +358,22 @@ class ReflectionProperty extends BaseReflectionProperty
     public function isProtected(): bool
     {
         return $this->propertyOrPromotedParam->isProtected();
+    }
+
+    /**
+     * @inheritDoc
+     *
+     * @see Property::isProtectedSet()
+     * @see Param::isProtectedSet()
+     */
+    public function isProtectedSet(): bool
+    {
+        /*
+         * Behavior of readonly is to imply protected(set), not private(set).
+         * A readonly property may still be explicitly declared private(set), in which case it will also be implicitly final
+         */
+        return ($this->propertyOrPromotedParam->isProtectedSet() && !$this->propertyOrPromotedParam->isProtected())
+            || ($this->isPublic() && $this->isReadonly() && !$this->isPrivateSet() && !$this->propertyOrPromotedParam->isPublicSet());
     }
 
     /**
@@ -352,7 +419,6 @@ class ReflectionProperty extends BaseReflectionProperty
         return $this->propertyOrPromotedParam->isReadonly() || $this->getDeclaringClass()->isReadOnly();
     }
 
-
     /**
      * {@inheritDoc}
      */
@@ -367,6 +433,14 @@ class ReflectionProperty extends BaseReflectionProperty
 
         // For static properties, we could check if we have default value
         return $this->hasDefaultValue();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isVirtual(): bool
+    {
+        return $this->propertyOrPromotedParam->isVirtual();
     }
 
     /**
