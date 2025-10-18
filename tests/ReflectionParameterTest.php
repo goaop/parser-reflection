@@ -216,6 +216,44 @@ class ReflectionParameterTest extends AbstractTestCase
     }
 
     /**
+     * Test that parameters with new expression default values work correctly
+     */
+    public function testParametersWithNewExpressionDefaults(): void
+    {
+        $fileName = __DIR__ . '/Stub/FileWithNewExpressionDefaults.php';
+        $reflectionFile = new ReflectionFile($fileName);
+        $parsedFileNamespace = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+        
+        // Test the method from the reported issue
+        $parsedClass = $parsedFileNamespace->getClass('Go\ParserReflection\Stub\TestClassWithNewExpressionDefaults');
+        $parsedMethod = $parsedClass->getMethod('deactivateSeries');
+        $parsedParameter = $parsedMethod->getParameters()[0];
+        
+        $this->assertTrue($parsedParameter->isDefaultValueAvailable());
+        $this->assertFalse($parsedParameter->isDefaultValueConstant());
+        
+        $defaultValue = $parsedParameter->getDefaultValue();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $defaultValue);
+        
+        // Test DateTime default
+        $parsedMethod2 = $parsedClass->getMethod('withDateTime');
+        $parsedParameter2 = $parsedMethod2->getParameters()[0];
+        
+        $this->assertTrue($parsedParameter2->isDefaultValueAvailable());
+        $defaultValue2 = $parsedParameter2->getDefaultValue();
+        $this->assertInstanceOf(\DateTime::class, $defaultValue2);
+        $this->assertSame('2023-01-01', $defaultValue2->format('Y-m-d'));
+        
+        // Test stdClass default
+        $parsedMethod3 = $parsedClass->getMethod('withStdClass');
+        $parsedParameter3 = $parsedMethod3->getParameters()[0];
+        
+        $this->assertTrue($parsedParameter3->isDefaultValueAvailable());
+        $defaultValue3 = $parsedParameter3->getDefaultValue();
+        $this->assertInstanceOf(\stdClass::class, $defaultValue3);
+    }
+
+    /**
      * @inheritDoc
      */
     static protected function getGettersToCheck(): array

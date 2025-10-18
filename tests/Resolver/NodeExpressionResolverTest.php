@@ -65,4 +65,44 @@ class NodeExpressionResolverTest extends TestCase
         $expressionSolver = new NodeExpressionResolver(NULL);
         $expressionSolver->process($expressionNodeTree[0]);
     }
+
+    /**
+     * Testing resolving new expression with a simple instantiation
+     */
+    public function testResolveNewExpression(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php new \\DateTime('2023-01-01');");
+        $expressionSolver = new NodeExpressionResolver(NULL);
+        $expressionSolver->process($expressionNodeTree[0]);
+        
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\DateTime::class, $value);
+        $this->assertSame('2023-01-01', $value->format('Y-m-d'));
+    }
+
+    /**
+     * Testing resolving new expression without constructor arguments
+     */
+    public function testResolveNewExpressionWithoutArguments(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php new \\stdClass();");
+        $expressionSolver = new NodeExpressionResolver(NULL);
+        $expressionSolver->process($expressionNodeTree[0]);
+        
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\stdClass::class, $value);
+    }
+
+    /**
+     * Testing resolving new expression with DateTimeImmutable as in the issue
+     */
+    public function testResolveNewExpressionDateTimeImmutable(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php new \\DateTimeImmutable('today');");
+        $expressionSolver = new NodeExpressionResolver(NULL);
+        $expressionSolver->process($expressionNodeTree[0]);
+        
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\DateTimeImmutable::class, $value);
+    }
 }

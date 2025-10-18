@@ -231,6 +231,49 @@ class NodeExpressionResolver
         return $reflectedFunction->invoke(...$resolvedArgs);
     }
 
+    /**
+     * Resolves new expression by instantiating the class with constructor arguments
+     *
+     * @throws \Throwable In case of any errors during class instantiation
+     */
+    protected function resolveExprNew(Expr\New_ $node): object
+    {
+        $classToInstantiateNode = $node->class;
+        
+        // Resolve class name - it can be a Name node or an expression
+        if ($classToInstantiateNode instanceof Node\Name) {
+            // Unwrap resolved class name if we have it inside attributes
+            if ($classToInstantiateNode->hasAttribute('resolvedName')) {
+                $classToInstantiateNode = $classToInstantiateNode->getAttribute('resolvedName');
+            }
+            $className = $classToInstantiateNode->toString();
+        } else {
+            // It's an expression, resolve it to get class name
+            $className = $this->resolve($classToInstantiateNode);
+            if (!is_string($className)) {
+                throw new ReflectionException("Unable to resolve class name for instantiation.");
+            }
+        }
+
+        // Resolve constructor arguments
+        $resolvedArgs = [];
+        foreach ($node->args as $argumentNode) {
+            $value = $this->resolve($argumentNode->value);
+            // if constructor uses named arguments, then unpack argument name first
+            if (isset($argumentNode->name)) {
+                $name = $this->resolve($argumentNode->name);
+                $resolvedArgs[$name] = $value;
+            } else {
+                // otherwise simply add argument to the list
+                $resolvedArgs[] = $value;
+            }
+        }
+
+        // Use ReflectionClass to safely instantiate the class
+        $reflectionClass = new \ReflectionClass($className);
+        return $reflectionClass->newInstance(...$resolvedArgs);
+    }
+
     protected function resolveScalarFloat(Float_ $node): float
     {
         return $node->value;
