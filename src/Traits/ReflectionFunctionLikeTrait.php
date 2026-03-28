@@ -78,11 +78,9 @@ trait ReflectionFunctionLikeTrait
 
     public function getEndLine(): int|false
     {
-        if ($this->functionLikeNode->hasAttribute('endLine')) {
-            return $this->functionLikeNode->getAttribute('endLine');
-        }
+        $endLine = $this->functionLikeNode->getAttribute('endLine');
 
-        return false;
+        return is_int($endLine) ? $endLine : false;
     }
 
     public function getExtension(): ?ReflectionExtension
@@ -97,11 +95,9 @@ trait ReflectionFunctionLikeTrait
 
     public function getFileName(): string|false
     {
-        if ($this->functionLikeNode->hasAttribute('fileName')) {
-            return $this->functionLikeNode->getAttribute('fileName');
-        }
+        $fileName = $this->functionLikeNode->getAttribute('fileName');
 
-        return false;
+        return is_string($fileName) ? $fileName : false;
     }
 
     /**
@@ -213,14 +209,12 @@ trait ReflectionFunctionLikeTrait
             $attrGroups = $this->functionLikeNode->getAttrGroups();
             $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
 
-            return $lastAttrGroupsEndLine + 1;
+            return is_int($lastAttrGroupsEndLine) ? $lastAttrGroupsEndLine + 1 : false;
         }
 
-        if ($this->functionLikeNode->hasAttribute('startLine')) {
-            return $this->functionLikeNode->getAttribute('startLine');
-        }
+        $startLine = $this->functionLikeNode->getAttribute('startLine');
 
-        return false;
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**

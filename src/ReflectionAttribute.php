@@ -71,7 +71,10 @@ class ReflectionAttribute extends BaseReflectionAttribute
                 $attributeNodeName = $attr->name;
                 // Unpack fully-resolved class name from attribute if we have it
                 if ($attributeNodeName->hasAttribute('resolvedName')) {
-                    $attributeNodeName = $attributeNodeName->getAttribute('resolvedName');
+                    $resolvedName = $attributeNodeName->getAttribute('resolvedName');
+                    if ($resolvedName instanceof \PhpParser\Node\Name) {
+                        $attributeNodeName = $resolvedName;
+                    }
                 }
                 if ($attributeNodeName->toString() !== $this->attributeName) {
                     continue;

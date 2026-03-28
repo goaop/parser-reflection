@@ -318,7 +318,9 @@ trait ReflectionClassLikeTrait
 
     public function getEndLine(): int|false
     {
-        return $this->classLikeNode->getAttribute('endLine');
+        $endLine = $this->classLikeNode->getAttribute('endLine');
+
+        return is_int($endLine) ? $endLine : false;
     }
 
     public function getExtension(): ?ReflectionExtension
@@ -333,7 +335,9 @@ trait ReflectionClassLikeTrait
 
     public function getFileName(): string|false
     {
-        return $this->classLikeNode->getAttribute('fileName');
+        $fileName = $this->classLikeNode->getAttribute('fileName');
+
+        return is_string($fileName) ? $fileName : false;
     }
 
     /**
@@ -642,10 +646,12 @@ trait ReflectionClassLikeTrait
             $attrGroups = $this->classLikeNode->attrGroups;
             $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
 
-            return $lastAttrGroupsEndLine + 1;
+            return is_int($lastAttrGroupsEndLine) ? $lastAttrGroupsEndLine + 1 : false;
         }
 
-        return $this->classLikeNode->getAttribute('startLine');
+        $startLine = $this->classLikeNode->getAttribute('startLine');
+
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**
@@ -1039,7 +1045,9 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * @return array<string|int, mixed>
+     * @template TValue
+     * @param \Closure(array<string, TValue>&, \ReflectionClass<object>, bool): void $collector
+     * @return array<string, TValue>
      */
     private function recursiveCollect(Closure $collector): array
     {

@@ -12,6 +12,14 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection\NodeVisitor;
 
+use Go\ParserReflection\ReflectionAttribute;
+use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionClassConstant;
+use Go\ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\ReflectionFunction;
+use Go\ParserReflection\ReflectionMethod;
+use Go\ParserReflection\ReflectionParameter;
+use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
@@ -23,8 +31,10 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 {
     /**
      * Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     *
+     * @var \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null
      */
-    private mixed $context;
+    private \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
 
     /**
      * @var array<string, mixed>
@@ -34,9 +44,9 @@ class StaticVariablesCollector extends NodeVisitorAbstract
     /**
      * Default constructor
      *
-     * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     * @param \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      */
-    public function __construct(mixed $context)
+    public function __construct(\ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context)
     {
         $this->context = $context;
     }
@@ -65,7 +75,11 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 
                 if ($staticVariable->var->name instanceof Node\Expr) {
                     $expressionSolver->process($staticVariable->var->name);
-                    $name = $expressionSolver->getValue();
+                    $resolvedName = $expressionSolver->getValue();
+                    if (!is_string($resolvedName)) {
+                        continue;
+                    }
+                    $name = $resolvedName;
                 } else {
                     $name = $staticVariable->var->name;
                 }

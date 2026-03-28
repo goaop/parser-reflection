@@ -285,7 +285,7 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
             ReflectionType::convertToDisplayType($valueType),
             $this->getName(),
-            is_object($value) ? 'Object' : $value
+            is_object($value) ? 'Object' : (is_scalar($value) || $value === null ? $value : '')
         );
     }
 

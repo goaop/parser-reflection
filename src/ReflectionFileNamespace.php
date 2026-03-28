@@ -164,7 +164,7 @@ class ReflectionFileNamespace
         $docComment = false;
         $comments   = $this->namespaceNode->getAttribute('comments');
 
-        if ($comments) {
+        if (is_array($comments) && isset($comments[0]) && ($comments[0] instanceof \PhpParser\Comment || is_string($comments[0]))) {
             $docComment = (string)$comments[0];
         }
 
@@ -176,11 +176,9 @@ class ReflectionFileNamespace
      */
     public function getEndLine(): int|false
     {
-        if ($this->namespaceNode->hasAttribute('endLine')) {
-            return $this->namespaceNode->getAttribute('endLine');
-        }
+        $endLine = $this->namespaceNode->getAttribute('endLine');
 
-        return false;
+        return is_int($endLine) ? $endLine : false;
     }
 
     /**
@@ -258,11 +256,13 @@ class ReflectionFileNamespace
      */
     public function getLastTokenPosition(): int
     {
-        $endNamespaceTokenPosition = $this->namespaceNode->getAttribute('endTokenPos');
+        $endNamespaceTokenPosRaw = $this->namespaceNode->getAttribute('endTokenPos');
+        $endNamespaceTokenPosition = is_int($endNamespaceTokenPosRaw) ? $endNamespaceTokenPosRaw : 0;
 
         /** @var Node $lastNamespaceNode */
         $lastNamespaceNode         = end($this->namespaceNode->stmts);
-        $endStatementTokenPosition = $lastNamespaceNode->getAttribute('endTokenPos');
+        $endStatementTokenPosRaw   = $lastNamespaceNode->getAttribute('endTokenPos');
+        $endStatementTokenPosition = is_int($endStatementTokenPosRaw) ? $endStatementTokenPosRaw : 0;
 
         return max($endNamespaceTokenPosition, $endStatementTokenPosition);
     }
@@ -272,11 +272,9 @@ class ReflectionFileNamespace
      */
     public function getStartLine(): int|false
     {
-        if ($this->namespaceNode->hasAttribute('startLine')) {
-            return $this->namespaceNode->getAttribute('startLine');
-        }
+        $startLine = $this->namespaceNode->getAttribute('startLine');
 
-        return false;
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**
@@ -401,6 +399,9 @@ class ReflectionFileNamespace
                         $expressionSolver->process($arg1->value);
                         $constantValue = $expressionSolver->getValue();
 
+                        if (!is_string($constantName)) {
+                            continue;
+                        }
                         $constants[$constantName] = $constantValue;
                     } catch (\Throwable) {
                         // Ignore all possible errors during evaluation of runtime constants defined in the code

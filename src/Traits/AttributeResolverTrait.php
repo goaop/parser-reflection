@@ -77,7 +77,7 @@ trait AttributeResolverTrait
      */
     private static function resolveAttributeClassName(mixed $nameNode): string
     {
-        $className = $nameNode instanceof Name ? $nameNode->toString() : (string) $nameNode;
+        $className = $nameNode instanceof Name ? $nameNode->toString() : (is_scalar($nameNode) ? (string) $nameNode : '');
         $className = ltrim($className, '\\');
         // Fast path: already loaded without autoloading
         if (class_exists($className, false) || interface_exists($className, false) || trait_exists($className, false) || enum_exists($className, false)) {
@@ -109,7 +109,10 @@ trait AttributeResolverTrait
                 $attributeNameNode = $attr->name;
                 // If we have resoled node name, then we should use it instead
                 if ($attributeNameNode->hasAttribute('resolvedName')) {
-                    $attributeNameNode = $attributeNameNode->getAttribute('resolvedName');
+                    $resolvedNameNode = $attributeNameNode->getAttribute('resolvedName');
+                    if ($resolvedNameNode instanceof Name) {
+                        $attributeNameNode = $resolvedNameNode;
+                    }
                 }
 
                 if ($attributeNameNode->toString() === $attributeName) {

@@ -123,7 +123,10 @@ class NodeExpressionResolver
                 $constantNodeName = $node->name;
                 // Unpack fully-resolved name if we have it inside attribute
                 if ($constantNodeName->hasAttribute('resolvedName')) {
-                    $constantNodeName = $constantNodeName->getAttribute('resolvedName');
+                    $resolvedName = $constantNodeName->getAttribute('resolvedName');
+                    if ($resolvedName instanceof Name) {
+                        $constantNodeName = $resolvedName;
+                    }
                 }
                 if ($constantNodeName->isFullyQualified()) {
                     // For full-qualified names we would like to remove leading "\"
@@ -203,7 +206,10 @@ class NodeExpressionResolver
     private function resolveName(Name $node): string
     {
         if ($node->hasAttribute('resolvedName')) {
-            return $node->getAttribute('resolvedName')->toString();
+            $resolvedName = $node->getAttribute('resolvedName');
+            if ($resolvedName instanceof Name) {
+                return $resolvedName->toString();
+            }
         }
 
         return $node->toString();
@@ -229,6 +235,9 @@ class NodeExpressionResolver
             // if function uses named arguments, then unpack argument name first
             if (isset($argumentNode->name)) {
                 $name = $this->resolve($argumentNode->name);
+                if (!is_string($name) && !is_int($name)) {
+                    continue;
+                }
                 $resolvedArgs[$name] = $value;
             } else {
                 // otherwise simply add argument to the list
@@ -236,6 +245,9 @@ class NodeExpressionResolver
             }
         }
 
+        if (!is_string($functionName) && !($functionName instanceof \Closure)) {
+            throw new ReflectionException("Could not resolve function name for function call.");
+        }
         $reflectedFunction = new \ReflectionFunction($functionName);
         if (!$reflectedFunction->isInternal()) {
             throw new ReflectionException("Only internal PHP functions can be evaluated safely");
@@ -256,7 +268,10 @@ class NodeExpressionResolver
         if ($classToInstantiateNode instanceof Node\Name) {
             // Unwrap resolved class name if we have it inside attributes
             if ($classToInstantiateNode->hasAttribute('resolvedName')) {
-                $classToInstantiateNode = $classToInstantiateNode->getAttribute('resolvedName');
+                $resolvedName = $classToInstantiateNode->getAttribute('resolvedName');
+                if ($resolvedName instanceof Node\Name) {
+                    $classToInstantiateNode = $resolvedName;
+                }
             }
             $className = $classToInstantiateNode->toString();
         } else {
@@ -277,6 +292,9 @@ class NodeExpressionResolver
             // if constructor uses named arguments, then unpack argument name first
             if (isset($argumentNode->name)) {
                 $name = $this->resolve($argumentNode->name);
+                if (!is_string($name) && !is_int($name)) {
+                    continue;
+                }
                 $resolvedArgs[$name] = $value;
             } else {
                 // otherwise simply add argument to the list
@@ -285,6 +303,9 @@ class NodeExpressionResolver
         }
 
         // Use ReflectionClass to safely instantiate the class
+        if (!class_exists($className)) {
+            throw new ReflectionException("Class '{$className}' does not exist and cannot be instantiated.");
+        }
         $reflectionClass = new \ReflectionClass($className);
         return $reflectionClass->newInstance(...$resolvedArgs);
     }
@@ -408,7 +429,10 @@ class NodeExpressionResolver
         $nodeConstantName = $node->name;
         // If we have resolved type name
         if ($nodeConstantName->hasAttribute('resolvedName')) {
-            $nodeConstantName = $nodeConstantName->getAttribute('resolvedName');
+            $resolvedConstantName = $nodeConstantName->getAttribute('resolvedName');
+            if ($resolvedConstantName instanceof Name) {
+                $nodeConstantName = $resolvedConstantName;
+            }
         }
         $isFQNConstant = $nodeConstantName instanceof Node\Name\FullyQualified;
         $constantName  = $nodeConstantName->toString();
@@ -455,7 +479,10 @@ class NodeExpressionResolver
         }
         // Unwrap resolved class name if we have it inside attributes
         if ($classToReflectNodeName->hasAttribute('resolvedName')) {
-            $classToReflectNodeName = $classToReflectNodeName->getAttribute('resolvedName');
+            $resolvedClassName = $classToReflectNodeName->getAttribute('resolvedName');
+            if ($resolvedClassName instanceof Node\Name) {
+                $classToReflectNodeName = $resolvedClassName;
+            }
         }
         $refClass = $this->fetchReflectionClass($classToReflectNodeName);
         if ($refClass === false) {
@@ -464,12 +491,15 @@ class NodeExpressionResolver
         if ($node->name instanceof Expr\Error) {
             $constantName = '';
         } elseif ($node->name instanceof Node\Identifier) {
-            $constantName = match (true) {
-                $node->name->hasAttribute('resolvedName') => $node->name->getAttribute('resolvedName')->toString(),
-                default => $node->name->toString(),
-            };
+            if ($node->name->hasAttribute('resolvedName')) {
+                $resolvedNodeName = $node->name->getAttribute('resolvedName');
+                $constantName = $resolvedNodeName instanceof Node\Name ? $resolvedNodeName->toString() : $node->name->toString();
+            } else {
+                $constantName = $node->name->toString();
+            }
         } else {
-            $constantName = (string) $this->resolve($node->name);
+            $resolvedName = $this->resolve($node->name);
+            $constantName = is_string($resolvedName) ? $resolvedName : '';
         }
 
         // special handling of ::class constants
@@ -479,7 +509,7 @@ class NodeExpressionResolver
 
         $this->isConstant   = true;
         $this->isConstExpr  = true;
-        $this->constantName = $classToReflectNodeName . '::' . $constantName;
+        $this->constantName = $classToReflectNodeName->toString() . '::' . $constantName;
 
         return $refClass->getConstant($constantName);
     }
@@ -494,8 +524,15 @@ class NodeExpressionResolver
 
         $result = [];
         foreach ($node->items as $itemIndex => $arrayItem) {
-            $itemValue        = $this->resolve($arrayItem->value);
-            $itemKey          = isset($arrayItem->key) ? $this->resolve($arrayItem->key) : $itemIndex;
+            $itemValue = $this->resolve($arrayItem->value);
+            if (isset($arrayItem->key)) {
+                $itemKey = $this->resolve($arrayItem->key);
+                if (!is_string($itemKey) && !is_int($itemKey)) {
+                    continue;
+                }
+            } else {
+                $itemKey = $itemIndex;
+            }
             $result[$itemKey] = $itemValue;
         }
 
@@ -507,27 +544,33 @@ class NodeExpressionResolver
      */
     protected function resolveExprBinaryOpPlus(Expr\BinaryOp\Plus $node): int|float|array
     {
-        return $this->resolve($node->left) + $this->resolve($node->right);
+        $left  = $this->resolve($node->left);
+        $right = $this->resolve($node->right);
+        if (is_array($left) && is_array($right)) {
+            return $left + $right;
+        }
+
+        return $this->resolveNumeric($left) + $this->resolveNumeric($right);
     }
 
     protected function resolveExprBinaryOpMinus(Expr\BinaryOp\Minus $node): int|float
     {
-        return $this->resolve($node->left) - $this->resolve($node->right);
+        return $this->resolveNumeric($this->resolve($node->left)) - $this->resolveNumeric($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpMul(Expr\BinaryOp\Mul $node): int|float
     {
-        return $this->resolve($node->left) * $this->resolve($node->right);
+        return $this->resolveNumeric($this->resolve($node->left)) * $this->resolveNumeric($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpPow(Expr\BinaryOp\Pow $node): int|float
     {
-        return $this->resolve($node->left) ** $this->resolve($node->right);
+        return $this->resolveNumeric($this->resolve($node->left)) ** $this->resolveNumeric($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpDiv(Expr\BinaryOp\Div $node): int|float
     {
-        return $this->resolve($node->left) / $this->resolve($node->right);
+        return $this->resolveNumeric($this->resolve($node->left)) / $this->resolveNumeric($this->resolve($node->right));
     }
 
     /**
@@ -537,7 +580,7 @@ class NodeExpressionResolver
      */
     protected function resolveExprBinaryOpMod(Expr\BinaryOp\Mod $node): int
     {
-        return $this->resolve($node->left) % $this->resolve($node->right);
+        return $this->resolveInt($this->resolve($node->left)) % $this->resolveInt($this->resolve($node->right));
     }
 
     protected function resolveExprBooleanNot(Expr\BooleanNot $node): bool
@@ -547,37 +590,45 @@ class NodeExpressionResolver
 
     protected function resolveExprBitwiseNot(Expr\BitwiseNot $node): int|string
     {
-        return ~$this->resolve($node->expr);
+        $value = $this->resolve($node->expr);
+        if (is_string($value)) {
+            return ~$value;
+        }
+
+        return ~$this->resolveInt($value);
     }
 
     protected function resolveExprBinaryOpBitwiseOr(Expr\BinaryOp\BitwiseOr $node): int
     {
-        return $this->resolve($node->left) | $this->resolve($node->right);
+        return $this->resolveInt($this->resolve($node->left)) | $this->resolveInt($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpBitwiseAnd(Expr\BinaryOp\BitwiseAnd $node): int
     {
-        return $this->resolve($node->left) & $this->resolve($node->right);
+        return $this->resolveInt($this->resolve($node->left)) & $this->resolveInt($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpBitwiseXor(Expr\BinaryOp\BitwiseXor $node): int
     {
-        return $this->resolve($node->left) ^ $this->resolve($node->right);
+        return $this->resolveInt($this->resolve($node->left)) ^ $this->resolveInt($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpShiftLeft(Expr\BinaryOp\ShiftLeft $node): int
     {
-        return $this->resolve($node->left) << $this->resolve($node->right);
+        return $this->resolveInt($this->resolve($node->left)) << $this->resolveInt($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpShiftRight(Expr\BinaryOp\ShiftRight $node): int
     {
-        return $this->resolve($node->left) >> $this->resolve($node->right);
+        return $this->resolveInt($this->resolve($node->left)) >> $this->resolveInt($this->resolve($node->right));
     }
 
     protected function resolveExprBinaryOpConcat(Expr\BinaryOp\Concat $node): string
     {
-        return $this->resolve($node->left) . $this->resolve($node->right);
+        $left  = $this->resolve($node->left);
+        $right = $this->resolve($node->right);
+
+        return (is_scalar($left) || $left === null ? (string) $left : '') . (is_scalar($right) || $right === null ? (string) $right : '');
     }
 
     protected function resolveExprTernary(Expr\Ternary $node): mixed
@@ -660,12 +711,39 @@ class NodeExpressionResolver
 
     protected function resolveExprUnaryMinus(Expr\UnaryMinus $node): int|float
     {
-        return -$this->resolve($node->expr);
+        return -$this->resolveNumeric($this->resolve($node->expr));
     }
 
     protected function resolveExprUnaryPlus(Expr\UnaryPlus $node): int|float
     {
-        return $this->resolve($node->expr);
+        return $this->resolveNumeric($this->resolve($node->expr));
+    }
+
+    private function resolveNumeric(mixed $value): int|float
+    {
+        if (is_int($value) || is_float($value)) {
+            return $value;
+        }
+        if (is_string($value) && is_numeric($value)) {
+            return strpos($value, '.') !== false ? (float) $value : (int) $value;
+        }
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        return 0;
+    }
+
+    private function resolveInt(mixed $value): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+        if (is_float($value) || is_string($value) || is_bool($value)) {
+            return (int) $value;
+        }
+
+        return 0;
     }
 
     private function getDispatchMethodFor(Node $node): string
@@ -693,7 +771,10 @@ class NodeExpressionResolver
     {
         // If we have already resolved node name, we should use it instead
         if ($node->hasAttribute('resolvedName')) {
-            $node = $node->getAttribute('resolvedName');
+            $resolvedNode = $node->getAttribute('resolvedName');
+            if ($resolvedNode instanceof Node\Name) {
+                $node = $resolvedNode;
+            }
         }
         $className  = $node->toString();
         $isFQNClass = $node instanceof Node\Name\FullyQualified;
