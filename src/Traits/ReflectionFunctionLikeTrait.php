@@ -35,6 +35,24 @@ trait ReflectionFunctionLikeTrait
 {
     use InitializationTrait;
 
+    /**
+     * Returns the name of the class this function/method belongs to, for self/parent type resolution.
+     * Overridden in ReflectionMethod; returns null for standalone functions.
+     */
+    protected function getDeclaringClassNameForTypes(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Returns the parent class name for type resolution, or null if none.
+     * Overridden in ReflectionMethod; returns null for standalone functions.
+     */
+    protected function getParentClassNameForTypes(): ?string
+    {
+        return null;
+    }
+
     protected FunctionLike|Function_|ClassMethod $functionLikeNode;
 
     /**
@@ -182,7 +200,10 @@ trait ReflectionFunctionLikeTrait
     {
         $returnType = $this->functionLikeNode->getReturnType();
         if ($this->hasReturnType() && $returnType !== null) {
-            $typeResolver = new TypeExpressionResolver();
+            $selfClassName   = $this->getDeclaringClassNameForTypes();
+            $parentClassName = $this->getParentClassNameForTypes();
+
+            $typeResolver = new TypeExpressionResolver($selfClassName, $parentClassName);
             $typeResolver->process($returnType, false);
 
             return $typeResolver->getType();

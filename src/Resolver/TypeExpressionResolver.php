@@ -53,8 +53,10 @@ class TypeExpressionResolver
 
     private \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null $type;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ?string $selfClassName = null,
+        private readonly ?string $parentClassName = null,
+    ) {
     }
 
     /**
@@ -152,7 +154,17 @@ class TypeExpressionResolver
             }
         }
 
-        return new ReflectionNamedType($node->toString(), $this->hasDefaultNull, false);
+        $typeName = $node->toString();
+
+        // Resolve self/parent to the actual class names when context is available.
+        // 'static' is intentionally kept as-is (late static binding, preserved by native reflection).
+        if ($typeName === 'self') {
+            $typeName = $this->selfClassName ?? $typeName;
+        } elseif ($typeName === 'parent') {
+            $typeName = $this->parentClassName ?? $typeName;
+        }
+
+        return new ReflectionNamedType($typeName, $this->hasDefaultNull, false);
     }
 
     private function resolveNameFullyQualified(Name\FullyQualified $node): ReflectionNamedType

@@ -63,6 +63,18 @@ final class ReflectionMethod extends BaseReflectionMethod
         unset($this->name, $this->class);
     }
 
+    protected function getDeclaringClassNameForTypes(): string
+    {
+        return $this->getDeclaringClass()->getName();
+    }
+
+    protected function getParentClassNameForTypes(): ?string
+    {
+        $parent = $this->getDeclaringClass()->getParentClass();
+
+        return ($parent !== false) ? $parent->getName() : null;
+    }
+
     /**
      * Returns an AST-node for method
      */

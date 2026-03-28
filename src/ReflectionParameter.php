@@ -118,7 +118,12 @@ final class ReflectionParameter extends BaseReflectionParameter
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
 
-            $typeResolver = new TypeExpressionResolver();
+            $declaringClass = $declaringFunction instanceof \ReflectionMethod ? $declaringFunction->getDeclaringClass() : null;
+            $selfClassName  = $declaringClass?->getName();
+            $parentClass    = $declaringClass?->getParentClass();
+            $parentClassName = ($parentClass !== false && $parentClass !== null) ? $parentClass->getName() : null;
+
+            $typeResolver = new TypeExpressionResolver($selfClassName, $parentClassName);
             $typeResolver->process($this->parameterNode->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();

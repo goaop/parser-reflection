@@ -101,7 +101,11 @@ final class ReflectionProperty extends BaseReflectionProperty
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->hasDefaultValue() && $this->getDefaultValue() === null;
 
-            $typeResolver = new TypeExpressionResolver();
+            $declaringClass  = $this->getDeclaringClass();
+            $parentClass     = $declaringClass->getParentClass();
+            $parentClassName = ($parentClass !== false) ? $parentClass->getName() : null;
+
+            $typeResolver = new TypeExpressionResolver($this->className, $parentClassName);
             $typeResolver->process($this->propertyOrPromotedParam->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();

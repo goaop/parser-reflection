@@ -121,7 +121,11 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->getValue() === null;
 
-            $typeResolver = new TypeExpressionResolver();
+            $declaringClass  = $this->getDeclaringClass();
+            $parentClass     = $declaringClass->getParentClass();
+            $parentClassName = ($parentClass !== false) ? $parentClass->getName() : null;
+
+            $typeResolver = new TypeExpressionResolver($this->className, $parentClassName);
             $typeResolver->process($this->classConstOrEnumCaseNode->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();
