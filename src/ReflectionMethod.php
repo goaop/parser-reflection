@@ -72,6 +72,14 @@ final class ReflectionMethod extends BaseReflectionMethod
     }
 
     /**
+     * Returns the AST node that contains attribute groups for this method.
+     */
+    protected function getNodeForAttributes(): ClassMethod
+    {
+        return $this->getClassMethodNode();
+    }
+
+    /**
      * Emulating original behaviour of reflection
      *
      * @return array<string, string>
@@ -166,6 +174,31 @@ final class ReflectionMethod extends BaseReflectionMethod
     public function getDeclaringClass(): \ReflectionClass
     {
         return $this->declaringClass ?? new ReflectionClass($this->className);
+    }
+
+    /**
+     * Checks if this method is an Enum magic method (cases/from/tryFrom).
+     */
+    private function isEnumMagicMethod(): bool
+    {
+        return $this->getDeclaringClass()->isEnum()
+            && in_array($this->getName(), ['cases', 'tryFrom', 'from'], true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isInternal(): bool
+    {
+        return $this->isEnumMagicMethod();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isUserDefined(): bool
+    {
+        return !$this->isEnumMagicMethod();
     }
 
     /**
@@ -336,7 +369,7 @@ final class ReflectionMethod extends BaseReflectionMethod
      * @param ClassLike $classLikeNode Class-like node
      * @param ReflectionClass $reflectionClass Reflection of the class
      *
-     * @return ReflectionMethod[]
+     * @return array<string, ReflectionMethod>
      */
     public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass): array
     {

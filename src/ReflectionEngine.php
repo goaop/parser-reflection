@@ -142,8 +142,7 @@ class ReflectionEngine
             }
             if ($node instanceof Node\Stmt\If_
                 && $node->cond instanceof Node\Expr\ConstFetch
-                && isset($node->cond->name->parts[0])
-                && $node->cond->name->parts[0] === 'false'
+                && $node->cond->name->toString() === 'false'
             ) {
                 $result = self::findClassLikeNodeByClassName($node->stmts, $className);
 

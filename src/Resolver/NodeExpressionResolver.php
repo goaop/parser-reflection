@@ -357,7 +357,10 @@ class NodeExpressionResolver
         if ($this->context instanceof ReflectionFileNamespace) {
             return $this->context->getName();
         }
-        if ($this->context === null || !method_exists($this->context, 'getNamespaceName')) {
+        if (!($this->context instanceof \ReflectionClass
+            || $this->context instanceof \ReflectionFunction
+            || $this->context instanceof \ReflectionMethod
+        )) {
             throw new ReflectionException("Could not resolve __NAMESPACE__ without having getNamespaceName");
         }
 
@@ -376,6 +379,9 @@ class NodeExpressionResolver
             throw new ReflectionException("Could not resolve __CLASS__ without having getDeclaringClass");
         }
         $declaringClass = $this->context->getDeclaringClass();
+        if (!$declaringClass instanceof \ReflectionClass) {
+            throw new ReflectionException("Could not resolve __CLASS__: getDeclaringClass() did not return a ReflectionClass");
+        }
 
         return $declaringClass->name;
     }
@@ -385,11 +391,16 @@ class NodeExpressionResolver
      */
     protected function resolveScalarMagicConstDir(): string
     {
-        if ($this->context === null || !method_exists($this->context, 'getFileName')) {
+        if (!($this->context instanceof \ReflectionClass
+            || $this->context instanceof \ReflectionFunction
+            || $this->context instanceof \ReflectionMethod
+            || $this->context instanceof ReflectionFileNamespace
+        )) {
             throw new ReflectionException("Could not resolve __DIR__ without having getFileName");
         }
+        $fileName = $this->context->getFileName();
 
-        return dirname($this->context->getFileName());
+        return dirname((string) $fileName);
     }
 
     /**
@@ -397,11 +408,15 @@ class NodeExpressionResolver
      */
     protected function resolveScalarMagicConstFile(): string
     {
-        if ($this->context === null || !method_exists($this->context, 'getFileName')) {
+        if (!($this->context instanceof \ReflectionClass
+            || $this->context instanceof \ReflectionFunction
+            || $this->context instanceof \ReflectionMethod
+            || $this->context instanceof ReflectionFileNamespace
+        )) {
             throw new ReflectionException("Could not resolve __FILE__ without having getFileName");
         }
 
-        return $this->context->getFileName();
+        return (string) $this->context->getFileName();
     }
 
     protected function resolveScalarMagicConstLine(Line $node): int
@@ -437,8 +452,12 @@ class NodeExpressionResolver
         $isFQNConstant = $nodeConstantName instanceof Node\Name\FullyQualified;
         $constantName  = $nodeConstantName->toString();
 
-        if (!$isFQNConstant && $this->context !== null && method_exists($this->context, 'getFileName')) {
-            $fileName      = $this->context->getFileName();
+        if (!$isFQNConstant && ($this->context instanceof \ReflectionClass
+            || $this->context instanceof \ReflectionFunction
+            || $this->context instanceof \ReflectionMethod
+            || $this->context instanceof ReflectionFileNamespace
+        )) {
+            $fileName      = (string) $this->context->getFileName();
             $namespaceName = $this->resolveScalarMagicConstNamespace();
             $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
             if ($fileNamespace->hasConstant($constantName)) {
@@ -451,7 +470,10 @@ class NodeExpressionResolver
         $isRealConstant = !isset(self::$notConstants[$constantName]);
         if (!$isResolved && defined($constantName)) {
             $constantValue = constant($constantName);
-            if (!$isFQNConstant && $this->context !== null && method_exists($this->context, 'getNamespaceName')) {
+            if (!$isFQNConstant && ($this->context instanceof \ReflectionClass
+                || $this->context instanceof \ReflectionFunction
+                || $this->context instanceof \ReflectionMethod
+            )) {
                 $constantName  = $this->context->getNamespaceName() . '\\' . $constantName;
             }
         }
@@ -796,8 +818,17 @@ class NodeExpressionResolver
                 return $this->context;
             }
 
-            if ($this->context !== null && method_exists($this->context, 'getDeclaringClass')) {
+            if ($this->context instanceof \ReflectionMethod
+                || $this->context instanceof \ReflectionProperty
+                || $this->context instanceof \ReflectionClassConstant
+            ) {
                 return $this->context->getDeclaringClass();
+            }
+
+            if ($this->context instanceof \ReflectionParameter) {
+                $declaringClass = $this->context->getDeclaringClass();
+
+                return $declaringClass ?? false;
             }
         }
 
@@ -806,15 +837,26 @@ class NodeExpressionResolver
                 return $this->context->getParentClass();
             }
 
-            if ($this->context !== null && method_exists($this->context, 'getDeclaringClass')) {
-                return $this->context->getDeclaringClass()
-                                     ->getParentClass()
-                    ;
+            if ($this->context instanceof \ReflectionMethod
+                || $this->context instanceof \ReflectionProperty
+                || $this->context instanceof \ReflectionClassConstant
+            ) {
+                return $this->context->getDeclaringClass()->getParentClass();
+            }
+
+            if ($this->context instanceof \ReflectionParameter) {
+                $declaringClass = $this->context->getDeclaringClass();
+
+                return $declaringClass !== null ? $declaringClass->getParentClass() : false;
             }
         }
 
-        if ($this->context !== null && method_exists($this->context, 'getFileName')) {
-            $fileName      = $this->context->getFileName();
+        if ($this->context instanceof \ReflectionClass
+            || $this->context instanceof \ReflectionFunction
+            || $this->context instanceof \ReflectionMethod
+            || $this->context instanceof ReflectionFileNamespace
+        ) {
+            $fileName      = (string) $this->context->getFileName();
             $namespaceName = $this->resolveScalarMagicConstNamespace();
 
             $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);

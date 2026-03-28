@@ -172,6 +172,14 @@ final class ReflectionClass extends InternalReflectionClass
     }
 
     /**
+     * Returns the AST node that contains attribute groups for this class.
+     */
+    protected function getNodeForAttributes(): ClassLike
+    {
+        return $this->classLikeNode;
+    }
+
+    /**
      * Implementation of internal reflection initialization
      */
     protected function __initialize(): void

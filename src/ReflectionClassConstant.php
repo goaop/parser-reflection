@@ -53,7 +53,7 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Parses class constants from the concrete class node
      *
-     * @return ReflectionClassConstant[]
+     * @return array<string, ReflectionClassConstant>
      */
     public static function collectFromClassNode(ClassLike $classLikeNode, string $reflectionClassFQN): array
     {
@@ -259,7 +259,7 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
     public function __toString(): string
     {
         # Starting from PHP7.3 gettype returns different names, need to remap them
-        static $typeMap = [
+        $typeMap = [
             'integer' => 'int',
             'boolean' => 'bool',
             'double'  => 'float',
@@ -290,6 +290,14 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
     }
 
     public function getNode(): ClassConst|EnumCase
+    {
+        return $this->classConstOrEnumCaseNode;
+    }
+
+    /**
+     * Returns the AST node that contains attribute groups for this class constant.
+     */
+    protected function getNodeForAttributes(): ClassConst|EnumCase
     {
         return $this->classConstOrEnumCaseNode;
     }

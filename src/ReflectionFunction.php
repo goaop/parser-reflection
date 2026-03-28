@@ -74,6 +74,14 @@ final class ReflectionFunction extends BaseReflectionFunction
     }
 
     /**
+     * Returns the AST node that contains attribute groups for this function.
+     */
+    protected function getNodeForAttributes(): Function_
+    {
+        return $this->getNode();
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function getClosure(): \Closure

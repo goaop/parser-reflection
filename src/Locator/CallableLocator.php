@@ -37,6 +37,8 @@ class CallableLocator implements LocatorInterface
      */
     public function locateClass(string $className): false|string
     {
-        return call_user_func($this->callable, ltrim($className, '\\'));
+        $result = call_user_func($this->callable, ltrim($className, '\\'));
+
+        return is_string($result) ? $result : false;
     }
 }

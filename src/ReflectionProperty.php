@@ -128,6 +128,14 @@ final class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
+     * Returns the AST node that contains attribute groups for this property.
+     */
+    protected function getNodeForAttributes(): Property|Param
+    {
+        return $this->propertyOrPromotedParam;
+    }
+
+    /**
      * Emulating original behaviour of reflection
      */
     public function __debugInfo(): array
@@ -496,7 +504,7 @@ final class ReflectionProperty extends BaseReflectionProperty
      * @param ClassLike            $classLikeNode Class-like node
      * @param class-string<object> $fullClassName FQN of the class
      *
-     * @return ReflectionProperty[]
+     * @return array<string, ReflectionProperty>
      */
     public static function collectFromClassNode(ClassLike $classLikeNode, string $fullClassName): array
     {

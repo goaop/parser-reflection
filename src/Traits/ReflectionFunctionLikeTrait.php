@@ -292,9 +292,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isInternal(): bool
     {
-        // never can be an internal method, except for the Enum magic methods
-        $isEnumMethod = $this instanceof ReflectionMethod && $this->getDeclaringClass()->isEnum();
-        return $isEnumMethod && in_array($this->getName(), ['cases', 'tryFrom', 'from']);
+        return false;
     }
 
     /**
@@ -302,9 +300,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isUserDefined(): bool
     {
-        // always user-defined method, except for the Enum magic methods
-        $isEnumMethod = $this instanceof ReflectionMethod && $this->getDeclaringClass()->isEnum();
-        return !($isEnumMethod && in_array($this->getName(), ['cases', 'tryFrom', 'from']));
+        return true;
     }
 
     /**

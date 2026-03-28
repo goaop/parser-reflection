@@ -13,23 +13,30 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
-use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node\Name;
+use PhpParser\Node\Param;
+use PhpParser\Node\Stmt\ClassConst;
+use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\EnumCase;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Property;
 
 trait AttributeResolverTrait
 {
+    /**
+     * Returns the AST node that contains attribute groups for this reflection element.
+     */
+    abstract protected function getNodeForAttributes(): ClassLike|ClassMethod|Function_|Param|ClassConst|EnumCase|Property;
+
     /**
      * @param class-string<object>|null $name
      * @return ReflectionAttribute[]
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        if ($this instanceof ReflectionProperty) {
-            $node = $this->getTypeNode();
-        } else {
-            $node = $this->getNode();
-        }
+        $node = $this->getNodeForAttributes();
 
         $attributes = [];
         $nodeExpressionResolver = new NodeExpressionResolver($this);

@@ -81,8 +81,8 @@ class ReflectionUnionType extends BaseReflectionUnionType
         }
 
         // PHP has own scheme of ordering of built-in types to follow
-        usort($stringTypes, function(string $first, string $second): int {
-            static $internalTypesOrder = ['object', 'array', 'string', 'int', 'float', 'bool', 'false', 'null'];
+        $internalTypesOrder = ['object', 'array', 'string', 'int', 'float', 'bool', 'false', 'null'];
+        usort($stringTypes, function(string $first, string $second) use ($internalTypesOrder): int {
 
             $firstOrder  = array_search($first, $internalTypesOrder, true);
             $secondOrder = array_search($second, $internalTypesOrder, true);

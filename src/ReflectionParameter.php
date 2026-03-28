@@ -134,6 +134,14 @@ final class ReflectionParameter extends BaseReflectionParameter
     }
 
     /**
+     * Returns the AST node that contains attribute groups for this parameter.
+     */
+    protected function getNodeForAttributes(): Param
+    {
+        return $this->parameterNode;
+    }
+
+    /**
      * Emulating original behaviour of reflection
      */
     public function __debugInfo(): array
