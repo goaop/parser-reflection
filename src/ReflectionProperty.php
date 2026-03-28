@@ -97,7 +97,7 @@ final class ReflectionProperty extends BaseReflectionProperty
             $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
         }
 
-        if ($this->hasType()) {
+        if ($this->hasType() && $this->propertyOrPromotedParam->type !== null) {
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->hasDefaultValue() && $this->getDefaultValue() === null;
 
@@ -569,11 +569,13 @@ final class ReflectionProperty extends BaseReflectionProperty
     /** @param class-string<object> $fullClassName */
     private static function createEnumValueProperty(Enum_ $classLikeNode, string $fullClassName): ReflectionProperty
     {
-        $valuePropertyNode = (new \PhpParser\Builder\Property('value'))
+        $propertyBuilder = (new \PhpParser\Builder\Property('value'))
             ->makeReadonly()
-            ->makePublic()
-            ->setType($classLikeNode->scalarType)
-            ->getNode();
+            ->makePublic();
+        if ($classLikeNode->scalarType !== null) {
+            $propertyBuilder->setType($classLikeNode->scalarType);
+        }
+        $valuePropertyNode = $propertyBuilder->getNode();
 
         return new self(
             $fullClassName,

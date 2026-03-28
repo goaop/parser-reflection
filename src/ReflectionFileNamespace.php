@@ -320,7 +320,7 @@ class ReflectionFileNamespace
         $namespaceName = $this->getName();
         // classes can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
-            if ($namespaceLevelNode instanceof ClassLike) {
+            if ($namespaceLevelNode instanceof ClassLike && $namespaceLevelNode->name !== null) {
                 $classShortName = $namespaceLevelNode->name->toString();
                 $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 

@@ -103,7 +103,7 @@ final class ReflectionParameter extends BaseReflectionParameter
             $context = null;
         }
 
-        if ($this->isDefaultValueAvailable()) {
+        if ($this->isDefaultValueAvailable() && $this->parameterNode->default !== null) {
             $expressionSolver = new NodeExpressionResolver($context);
             $expressionSolver->process($this->parameterNode->default);
 
@@ -114,7 +114,7 @@ final class ReflectionParameter extends BaseReflectionParameter
             $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
         }
 
-        if ($this->hasType()) {
+        if ($this->hasType() && $this->parameterNode->type !== null) {
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
 
@@ -183,7 +183,7 @@ final class ReflectionParameter extends BaseReflectionParameter
     public function allowsNull(): bool
     {
         // All non-typed parameters allows null by default
-        if (!$this->hasType()) {
+        if (!$this->hasType() || $this->type === null) {
             return true;
         }
 
@@ -225,7 +225,11 @@ final class ReflectionParameter extends BaseReflectionParameter
                 }
 
                 if ('parent' === $parameterTypeName) {
-                    $parentClass = $this->getDeclaringClass()->getParentClass();
+                    $declaringClass = $this->getDeclaringClass();
+                    if ($declaringClass === null) {
+                        return null;
+                    }
+                    $parentClass = $declaringClass->getParentClass();
 
                     return $parentClass !== false ? $parentClass : null;
                 }

@@ -209,7 +209,7 @@ trait ReflectionClassLikeTrait
     public function getConstant(string $name): mixed
     {
         if ($this->hasConstant($name)) {
-            return $this->constants[$name];
+            return $this->getConstants()[$name];
         }
 
         return false;

@@ -184,9 +184,10 @@ trait ReflectionFunctionLikeTrait
      */
     public function getReturnType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
-        if ($this->hasReturnType()) {
+        $returnType = $this->functionLikeNode->getReturnType();
+        if ($this->hasReturnType() && $returnType !== null) {
             $typeResolver = new TypeExpressionResolver();
-            $typeResolver->process($this->functionLikeNode->getReturnType(), false);
+            $typeResolver->process($returnType, false);
 
             return $typeResolver->getType();
         }

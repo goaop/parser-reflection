@@ -100,6 +100,9 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
         if (!$classConstNode) {
             [$classConstNode, $constNode] = ReflectionEngine::parseClassConstant($className, $classConstantName);
         }
+        if ($constNode === null) {
+            throw new \InvalidArgumentException("Const node was not found for $className::$classConstantName");
+        }
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name, $this->class);
 
@@ -114,7 +117,7 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
             $this->value = $expressionSolver->getValue();
         }
 
-        if ($this->hasType() && $this->classConstOrEnumCaseNode instanceof ClassConst) {
+        if ($this->hasType() && $this->classConstOrEnumCaseNode instanceof ClassConst && $this->classConstOrEnumCaseNode->type !== null) {
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->getValue() === null;
 
@@ -274,7 +277,7 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
             }
             $valueType = new ReflectionType($type, false);
         } else {
-            $valueType = $this->type;
+            $valueType = $this->type ?? new ReflectionType('mixed', false);
         }
 
         return sprintf(

@@ -86,6 +86,9 @@ class ReflectionEngine
             $refClass      = new \ReflectionClass($fullClassName);
             $classFileName = $refClass->getFileName();
         } else {
+            if (self::$locator === null) {
+                throw new \LogicException('ReflectionEngine locator is not initialized. Call ReflectionEngine::init() first.');
+            }
             $classFileName = self::$locator->locateClass($fullClassName);
         }
 
@@ -134,7 +137,7 @@ class ReflectionEngine
     protected static function findClassLikeNodeByClassName(array $nodes, string $className): ?ClassLike
     {
         foreach ($nodes as $node) {
-            if ($node instanceof ClassLike && $node->name->toString() == $className) {
+            if ($node instanceof ClassLike && $node->name !== null && $node->name->toString() == $className) {
                 return $node;
             }
             if ($node instanceof Node\Stmt\If_
@@ -241,7 +244,7 @@ class ReflectionEngine
                 throw new ReflectionException("Could not read file: $fileName");
             }
         }
-        $treeNodes = self::$parser->parse($fileContent);
+        $treeNodes = self::$parser->parse($fileContent) ?? [];
         $treeNodes = self::$traverser->traverse($treeNodes);
 
         self::$parsedFiles[$fileName] = $treeNodes;

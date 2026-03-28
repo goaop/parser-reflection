@@ -50,13 +50,13 @@ class PathResolver
             return $fastPath;
         }
 
-        $isRelative = !$pathScheme && ($path[0] !== '/') && ($path[1] !== ':');
+        $isRelative = !$pathScheme && $path !== null && ($path[0] !== '/') && ($path[1] !== ':');
         if ($isRelative) {
             $path = getcwd() . DIRECTORY_SEPARATOR . $path;
         }
 
         // resolve path parts (single dot, double dot and double delimiters)
-        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path ?? '');
         if (strpos($path, '.') !== false) {
             $parts     = explode(DIRECTORY_SEPARATOR, $path);
             $absolutes = [];
