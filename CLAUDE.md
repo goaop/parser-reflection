@@ -25,9 +25,6 @@ vendor/bin/phpunit --filter testMethodName
 
 # Static analysis (~5 seconds, 18 known existing errors are normal)
 vendor/bin/phpstan analyse src --no-progress
-
-# Code quality check (dry-run only — don't auto-apply)
-vendor/bin/rector --dry-run
 ```
 
 > **Note on `composer install` locally**: due to GitHub API rate limits, use `--prefer-source` and set a long timeout: `composer config --global process-timeout 2000`. In CI, standard `composer install` works fine with GitHub tokens.
