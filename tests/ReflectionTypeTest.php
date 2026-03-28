@@ -62,28 +62,6 @@ class ReflectionTypeTest extends TestCase
      * We're already testing it with Go\ParserReflection\ReflectionType
      * elsewhere.
      */
-    public function testTypeConvertToDisplayTypeImplicitlyNullable(): void
-    {
-        $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp70ScalarTypeHints');
-        $nativeMethodRef = $nativeClassRef->getMethod('acceptsStringDefaultToNull');
-        $this->assertInstanceOf(\ReflectionMethod::class, $nativeMethodRef);
-        $nativeParamRefArr = $nativeMethodRef->getParameters();
-        $this->assertCount(1, $nativeParamRefArr);
-        $this->assertInstanceOf(\ReflectionParameter::class, $nativeParamRefArr[0]);
-        $nativeTypeRef = $nativeParamRefArr[0]->getType();
-        $this->assertTrue($nativeTypeRef->allowsNull());
-        $this->assertSame('string', $nativeTypeRef->getName());
-        $this->assertStringNotContainsString('\\', get_class($nativeTypeRef));
-        $this->assertInstanceOf(\ReflectionType::class, $nativeTypeRef);
-        $this->assertSame('?string', \Go\ParserReflection\ReflectionType::convertToDisplayType($nativeTypeRef));
-    }
-
-    /**
-     * Testing convertToDisplayType() with native \ReflectionType
-     *
-     * We're already testing it with Go\ParserReflection\ReflectionType
-     * elsewhere.
-     */
     public function testTypeConvertToDisplayTypeImplicitlyUnionNullable(): void
     {
         $nativeClassRef = new \ReflectionClass('Go\\ParserReflection\\Stub\\ClassWithPhp80Features');

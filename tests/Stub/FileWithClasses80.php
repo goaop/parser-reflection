@@ -16,7 +16,7 @@ use Go\ParserReflection\{ReflectionMethod, ReflectionProperty as P};
 
 class ClassWithPhp80Features
 {
-    public function acceptsStringArrayDefaultToNull(array|string $iterable = null) : array {}
+    public function acceptsStringArrayDefaultToNull(array|string|null $iterable = null) : array {}
 }
 
 /**

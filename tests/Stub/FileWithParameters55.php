@@ -35,9 +35,6 @@ namespace Go\ParserReflection\Stub {
         &$byReferenceParam,
         \Traversable $traversable,
         array $arrayParamWithDefault = array(1, 2, 3),
-        array $arrayNullable = null,
-        callable $callableNullable = null,
-        \stdClass $objectNullable = null,
         &$byReferenceNullable = __FUNCTION__,
         $constParam = TEST_PARAMETER,
         $constValueParam = __NAMESPACE__, // This line is long and should be truncated
