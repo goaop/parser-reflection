@@ -97,8 +97,10 @@ final class ReflectionParameter extends BaseReflectionParameter
 
         if ($declaringFunction instanceof \ReflectionMethod) {
             $context = $declaringFunction->getDeclaringClass();
-        } else {
+        } elseif ($declaringFunction instanceof \ReflectionFunction) {
             $context = $declaringFunction;
+        } else {
+            $context = null;
         }
 
         if ($this->isDefaultValueAvailable()) {
@@ -136,8 +138,10 @@ final class ReflectionParameter extends BaseReflectionParameter
      */
     public function __debugInfo(): array
     {
+        $varName = $this->parameterNode->var instanceof Expr\Variable ? $this->parameterNode->var->name : '';
+
         return [
-            'name' => (string)$this->parameterNode->var->name,
+            'name' => is_string($varName) ? $varName : '',
         ];
     }
 
@@ -221,7 +225,9 @@ final class ReflectionParameter extends BaseReflectionParameter
                 }
 
                 if ('parent' === $parameterTypeName) {
-                    return $this->getDeclaringClass()->getParentClass();
+                    $parentClass = $this->getDeclaringClass()->getParentClass();
+
+                    return $parentClass !== false ? $parentClass : null;
                 }
 
                 throw new ReflectionException("Can not resolve a class name for parameter");
@@ -287,7 +293,9 @@ final class ReflectionParameter extends BaseReflectionParameter
      */
     public function getName(): string
     {
-        return (string)$this->parameterNode->var->name;
+        $varName = $this->parameterNode->var instanceof Expr\Variable ? $this->parameterNode->var->name : '';
+
+        return is_string($varName) ? $varName : '';
     }
 
     /**

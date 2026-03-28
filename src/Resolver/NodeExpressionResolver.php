@@ -222,6 +222,9 @@ class NodeExpressionResolver
         $functionName = $this->resolve($node->name);
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
+            if (!$argumentNode instanceof Node\Arg) {
+                continue;
+            }
             $value = $this->resolve($argumentNode->value);
             // if function uses named arguments, then unpack argument name first
             if (isset($argumentNode->name)) {
@@ -267,6 +270,9 @@ class NodeExpressionResolver
         // Resolve constructor arguments
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
+            if (!$argumentNode instanceof Node\Arg) {
+                continue;
+            }
             $value = $this->resolve($argumentNode->value);
             // if constructor uses named arguments, then unpack argument name first
             if (isset($argumentNode->name)) {
@@ -421,7 +427,7 @@ class NodeExpressionResolver
         $isRealConstant = !isset(self::$notConstants[$constantName]);
         if (!$isResolved && defined($constantName)) {
             $constantValue = constant($constantName);
-            if (!$isFQNConstant) {
+            if (!$isFQNConstant && method_exists($this->context, 'getNamespaceName')) {
                 $constantName  = $this->context->getNamespaceName() . '\\' . $constantName;
             }
         }
@@ -452,13 +458,18 @@ class NodeExpressionResolver
             $classToReflectNodeName = $classToReflectNodeName->getAttribute('resolvedName');
         }
         $refClass = $this->fetchReflectionClass($classToReflectNodeName);
-        if (($node->name instanceof Expr\Error)) {
+        if ($refClass === false) {
+            throw new ReflectionException("Could not resolve class for class constant fetch.");
+        }
+        if ($node->name instanceof Expr\Error) {
             $constantName = '';
-        } else {
+        } elseif ($node->name instanceof Node\Identifier) {
             $constantName = match (true) {
                 $node->name->hasAttribute('resolvedName') => $node->name->getAttribute('resolvedName')->toString(),
                 default => $node->name->toString(),
             };
+        } else {
+            $constantName = (string) $this->resolve($node->name);
         }
 
         // special handling of ::class constants

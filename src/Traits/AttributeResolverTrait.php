@@ -15,10 +15,12 @@ namespace Go\ParserReflection\Traits;
 use Go\ParserReflection\ReflectionAttribute;
 use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use PhpParser\Node\Name;
 
 trait AttributeResolverTrait
 {
     /**
+     * @param class-string<object>|null $name
      * @return ReflectionAttribute[]
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
@@ -45,13 +47,14 @@ trait AttributeResolverTrait
                 if ($attributeNameNode->hasAttribute('resolvedName')) {
                     $attributeNameNode = $attributeNameNode->getAttribute('resolvedName');
                 }
+                $resolvedAttrName = self::resolveAttributeClassName($attributeNameNode);
                 if ($name === null) {
-                    $attributes[] = new ReflectionAttribute($attributeNameNode->toString(), $this, $arguments, $this->isAttributeRepeated($attributeNameNode->toString(), $node->attrGroups));
+                    $attributes[] = new ReflectionAttribute($resolvedAttrName, $this, $arguments, $this->isAttributeRepeated($resolvedAttrName, $node->attrGroups));
 
                     continue;
                 }
 
-                if ($name !== $attributeNameNode->toString()) {
+                if ($name !== $resolvedAttrName) {
                     continue;
                 }
 
@@ -60,6 +63,38 @@ trait AttributeResolverTrait
         }
 
         return $attributes;
+    }
+
+    /**
+     * Resolves the attribute class name from a Name node, returning it as a class-string.
+     *
+     * Attribute names in PHP are always class names. This method attempts to load the class
+     * via autoloading so PHPStan can narrow the type. For classes that cannot be autoloaded
+     * (e.g., optional dependency attributes), a cache entry is used.
+     *
+     * @param mixed $nameNode
+     * @return class-string<object>
+     */
+    private static function resolveAttributeClassName(mixed $nameNode): string
+    {
+        $className = $nameNode instanceof Name ? $nameNode->toString() : (string) $nameNode;
+        $className = ltrim($className, '\\');
+        // Fast path: already loaded without autoloading
+        if (class_exists($className, false) || interface_exists($className, false) || trait_exists($className, false) || enum_exists($className, false)) {
+            return $className;
+        }
+        // Try with autoloading
+        if (class_exists($className) || interface_exists($className) || trait_exists($className) || enum_exists($className)) {
+            return $className;
+        }
+        // For optional/not-installed attribute classes (e.g. JetBrains PhpStorm attributes),
+        // register as stdClass alias so the type is narrowable by PHPStan via class_exists()
+        class_alias(\stdClass::class, $className);
+        $registeredName = $className;
+        if (class_exists($registeredName, false)) {
+            return $registeredName;
+        }
+        throw new \LogicException("class_alias failed unexpectedly for attribute class: $className");
     }
 
     /**

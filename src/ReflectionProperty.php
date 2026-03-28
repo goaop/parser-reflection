@@ -16,6 +16,7 @@ use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
+use PhpParser\Node\Expr;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Param;
 use PhpParser\Node\PropertyItem;
@@ -48,6 +49,8 @@ final class ReflectionProperty extends BaseReflectionProperty
 
     /**
      * Name of the class
+     *
+     * @var class-string<object>
      */
     private string $className;
 
@@ -64,6 +67,7 @@ final class ReflectionProperty extends BaseReflectionProperty
     /**
      * Initializes a reflection for the property
      *
+     * @param class-string<object> $className
      * @param Property|Param|null $propertyOrPromotedParam Property type definition node
      * @param PropertyItem|Param|null $propertyItemOrPromotedParam Concrete property definition (value, name)
      * @throws ReflectionException
@@ -231,10 +235,13 @@ final class ReflectionProperty extends BaseReflectionProperty
     {
         $node = $this->propertyItemOrPromotedParam;
 
-        return match (true) {
-            $node instanceof PropertyItem => $node->name->toString(),
-            default => (string) $node->var->name,
-        };
+        if ($node instanceof PropertyItem) {
+            return $node->name->toString();
+        }
+        // $node is Param; var is Expr\Variable|Expr\Error; Expr\Variable->name is string|Expr
+        $varName = $node->var instanceof Expr\Variable ? $node->var->name : '';
+
+        return is_string($varName) ? $varName : '';
     }
 
     /**
@@ -398,7 +405,7 @@ final class ReflectionProperty extends BaseReflectionProperty
     public function isStatic(): bool
     {
         // All promoted properties are dynamic and not static
-        return !$this->isPromoted() && $this->propertyOrPromotedParam->isStatic();
+        return $this->propertyOrPromotedParam instanceof Property && $this->propertyOrPromotedParam->isStatic();
     }
 
     /**
@@ -481,8 +488,8 @@ final class ReflectionProperty extends BaseReflectionProperty
     /**
      * Parses properties from the concrete class node
      *
-     * @param ClassLike $classLikeNode Class-like node
-     * @param string    $fullClassName FQN of the class
+     * @param ClassLike            $classLikeNode Class-like node
+     * @param class-string<object> $fullClassName FQN of the class
      *
      * @return ReflectionProperty[]
      */
@@ -509,7 +516,8 @@ final class ReflectionProperty extends BaseReflectionProperty
             if ($classLevelNode instanceof ClassMethod && $classLevelNode->name->toString() === '__construct') {
                 foreach ($classLevelNode->getParams() as $paramNode) {
                     if ($paramNode->isPromoted()) {
-                        $propertyName = (string) $paramNode->var->name;
+                        $varName = $paramNode->var instanceof Expr\Variable ? $paramNode->var->name : '';
+                        $propertyName = is_string($varName) ? $varName : '';
                         $properties[$propertyName] = new self(
                             $fullClassName,
                             $propertyName,
@@ -541,6 +549,7 @@ final class ReflectionProperty extends BaseReflectionProperty
         parent::__construct($this->className, $this->getName());
     }
 
+    /** @param class-string<object> $fullClassName */
     private static function createEnumNameProperty(string $fullClassName): ReflectionProperty
     {
         $namePropertyNode = (new \PhpParser\Builder\Property('name'))
@@ -557,6 +566,7 @@ final class ReflectionProperty extends BaseReflectionProperty
         );
     }
 
+    /** @param class-string<object> $fullClassName */
     private static function createEnumValueProperty(Enum_ $classLikeNode, string $fullClassName): ReflectionProperty
     {
         $valuePropertyNode = (new \PhpParser\Builder\Property('value'))

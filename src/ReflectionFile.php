@@ -50,9 +50,9 @@ class ReflectionFile
      */
     public function __construct(string $fileName, ?array $topLevelNodes = null)
     {
-        $fileName            = PathResolver::realpath($fileName);
-        $this->fileName      = $fileName;
-        $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
+        $resolvedFileName    = PathResolver::realpath($fileName);
+        $this->fileName      = is_string($resolvedFileName) ? $resolvedFileName : $fileName;
+        $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($this->fileName);
     }
 
     /**
@@ -123,6 +123,9 @@ class ReflectionFile
         }
 
         $declareStatement = reset($topLevelNode->declares);
+        if ($declareStatement === false) {
+            return false;
+        }
         $isStrictTypeKey  = $declareStatement->key->toString() === 'strict_types';
         $isScalarValue    = $declareStatement->value instanceof Node\Scalar\Int_;
         $isStrictMode     = $isStrictTypeKey && $isScalarValue && $declareStatement->value->value === 1;

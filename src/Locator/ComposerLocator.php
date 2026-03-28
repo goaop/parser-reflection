@@ -54,7 +54,8 @@ class ComposerLocator implements LocatorInterface
     {
         $filePath = $this->loader->findFile(ltrim($className, '\\'));
         if (!empty($filePath)) {
-            $filePath = PathResolver::realpath($filePath);
+            $resolvedPath = PathResolver::realpath($filePath);
+            $filePath = is_string($resolvedPath) ? $resolvedPath : false;
         }
 
         return $filePath;

@@ -49,9 +49,16 @@ final class ReflectionClass extends InternalReflectionClass
      */
     public function __construct(object|string $argument, ?ClassLike $classLikeNode = null)
     {
-        $fullClassName   = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
+        $fullClassName = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts  = explode('\\', $fullClassName);
-        $this->className = array_pop($namespaceParts);
+        $shortName = array_pop($namespaceParts);
+        if ($shortName !== null && $shortName !== '') {
+            $this->className = $shortName;
+        } else {
+            // Fallback: use the full class name if explode produced an empty short name
+            // get_class() always returns non-empty, so this path handles edge cases only
+            $this->className = $fullClassName !== '' ? $fullClassName : 'UnknownClass';
+        }
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name);
 
@@ -63,7 +70,7 @@ final class ReflectionClass extends InternalReflectionClass
     /**
      * Parses interfaces from the concrete class node
      *
-     * @return \ReflectionClass<object>[] List of reflections of interfaces
+     * @return array<string, \ReflectionClass<object>> List of reflections of interfaces
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
@@ -97,7 +104,7 @@ final class ReflectionClass extends InternalReflectionClass
                 ? [\UnitEnum::class, \BackedEnum::class] // PHP Uses exactly this order, not reversed by parent!
                 : [\UnitEnum::class];
             foreach ($interfacesToAdd as $interfaceToAdd) {
-                $interfaces[$interfaceToAdd] = new parent($interfaceToAdd);
+                $interfaces[$interfaceToAdd] = self::createNativeReflectionClass($interfaceToAdd);
             }
         }
 
@@ -133,6 +140,17 @@ final class ReflectionClass extends InternalReflectionClass
         }
 
         return $traits;
+    }
+
+    /**
+     * Creates a native ReflectionClass instance for the given class/interface name.
+     *
+     * @param class-string<object> $className
+     * @return \ReflectionClass<object>
+     */
+    private static function createNativeReflectionClass(string $className): InternalReflectionClass
+    {
+        return new parent($className);
     }
 
     /**

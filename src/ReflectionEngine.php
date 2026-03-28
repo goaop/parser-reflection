@@ -225,7 +225,8 @@ class ReflectionEngine
      */
     public static function parseFile(string $fileName, ?string $fileContent = null): array
     {
-        $fileName = PathResolver::realpath($fileName);
+        $resolvedFileName = PathResolver::realpath($fileName);
+        $fileName = is_string($resolvedFileName) ? $resolvedFileName : $fileName;
         if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
             return self::$parsedFiles[$fileName];
         }
@@ -236,6 +237,9 @@ class ReflectionEngine
 
         if (!isset($fileContent)) {
             $fileContent = file_get_contents($fileName);
+            if ($fileContent === false) {
+                throw new ReflectionException("Could not read file: $fileName");
+            }
         }
         $treeNodes = self::$parser->parse($fileContent);
         $treeNodes = self::$traverser->traverse($treeNodes);

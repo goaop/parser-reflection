@@ -29,7 +29,7 @@ class PathResolver
      * @param string|array<int, string> $somePath             Path without normalization or array of paths
      * @param bool                      $shouldCheckExistence Flag for checking existence of resolved filename
      *
-     * @return array<int, string>|bool|string
+     * @return ($somePath is array ? array<int, string|false> : string|false)
      */
     public static function realpath($somePath, $shouldCheckExistence = false)
     {

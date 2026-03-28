@@ -109,12 +109,12 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
         $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
 
         // We can statically resolve value only fot ClassConst, as for EnumCase we need to have object itself as default
-        if ($classConstNode instanceof ClassConst) {
+        if ($classConstNode instanceof ClassConst && $this->constOrEnumCaseNode instanceof Const_) {
             $expressionSolver->process($this->constOrEnumCaseNode->value);
             $this->value = $expressionSolver->getValue();
         }
 
-        if ($this->hasType()) {
+        if ($this->hasType() && $this->classConstOrEnumCaseNode instanceof ClassConst) {
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->getValue() === null;
 

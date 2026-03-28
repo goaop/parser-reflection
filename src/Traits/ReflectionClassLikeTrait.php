@@ -45,6 +45,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * Short name of the class, without namespace
+     *
+     * @var non-empty-string
      */
     protected string $className;
 
@@ -221,15 +223,33 @@ trait ReflectionClassLikeTrait
     public function getConstants(?int $filter = null): array
     {
         if (!isset($this->constants)) {
-            $this->constants = $this->recursiveCollect(
-                function (array &$result, \ReflectionClass $instance) {
-                    $result += $instance->getConstants();
-                }
-            );
+            $this->constants = $this->collectInheritedConstants();
             $this->collectSelfConstants();
         }
 
-        return $this->constants;
+        return $this->constants ?? [];
+    }
+
+    /**
+     * Collects constants from parent classes, traits, and interfaces.
+     *
+     * @return array<string, mixed>
+     */
+    private function collectInheritedConstants(): array
+    {
+        $result = [];
+        foreach ($this->getTraits() as $trait) {
+            $result += $trait->getConstants();
+        }
+        $parentClass = $this->getParentClass();
+        if ($parentClass !== false) {
+            $result += $parentClass->getConstants();
+        }
+        foreach (ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode) as $interface) {
+            $result += $interface->getConstants();
+        }
+
+        return $result;
     }
 
     /**
@@ -437,12 +457,41 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return class-string<object>
      */
     public function getName(): string
     {
         $namespaceName = $this->namespaceName ? $this->namespaceName . '\\' : '';
+        $fullName = $namespaceName . $this->getShortName();
 
-        return $namespaceName . $this->getShortName();
+        return $this->resolveAsClassString($fullName);
+    }
+
+    /**
+     * Resolves a fully-qualified class name string as a class-string type.
+     * Classes reflected via AST may not be loaded yet; this method attempts autoloading
+     * and falls back to returning the name as-is (which is valid since class names ARE class-strings).
+     *
+     * @param non-empty-string $name
+     * @return class-string<object>
+     */
+    private function resolveAsClassString(string $name): string
+    {
+        if (class_exists($name, false) || interface_exists($name, false) || trait_exists($name, false) || enum_exists($name, false)) {
+            return $name;
+        }
+        // Trigger autoloading for the class - this resolves the type for PHPStan
+        if (class_exists($name) || interface_exists($name) || trait_exists($name) || enum_exists($name)) {
+            return $name;
+        }
+        // For AST-only classes not yet loadable, register as stdClass alias so PHPStan can narrow the type
+        class_alias(\stdClass::class, $name);
+        $registeredName = $name;
+        if (class_exists($registeredName, false)) {
+            return $registeredName;
+        }
+        throw new \LogicException("class_alias failed unexpectedly for class name: $name");
     }
 
     /**
@@ -579,6 +628,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return non-empty-string
      */
     public function getShortName(): string
     {

@@ -31,24 +31,38 @@ use ReflectionAttribute as BaseReflectionAttribute;
 class ReflectionAttribute extends BaseReflectionAttribute
 {
     /**
+     * Fully-qualified attribute class name.
+     *
+     * @var class-string<object>
+     */
+    private string $attributeName;
+
+    /**
+     * @param class-string<object> $attributeName
      * @param array<int, mixed> $arguments
      */
     public function __construct(
-        private string $attributeName,
+        string $attributeName,
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
         private array $arguments,
         private bool $isRepeated,
     ) {
+        $this->attributeName = $attributeName;
     }
 
     public function getNode(): Node\Attribute
     {
-        /** @var Class_|ClassMethod|PropertyItem|ClassConst|Function_|Param $node  */
-        $node = $this->reflector->getNode();
+        $reflectorNode = $this->reflector->getNode();
 
-        // attrGroups only exists in Property Stmt
-        if ($node instanceof PropertyItem) {
+        // attrGroups only exists in Property Stmt (not PropertyItem), so switch to the type node
+        if ($reflectorNode instanceof PropertyItem && $this->reflector instanceof ReflectionProperty) {
             $node = $this->reflector->getTypeNode();
+        } else {
+            $node = $reflectorNode;
+        }
+
+        if ($node instanceof PropertyItem) {
+            throw new ReflectionException('ReflectionAttribute cannot resolve attrGroups from a PropertyItem node');
         }
 
         $nodeExpressionResolver = new NodeExpressionResolver($this);

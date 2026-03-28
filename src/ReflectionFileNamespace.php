@@ -81,7 +81,8 @@ class ReflectionFileNamespace
      */
     public function __construct(string $fileName, string $namespaceName, ?Namespace_ $namespaceNode = null)
     {
-        $fileName = PathResolver::realpath($fileName);
+        $resolvedFileName = PathResolver::realpath($fileName);
+        $fileName = is_string($resolvedFileName) ? $resolvedFileName : $fileName;
         if (!isset($namespaceNode)) {
             $namespaceNode = ReflectionEngine::parseFileNamespace($fileName, $namespaceName);
         }
@@ -389,10 +390,15 @@ class ReflectionFileNamespace
                 ) {
                     try {
                         $functionCallNode = $namespaceLevelNode->expr;
-                        $expressionSolver->process($functionCallNode->args[0]->value);
+                        $arg0 = $functionCallNode->args[0];
+                        $arg1 = $functionCallNode->args[1];
+                        if (!$arg0 instanceof \PhpParser\Node\Arg || !$arg1 instanceof \PhpParser\Node\Arg) {
+                            continue;
+                        }
+                        $expressionSolver->process($arg0->value);
                         $constantName = $expressionSolver->getValue();
 
-                        $expressionSolver->process($functionCallNode->args[1]->value);
+                        $expressionSolver->process($arg1->value);
                         $constantValue = $expressionSolver->getValue();
 
                         $constants[$constantName] = $constantValue;
