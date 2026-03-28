@@ -15,7 +15,6 @@ use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
-use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\BinaryOp\Concat;
@@ -33,10 +32,15 @@ use ReflectionParameter as BaseReflectionParameter;
  * AST-based reflection for method/function parameter
  * @see \Go\ParserReflection\ReflectionParameterTest
  */
-class ReflectionParameter extends BaseReflectionParameter
+final class ReflectionParameter extends BaseReflectionParameter
 {
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;
+
+    /**
+     * Re-declare to remove PHP 8.4 { get; } hook so it can be unset in constructor
+     */
+    public string $name;
 
     /**
      * Reflection function or method
@@ -80,8 +84,6 @@ class ReflectionParameter extends BaseReflectionParameter
      * Initializes a reflection for the property
      */
     public function __construct(
-        string|array $unusedFunctionName,
-        string $parameterName,
         Param $parameterNode,
         int $parameterIndex,
         ReflectionFunctionAbstract $declaringFunction
@@ -114,7 +116,7 @@ class ReflectionParameter extends BaseReflectionParameter
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
 
-            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver = new TypeExpressionResolver();
             $typeResolver->process($this->parameterNode->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();
@@ -195,7 +197,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    #[Deprecated(reason: "Use ReflectionParameter::getType() and the ReflectionType APIs should be used instead.", since: "8.0")]
+    #[\Deprecated("Use ReflectionParameter::getType() and the ReflectionType APIs should be used instead.", since: "8.0")]
     public function getClass(): ?\ReflectionClass
     {
         $parameterType = $this->parameterNode->type;
@@ -311,7 +313,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    #[Deprecated(reason: "Use ReflectionParameter::getType() instead.", since: "8.0")]
+    #[\Deprecated("Use ReflectionParameter::getType() instead.", since: "8.0")]
     public function isArray(): bool
     {
         $type = $this->parameterNode->type;
@@ -322,7 +324,7 @@ class ReflectionParameter extends BaseReflectionParameter
     /**
      * @inheritDoc
      */
-    #[Deprecated(reason: "Use ReflectionParameter::getType() instead.", since: "8.0")]
+    #[\Deprecated("Use ReflectionParameter::getType() instead.", since: "8.0")]
     public function isCallable(): bool
     {
         $type = $this->parameterNode->type;
@@ -385,7 +387,11 @@ class ReflectionParameter extends BaseReflectionParameter
     {
         // start from PHP 8.1, isDefaultValueAvailable() returns false if next parameter is required
         // see https://github.com/php/php-src/issues/8090
-        $parameters = $this->declaringFunction->getNode()->getParams();
+        $fn = $this->declaringFunction;
+        if (!$fn instanceof ReflectionFunction && !$fn instanceof ReflectionMethod) {
+            return true;
+        }
+        $parameters = $fn->getNode()->getParams();
         for ($nextParamIndex = $this->parameterIndex + 1; $nextParamIndex < count($parameters); ++$nextParamIndex) {
             if (!isset($parameters[$nextParamIndex]->default) && !$parameters[$nextParamIndex]->variadic) {
                 return false;

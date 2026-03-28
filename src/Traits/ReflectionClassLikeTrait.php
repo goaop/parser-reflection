@@ -601,7 +601,7 @@ trait ReflectionClassLikeTrait
         $traits  = $this->getTraits();
         foreach ($this->traitAdaptations as $adaptation) {
             if ($adaptation instanceof TraitUseAdaptation\Alias) {
-                $methodName = $adaptation->method;
+                $methodName = (string) $adaptation->method;
                 $traitName  = null;
                 foreach ($traits as $trait) {
                     if ($trait->hasMethod($methodName)) {
@@ -609,7 +609,7 @@ trait ReflectionClassLikeTrait
                         break;
                     }
                 }
-                $aliases[$adaptation->newName] = $traitName . '::' . $methodName;
+                $aliases[(string) $adaptation->newName] = $traitName . '::' . $methodName;
             }
         }
 
@@ -978,7 +978,7 @@ trait ReflectionClassLikeTrait
 
         $traits = $this->getTraits();
         foreach ($traits as $trait) {
-            $collector($result, $trait, !$isParent);
+            $collector($result, $trait, false);
         }
 
         $parentClass = $this->getParentClass();

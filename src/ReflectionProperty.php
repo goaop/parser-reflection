@@ -16,7 +16,6 @@ use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
-use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Param;
 use PhpParser\Node\PropertyItem;
@@ -31,11 +30,17 @@ use ReflectionProperty as BaseReflectionProperty;
  * AST-based reflection for class property
  * @see \Go\ParserReflection\ReflectionPropertyTest
  */
-class ReflectionProperty extends BaseReflectionProperty
+final class ReflectionProperty extends BaseReflectionProperty
 {
     use InitializationTrait;
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;
+
+    /**
+     * Re-declare to remove PHP 8.4 { get; } hooks so these properties can be unset in constructor
+     */
+    public string $name;
+    public string $class;
 
     private Property|Param $propertyOrPromotedParam;
 
@@ -53,8 +58,6 @@ class ReflectionProperty extends BaseReflectionProperty
     private bool $isDefaultValueConstant = false;
 
     private ?string $defaultValueConstantName;
-
-    private bool $isDefaultValueConstExpr = false;
 
     private ?string $defaultValueConstExpr;
 
@@ -87,7 +90,6 @@ class ReflectionProperty extends BaseReflectionProperty
             $this->defaultValue             = $expressionSolver->getValue();
             $this->isDefaultValueConstant   = $expressionSolver->isConstant();
             $this->defaultValueConstantName = $expressionSolver->getConstantName();
-            $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
             $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
         }
 
@@ -95,7 +97,7 @@ class ReflectionProperty extends BaseReflectionProperty
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->hasDefaultValue() && $this->getDefaultValue() === null;
 
-            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver = new TypeExpressionResolver();
             $typeResolver->process($this->propertyOrPromotedParam->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();
@@ -229,8 +231,7 @@ class ReflectionProperty extends BaseReflectionProperty
 
         return match (true) {
             $node instanceof PropertyItem => $node->name->toString(),
-            $node instanceof Param => (string) $node->var->name,
-            default => 'unknown'
+            default => (string) $node->var->name,
         };
     }
 
@@ -440,13 +441,27 @@ class ReflectionProperty extends BaseReflectionProperty
      */
     public function isVirtual(): bool
     {
-        return $this->propertyOrPromotedParam->isVirtual();
+        if (!$this->propertyOrPromotedParam instanceof Property) {
+            return false;
+        }
+        $hooks = $this->propertyOrPromotedParam->hooks;
+        if (empty($hooks)) {
+            return false;
+        }
+        // A property is virtual if it has hooks but none expose backing storage (byRef)
+        foreach ($hooks as $hook) {
+            if ($hook->byRef) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
      * {@inheritDoc}
      */
-    #[Deprecated(reason: 'This method is no-op starting from PHP 8.1', since: '8.1')]
+    #[\Deprecated('This method is no-op starting from PHP 8.1', since: '8.1')]
     public function setAccessible(bool $accessible): void
     {
     }
@@ -479,7 +494,7 @@ class ReflectionProperty extends BaseReflectionProperty
             if ($classLevelNode instanceof Property) {
                 foreach ($classLevelNode->props as $classPropertyNode) {
                     $propertyName = $classPropertyNode->name->toString();
-                    $properties[$propertyName] = new static(
+                    $properties[$propertyName] = new self(
                         $fullClassName,
                         $propertyName,
                         $classLevelNode,
@@ -493,7 +508,7 @@ class ReflectionProperty extends BaseReflectionProperty
                 foreach ($classLevelNode->getParams() as $paramNode) {
                     if ($paramNode->isPromoted()) {
                         $propertyName = (string) $paramNode->var->name;
-                        $properties[$propertyName] = new static(
+                        $properties[$propertyName] = new self(
                             $fullClassName,
                             $propertyName,
                             $paramNode,
@@ -532,7 +547,7 @@ class ReflectionProperty extends BaseReflectionProperty
             ->setType('string')
             ->getNode();
 
-        return new static(
+        return new self(
             $fullClassName,
             'name',
             $namePropertyNode,
@@ -548,7 +563,7 @@ class ReflectionProperty extends BaseReflectionProperty
             ->setType($classLikeNode->scalarType)
             ->getNode();
 
-        return new static(
+        return new self(
             $fullClassName,
             'value',
             $valuePropertyNode,

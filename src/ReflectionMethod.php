@@ -14,7 +14,6 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
-use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -27,7 +26,7 @@ use ReflectionMethod as BaseReflectionMethod;
  * AST-based reflection for the method in a class
  * @see \Go\ParserReflection\ReflectionMethodTest
  */
-class ReflectionMethod extends BaseReflectionMethod
+final class ReflectionMethod extends BaseReflectionMethod
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionFunctionLikeTrait;
@@ -69,7 +68,7 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     public function getNode(): ClassMethod
     {
-        return $this->functionLikeNode;
+        return $this->getClassMethodNode();
     }
 
     /**
@@ -320,7 +319,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    #[Deprecated(reason: "Usage of ReflectionMethod::setAccessible() has no effect.", since: "8.1")]
+    #[\Deprecated("Usage of ReflectionMethod::setAccessible() has no effect.", since: "8.1")]
     public function setAccessible(bool $accessible): void
     {
     }
@@ -383,7 +382,7 @@ class ReflectionMethod extends BaseReflectionMethod
             ->setReturnType('array')
             ->getNode();
         
-        return new static(
+        return new self(
             $reflectionClass->name,
             'cases',
             $casesMethodNode,
@@ -403,7 +402,7 @@ class ReflectionMethod extends BaseReflectionMethod
             ->setReturnType('static')
             ->getNode();
 
-        return new static(
+        return new self(
             $reflectionClass->name,
             'from',
             $fromMethodNode,
@@ -423,7 +422,7 @@ class ReflectionMethod extends BaseReflectionMethod
             ->setReturnType('?static')
             ->getNode();
 
-        return new static(
+        return new self(
             $reflectionClass->name,
             'tryFrom',
             $fromMethodNode,
@@ -436,6 +435,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     private function getClassMethodNode(): ClassMethod
     {
+        if (!$this->functionLikeNode instanceof ClassMethod) {
+            throw new \LogicException('Expected ClassMethod node');
+        }
+
         return $this->functionLikeNode;
     }
 }

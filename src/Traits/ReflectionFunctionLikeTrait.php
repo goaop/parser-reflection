@@ -161,8 +161,6 @@ trait ReflectionFunctionLikeTrait
 
             foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
                 $reflectionParameter = new ReflectionParameter(
-                    $this->getName(),
-                    (string)$parameterNode->var->name,
                     $parameterNode,
                     $parameterIndex,
                     $this
@@ -185,7 +183,7 @@ trait ReflectionFunctionLikeTrait
     public function getReturnType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
         if ($this->hasReturnType()) {
-            $typeResolver = new TypeExpressionResolver($this);
+            $typeResolver = new TypeExpressionResolver();
             $typeResolver->process($this->functionLikeNode->getReturnType(), false);
 
             return $typeResolver->getType();
@@ -208,8 +206,8 @@ trait ReflectionFunctionLikeTrait
 
     public function getStartLine(): int|false
     {
-        if ($this->functionLikeNode->attrGroups !== []) {
-            $attrGroups = $this->functionLikeNode->attrGroups;
+        if ($this->functionLikeNode->getAttrGroups() !== []) {
+            $attrGroups = $this->functionLikeNode->getAttrGroups();
             $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
 
             return $lastAttrGroupsEndLine + 1;

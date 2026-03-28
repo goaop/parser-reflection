@@ -2,3 +2,10 @@ parameters:
   level: 5
   paths:
     - src
+  treatPhpDocTypesAsCertain: false
+  ignoreErrors:
+    # Both classes are final, so "might have hooks in a subclass" is a false positive
+    - identifier: unset.possiblyHookedProperty
+      path: src/ReflectionFunction.php
+    - identifier: unset.possiblyHookedProperty
+      path: src/ReflectionMethod.php

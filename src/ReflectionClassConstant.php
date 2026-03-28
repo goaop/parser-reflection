@@ -26,10 +26,16 @@ use ReflectionClassConstant as BaseReflectionClassConstant;
 /**
  * @see \Go\ParserReflection\ReflectionClassConstantTest
  */
-class ReflectionClassConstant extends BaseReflectionClassConstant
+final class ReflectionClassConstant extends BaseReflectionClassConstant
 {
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;
+
+    /**
+     * Re-declare to remove PHP 8.4 { get; } hooks so these properties can be unset in constructor
+     */
+    public string $name;
+    public string $class;
 
     /**
      * Concrete class constant node
@@ -57,7 +63,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             if ($classLevelNode instanceof ClassConst) {
                 foreach ($classLevelNode->consts as $const) {
                     $classConstName = $const->name->toString();
-                    $classConstants[$classConstName] = new static(
+                    $classConstants[$classConstName] = new self(
                         $reflectionClassFQN,
                         $classConstName,
                         $classLevelNode,
@@ -112,7 +118,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->getValue() === null;
 
-            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $typeResolver = new TypeExpressionResolver();
             $typeResolver->process($this->classConstOrEnumCaseNode->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();

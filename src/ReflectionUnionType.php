@@ -90,10 +90,10 @@ class ReflectionUnionType extends BaseReflectionUnionType
             if ($firstOrder !== false && $secondOrder !== false) {
                 return $firstOrder <=> $secondOrder;
             }
-            if ($firstOrder !== false && $secondOrder === false) {
+            if ($firstOrder !== false) {
                 return 1;
             }
-            if ($firstOrder === false && $secondOrder !== false) {
+            if ($secondOrder !== false) {
                 return -1;
             }
 

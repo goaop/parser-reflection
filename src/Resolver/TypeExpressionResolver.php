@@ -37,13 +37,6 @@ class TypeExpressionResolver
 {
 
     /**
-     * Current reflection context for parsing
-     */
-    private
-        \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|
-        \ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
-
-    /**
      * Whether this type has explicit null value set
      */
     private bool $hasDefaultNull = false;
@@ -60,9 +53,8 @@ class TypeExpressionResolver
 
     private \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null $type;
 
-    public function __construct($context)
+    public function __construct()
     {
-        $this->context = $context;
     }
 
     /**

@@ -17,6 +17,7 @@ use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Interface_;
@@ -27,11 +28,16 @@ use ReflectionClass as InternalReflectionClass;
  * AST-based reflection class
  * @see \Go\ParserReflection\ReflectionClassTest
  */
-class ReflectionClass extends InternalReflectionClass
+final class ReflectionClass extends InternalReflectionClass
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionClassLikeTrait;
     use AttributeResolverTrait;
+
+    /**
+     * Re-declare to remove parent's @readonly / PHP 8.4 hook so it can be unset in constructor
+     */
+    public string $name;
 
     /**
      * Initializes reflection instance
@@ -62,18 +68,20 @@ class ReflectionClass extends InternalReflectionClass
         $interfaces = [];
 
         $isInterface    = $classLikeNode instanceof Interface_;
-        $interfaceField = $isInterface ? 'extends' : 'implements';
 
-        $hasExplicitInterfaces = in_array($interfaceField, $classLikeNode->getSubNodeNames(), true);
-        $implementsList        = $hasExplicitInterfaces ? $classLikeNode->$interfaceField : [];
+        if ($isInterface) {
+            $implementsList = $classLikeNode instanceof Interface_ ? $classLikeNode->extends : [];
+        } else {
+            $implementsList = $classLikeNode instanceof Class_ ? $classLikeNode->implements : [];
+        }
 
         if (count($implementsList) > 0) {
             foreach ($implementsList as $implementNode) {
-                if ($implementNode instanceof Name && $implementNode->getAttribute('resolvedName') instanceof FullyQualified) {
+                if ($implementNode->getAttribute('resolvedName') instanceof FullyQualified) {
                     $implementName = $implementNode->getAttribute('resolvedName')->toString();
                     $interface     = interface_exists($implementName, false)
                         ? new parent($implementName)
-                        : new static($implementName);
+                        : new self($implementName);
 
                     $interfaces[$implementName] = $interface;
                 }
@@ -113,7 +121,7 @@ class ReflectionClass extends InternalReflectionClass
                             $traitName          = $classTraitName->getAttribute('resolvedName')->toString();
                             $trait              = trait_exists($traitName, false)
                                 ? new parent($traitName)
-                                : new static($traitName);
+                                : new self($traitName);
                             $traits[$traitName] = $trait;
                         }
                     }
@@ -138,7 +146,7 @@ class ReflectionClass extends InternalReflectionClass
     /**
      * Returns an AST-node for class
      */
-    public function getNode(): ?ClassLike
+    public function getNode(): ClassLike
     {
         return $this->classLikeNode;
     }
@@ -160,6 +168,6 @@ class ReflectionClass extends InternalReflectionClass
      */
     protected function createReflectionForClass(string $className): InternalReflectionClass
     {
-        return class_exists($className, false) ? new parent($className) : new static($className);
+        return class_exists($className, false) ? new parent($className) : new self($className);
     }
 }

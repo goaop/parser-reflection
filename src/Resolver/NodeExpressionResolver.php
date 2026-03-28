@@ -130,8 +130,10 @@ class NodeExpressionResolver
             if ($node instanceof Expr\Array_ && $node->getAttribute('kind') === Expr\Array_::KIND_LONG) {
                 $node->setAttribute('kind', Expr\Array_::KIND_SHORT);
             }
-            $printer    = new Standard(['shortArraySyntax' => true]);
-            $expression = $printer->prettyPrintExpr($node);
+            if ($node instanceof Expr) {
+                $printer    = new Standard(['shortArraySyntax' => true]);
+                $expression = $printer->prettyPrintExpr($node);
+            }
         }
 
         return $expression;
@@ -707,7 +709,6 @@ class NodeExpressionResolver
         }
 
         if (method_exists($this->context, 'getFileName')) {
-            /** @var ReflectionFileNamespace|null $fileNamespace */
             $fileName      = $this->context->getFileName();
             $namespaceName = $this->resolveScalarMagicConstNamespace();
 
