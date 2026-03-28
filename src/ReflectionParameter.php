@@ -196,6 +196,8 @@ final class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * @inheritDoc
+     *
+     * @return \ReflectionClass<object>|null
      */
     #[\Deprecated("Use ReflectionParameter::getType() and the ReflectionType APIs should be used instead.", since: "8.0")]
     public function getClass(): ?\ReflectionClass
@@ -236,6 +238,8 @@ final class ReflectionParameter extends BaseReflectionParameter
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>|null
      */
     public function getDeclaringClass(): ?\ReflectionClass
     {

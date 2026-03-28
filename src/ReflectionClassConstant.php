@@ -138,6 +138,8 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
 
     /**
      * @inheritDoc
+     *
+     * @return \ReflectionClass<object>
      */
     public function getDeclaringClass(): \ReflectionClass
     {

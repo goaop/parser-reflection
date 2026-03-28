@@ -26,7 +26,9 @@ use ReflectionClass as InternalReflectionClass;
 
 /**
  * AST-based reflection class
+ *
  * @see \Go\ParserReflection\ReflectionClassTest
+ * @extends \ReflectionClass<object>
  */
 final class ReflectionClass extends InternalReflectionClass
 {
@@ -61,7 +63,7 @@ final class ReflectionClass extends InternalReflectionClass
     /**
      * Parses interfaces from the concrete class node
      *
-     * @return InternalReflectionClass[] List of reflections of interfaces
+     * @return \ReflectionClass<object>[] List of reflections of interfaces
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
@@ -105,9 +107,9 @@ final class ReflectionClass extends InternalReflectionClass
     /**
      * Parses traits from the concrete class node
      *
-     * @param array $traitAdaptations List of method adaptations
+     * @param array<int|string, \PhpParser\Node\Stmt\TraitUseAdaptation> $traitAdaptations List of method adaptations
      *
-     * @return InternalReflectionClass[] List of reflections of traits
+     * @return \ReflectionClass<object>[] List of reflections of traits
      */
     public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations): array
     {
@@ -164,7 +166,7 @@ final class ReflectionClass extends InternalReflectionClass
      *
      * @param string $className The name of the class to create a reflection for.
      *
-     * @return InternalReflectionClass The appropriate reflection object.
+     * @return \ReflectionClass<object> The appropriate reflection object.
      */
     protected function createReflectionForClass(string $className): InternalReflectionClass
     {

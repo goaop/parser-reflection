@@ -45,16 +45,22 @@ class ReflectionFileNamespace
 
     /**
      * Map of constants in the namespace
+     *
+     * @var array<string, mixed>
      */
     protected array $fileConstants;
 
     /**
      * Map of constants in the namespace including defined via "define(...)"
+     *
+     * @var array<string, mixed>
      */
     protected array $fileConstantsWithDefined;
 
     /**
      * List of imported namespaces (aliases)
+     *
+     * @var array<string, string>
      */
     protected array $fileNamespaceAliases;
 
@@ -129,6 +135,8 @@ class ReflectionFileNamespace
      * Returns a list of defined constants in the namespace
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
+     *
+     * @return array<string, mixed>
      */
     public function getConstants(bool $withDefined = false): array
     {
@@ -222,6 +230,8 @@ class ReflectionFileNamespace
 
     /**
      * Returns a list of namespace aliases
+     *
+     * @return array<string, string>
      */
     public function getNamespaceAliases(): array
     {
@@ -349,6 +359,8 @@ class ReflectionFileNamespace
      * Searches for constants in the given AST
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
+     *
+     * @return array<string, mixed>
      */
     private function findConstants(bool $withDefined = false): array
     {
@@ -396,6 +408,8 @@ class ReflectionFileNamespace
 
     /**
      * Searches for namespace aliases for the current block
+     *
+     * @return array<string, string>
      */
     private function findNamespaceAliases(): array
     {

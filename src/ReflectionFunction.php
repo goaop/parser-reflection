@@ -47,6 +47,8 @@ final class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * Emulating original behaviour of reflection
+     *
+     * @return array<string, string>
      */
     public function __debugInfo(): array
     {
@@ -93,6 +95,8 @@ final class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<int, mixed> $args
      */
     public function invokeArgs(array $args): mixed
     {

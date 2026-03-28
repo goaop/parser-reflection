@@ -50,20 +50,22 @@ trait ReflectionClassLikeTrait
 
     /**
      * List of all constants from the class or null if not initialized yet
+     *
+     * @var array<string, mixed>|null
      */
     protected ?array $constants;
 
     /**
      * Interfaces or null if not initialized yet
      *
-     * @var \ReflectionClass[]|null
+     * @var \ReflectionClass<object>[]|null
      */
     protected ?array $interfaceClasses;
 
     /**
      * List of traits or null if not initialized yet
      *
-     * @var  \ReflectionClass[]|null
+     * @var \ReflectionClass<object>[]|null
      */
     protected ?array $traits;
 
@@ -86,6 +88,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * Parent class, or false if not present, null if uninitialized yet
+     *
+     * @var \ReflectionClass<object>|false|null
      */
     protected null|\ReflectionClass|false $parentClass;
 
@@ -211,6 +215,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getConstants(?int $filter = null): array
     {
@@ -245,7 +251,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.getdefaultproperties.php
      *
-     * @return array An array of default properties, with the key being the name of the property and the value being
+     * @return array<string, mixed> An array of default properties, with the key being the name of the property and the value being
      * the default value of the property or NULL if the property doesn't have a default value
      */
     public function getDefaultProperties(): array
@@ -320,6 +326,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>[]
      */
     public function getInterfaces(): array
     {
@@ -447,6 +455,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>|false
      */
     public function getParentClass(): \ReflectionClass|false
     {
@@ -592,7 +602,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.gettraitaliases.php
      *
-     * @return array an array with new method names in keys and original names (in the format
+     * @return array<string, string> an array with new method names in keys and original names (in the format
      *                    "TraitName::original") in values.
      */
     public function getTraitAliases(): array
@@ -631,7 +641,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.gettraits.php
      *
-     * @return \ReflectionClass[]
+     * @return \ReflectionClass<object>[]
      */
     public function getTraits(): array
     {
@@ -689,6 +699,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @param \ReflectionClass<object>|string $interfaceName
      */
     public function implementsInterface(\ReflectionClass|string $interfaceName): bool
     {
@@ -828,6 +840,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @param \ReflectionClass<object>|string $class
      */
     public function isSubclassOf(\ReflectionClass|string $class): bool
     {
@@ -880,6 +894,8 @@ trait ReflectionClassLikeTrait
      * Gets static properties
      *
      * @link http://php.net/manual/en/reflectionclass.getstaticproperties.php
+     *
+     * @return array<string, mixed>
      */
     public function getStaticProperties(): array
     {
@@ -935,7 +951,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.newinstanceargs.php
      *
-     * @param array $args The parameters to be passed to the class constructor as an array.
+     * @param array<int, mixed> $args The parameters to be passed to the class constructor as an array.
      */
     public function newInstanceArgs(array $args = []): ?object
     {
@@ -971,6 +987,9 @@ trait ReflectionClassLikeTrait
         parent::setStaticPropertyValue($name, $value);
     }
 
+    /**
+     * @return array<string|int, mixed>
+     */
     private function recursiveCollect(Closure $collector): array
     {
         $result   = [];

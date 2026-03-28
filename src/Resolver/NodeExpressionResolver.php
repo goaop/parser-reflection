@@ -39,6 +39,8 @@ class NodeExpressionResolver
 
     /**
      * List of exception for constant fetch
+     *
+     * @var array<string, bool>
      */
     private static array $notConstants = [
         'true'  => true,
@@ -48,6 +50,8 @@ class NodeExpressionResolver
 
     /**
      * Current reflection context for parsing
+     *
+     * @var \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null
      */
     private
         \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|
@@ -81,6 +85,9 @@ class NodeExpressionResolver
 
     private mixed $value;
 
+    /**
+     * @param \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null $context
+     */
     public function __construct($context)
     {
         $this->context = $context;
@@ -387,7 +394,7 @@ class NodeExpressionResolver
         return $this->context->name;
     }
 
-    protected function resolveExprConstFetch(Expr\ConstFetch $node)
+    protected function resolveExprConstFetch(Expr\ConstFetch $node): mixed
     {
         $constantValue = null;
         $isResolved    = false;
@@ -428,7 +435,7 @@ class NodeExpressionResolver
         return $constantValue;
     }
 
-    protected function resolveExprClassConstFetch(Expr\ClassConstFetch $node)
+    protected function resolveExprClassConstFetch(Expr\ClassConstFetch $node): mixed
     {
         $classToReflectNodeName = $node->class;
         if (!($classToReflectNodeName instanceof Node\Name)) {
@@ -466,6 +473,9 @@ class NodeExpressionResolver
         return $refClass->getConstant($constantName);
     }
 
+    /**
+     * @return array<int|string, mixed>
+     */
     protected function resolveExprArray(Expr\Array_ $node): array
     {
         // For array expressions we would like to have pretty-printed output too
@@ -481,6 +491,9 @@ class NodeExpressionResolver
         return $result;
     }
 
+    /**
+     * @return int|float|array<int|string, mixed>
+     */
     protected function resolveExprBinaryOpPlus(Expr\BinaryOp\Plus $node): int|float|array
     {
         return $this->resolve($node->left) + $this->resolve($node->right);
@@ -661,7 +674,7 @@ class NodeExpressionResolver
      *
      * @param Node\Name $node Class name node
      *
-     * @return bool|\ReflectionClass
+     * @return \ReflectionClass<object>|false
      *
      * @throws ReflectionException
      */

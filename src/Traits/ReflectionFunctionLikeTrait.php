@@ -49,6 +49,8 @@ trait ReflectionFunctionLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>|null
      */
     public function getClosureScopeClass(): ?\ReflectionClass
     {
@@ -222,6 +224,8 @@ trait ReflectionFunctionLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getStaticVariables(): array
     {

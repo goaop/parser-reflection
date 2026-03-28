@@ -26,10 +26,10 @@ class PathResolver
     /**
      * Custom replacement for realpath() and stream_resolve_include_path()
      *
-     * @param string|array $somePath             Path without normalization or array of paths
-     * @param bool         $shouldCheckExistence Flag for checking existence of resolved filename
+     * @param string|array<int, string> $somePath             Path without normalization or array of paths
+     * @param bool                      $shouldCheckExistence Flag for checking existence of resolved filename
      *
-     * @return array|bool|string
+     * @return array<int, string>|bool|string
      */
     public static function realpath($somePath, $shouldCheckExistence = false)
     {

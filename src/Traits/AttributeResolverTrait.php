@@ -62,6 +62,9 @@ trait AttributeResolverTrait
         return $attributes;
     }
 
+    /**
+     * @param \PhpParser\Node\AttributeGroup[] $attrGroups
+     */
     private function isAttributeRepeated(string $attributeName, array $attrGroups): bool
     {
         $count = 0;

@@ -164,6 +164,8 @@ final class ReflectionProperty extends BaseReflectionProperty
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>
      */
     public function getDeclaringClass(): \ReflectionClass
     {

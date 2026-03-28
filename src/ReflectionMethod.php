@@ -73,6 +73,8 @@ final class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * Emulating original behaviour of reflection
+     *
+     * @return array<string, string>
      */
     public function __debugInfo(): array
     {
@@ -158,6 +160,8 @@ final class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>
      */
     public function getDeclaringClass(): \ReflectionClass
     {
@@ -244,6 +248,8 @@ final class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<int, mixed> $args
      */
     public function invokeArgs(?object $object, array $args): mixed
     {

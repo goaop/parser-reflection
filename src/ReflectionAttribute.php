@@ -25,9 +25,14 @@ use ReflectionAttribute as BaseReflectionAttribute;
 
 /**
  * ref original usage https://3v4l.org/duaQI
+ *
+ * @extends \ReflectionAttribute<object>
  */
 class ReflectionAttribute extends BaseReflectionAttribute
 {
+    /**
+     * @param array<int, mixed> $arguments
+     */
     public function __construct(
         private string $attributeName,
         private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
@@ -82,6 +87,8 @@ class ReflectionAttribute extends BaseReflectionAttribute
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<int, mixed>
      */
     public function getArguments(): array
     {

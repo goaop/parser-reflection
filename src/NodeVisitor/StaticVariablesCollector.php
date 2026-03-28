@@ -26,6 +26,9 @@ class StaticVariablesCollector extends NodeVisitorAbstract
      */
     private mixed $context;
 
+    /**
+     * @var array<string, mixed>
+     */
     private array $staticVariables = [];
 
     /**
@@ -75,6 +78,8 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 
     /**
      * Returns an associative map of static variables in the method/function body
+     *
+     * @return array<string, mixed>
      */
     public function getStaticVariables(): array
     {

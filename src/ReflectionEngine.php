@@ -128,6 +128,9 @@ class ReflectionEngine
      *
      * @see https://dev.to/greg0ire/how-to-deprecate-a-type-in-php-48cf
      */
+    /**
+     * @param Node[] $nodes
+     */
     protected static function findClassLikeNodeByClassName(array $nodes, string $className): ?ClassLike
     {
         foreach ($nodes as $node) {
@@ -170,7 +173,7 @@ class ReflectionEngine
     /**
      * Parses class property
      *
-     * @return array Pair of [Property and PropertyItem] nodes
+     * @return array{0: \PhpParser\Node\Stmt\Property, 1: \PhpParser\Node\PropertyItem} Pair of [Property and PropertyItem] nodes
      */
     public static function parseClassProperty(string $fullClassName, string $propertyName): array
     {
@@ -193,7 +196,7 @@ class ReflectionEngine
     /**
      * Parses class constants
      *
-     * @return array Pair of [ClassConst and Const_] nodes
+     * @return array{0: \PhpParser\Node\Stmt\ClassConst|\PhpParser\Node\Stmt\EnumCase, 1: \PhpParser\Node\Const_|\PhpParser\Node\Stmt\EnumCase} Pair of [ClassConst and Const_] nodes
      */
     public static function parseClassConstant(string $fullClassName, string $constantName): array
     {
