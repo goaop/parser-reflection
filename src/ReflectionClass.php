@@ -52,7 +52,7 @@ final class ReflectionClass extends InternalReflectionClass
         $fullClassName = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts  = explode('\\', $fullClassName);
         $shortName = array_pop($namespaceParts);
-        if ($shortName !== null && $shortName !== '') {
+        if ($shortName !== '') {
             $this->className = $shortName;
         } else {
             // Fallback: use the full class name if explode produced an empty short name
@@ -76,12 +76,12 @@ final class ReflectionClass extends InternalReflectionClass
     {
         $interfaces = [];
 
-        $isInterface    = $classLikeNode instanceof Interface_;
-
-        if ($isInterface) {
-            $implementsList = $classLikeNode instanceof Interface_ ? $classLikeNode->extends : [];
+        if ($classLikeNode instanceof Interface_) {
+            $implementsList = $classLikeNode->extends;
+        } elseif ($classLikeNode instanceof Class_) {
+            $implementsList = $classLikeNode->implements;
         } else {
-            $implementsList = $classLikeNode instanceof Class_ ? $classLikeNode->implements : [];
+            $implementsList = [];
         }
 
         if (count($implementsList) > 0) {
@@ -126,7 +126,7 @@ final class ReflectionClass extends InternalReflectionClass
             foreach ($classLikeNode->stmts as $classLevelNode) {
                 if ($classLevelNode instanceof TraitUse) {
                     foreach ($classLevelNode->traits as $classTraitName) {
-                        if ($classTraitName instanceof Name && $classTraitName->getAttribute('resolvedName') instanceof FullyQualified) {
+                        if ($classTraitName->getAttribute('resolvedName') instanceof FullyQualified) {
                             $traitName          = $classTraitName->getAttribute('resolvedName')->toString();
                             $trait              = trait_exists($traitName, false)
                                 ? new parent($traitName)

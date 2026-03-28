@@ -299,11 +299,9 @@ trait ReflectionClassLikeTrait
                 } elseif (!$isStaticProperty) {
                     // Internal reflection and dynamic property
                     $declaringClass  = $property->getDeclaringClass();
-                    if ($declaringClass instanceof \ReflectionClass) {
-                        $classProperties = $declaringClass->getDefaultProperties();
+                    $classProperties = $declaringClass->getDefaultProperties();
 
-                        $defaultValues[$propertyName] = $classProperties[$propertyName];
-                    }
+                    $defaultValues[$propertyName] = $classProperties[$propertyName];
                 }
             }
         }

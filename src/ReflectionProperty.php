@@ -487,16 +487,11 @@ final class ReflectionProperty extends BaseReflectionProperty
     {
     }
 
-    /**
-     * @inheritDoc
-     *
-     * @param object|null $objectOrValue
-     */
     public function setValue(mixed $objectOrValue, mixed $value = null): void
     {
         $this->initializeInternalReflection();
 
-        if (!is_object($objectOrValue) && $objectOrValue !== null) {
+        if ($objectOrValue !== null && !is_object($objectOrValue)) {
             throw new \InvalidArgumentException('Expected object or null for $objectOrValue');
         }
         parent::setValue($objectOrValue, $value);

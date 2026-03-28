@@ -2,7 +2,6 @@ parameters:
   level: 10
   paths:
     - src
-  treatPhpDocTypesAsCertain: false
   ignoreErrors:
     # Both classes are final, so "might have hooks in a subclass" is a false positive
     - identifier: unset.possiblyHookedProperty
