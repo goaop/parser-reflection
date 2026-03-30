@@ -35,6 +35,24 @@ trait ReflectionFunctionLikeTrait
 {
     use InitializationTrait;
 
+    /**
+     * Returns the name of the class this function/method belongs to, for self/parent type resolution.
+     * Overridden in ReflectionMethod; returns null for standalone functions.
+     */
+    protected function getDeclaringClassNameForTypes(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Returns the parent class name for type resolution, or null if none.
+     * Overridden in ReflectionMethod; returns null for standalone functions.
+     */
+    protected function getParentClassNameForTypes(): ?string
+    {
+        return null;
+    }
+
     protected FunctionLike|Function_|ClassMethod $functionLikeNode;
 
     /**
@@ -49,6 +67,8 @@ trait ReflectionFunctionLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>|null
      */
     public function getClosureScopeClass(): ?\ReflectionClass
     {
@@ -76,11 +96,9 @@ trait ReflectionFunctionLikeTrait
 
     public function getEndLine(): int|false
     {
-        if ($this->functionLikeNode->hasAttribute('endLine')) {
-            return $this->functionLikeNode->getAttribute('endLine');
-        }
+        $endLine = $this->functionLikeNode->getAttribute('endLine');
 
-        return false;
+        return is_int($endLine) ? $endLine : false;
     }
 
     public function getExtension(): ?ReflectionExtension
@@ -95,11 +113,9 @@ trait ReflectionFunctionLikeTrait
 
     public function getFileName(): string|false
     {
-        if ($this->functionLikeNode->hasAttribute('fileName')) {
-            return $this->functionLikeNode->getAttribute('fileName');
-        }
+        $fileName = $this->functionLikeNode->getAttribute('fileName');
 
-        return false;
+        return is_string($fileName) ? $fileName : false;
     }
 
     /**
@@ -161,8 +177,6 @@ trait ReflectionFunctionLikeTrait
 
             foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
                 $reflectionParameter = new ReflectionParameter(
-                    $this->getName(),
-                    (string)$parameterNode->var->name,
                     $parameterNode,
                     $parameterIndex,
                     $this
@@ -184,9 +198,13 @@ trait ReflectionFunctionLikeTrait
      */
     public function getReturnType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
-        if ($this->hasReturnType()) {
-            $typeResolver = new TypeExpressionResolver($this);
-            $typeResolver->process($this->functionLikeNode->getReturnType(), false);
+        $returnType = $this->functionLikeNode->getReturnType();
+        if ($this->hasReturnType() && $returnType !== null) {
+            $selfClassName   = $this->getDeclaringClassNameForTypes();
+            $parentClassName = $this->getParentClassNameForTypes();
+
+            $typeResolver = new TypeExpressionResolver($selfClassName, $parentClassName);
+            $typeResolver->process($returnType, false);
 
             return $typeResolver->getType();
         }
@@ -208,22 +226,22 @@ trait ReflectionFunctionLikeTrait
 
     public function getStartLine(): int|false
     {
-        if ($this->functionLikeNode->attrGroups !== []) {
-            $attrGroups = $this->functionLikeNode->attrGroups;
+        if ($this->functionLikeNode->getAttrGroups() !== []) {
+            $attrGroups = $this->functionLikeNode->getAttrGroups();
             $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
 
-            return $lastAttrGroupsEndLine + 1;
+            return is_int($lastAttrGroupsEndLine) ? $lastAttrGroupsEndLine + 1 : false;
         }
 
-        if ($this->functionLikeNode->hasAttribute('startLine')) {
-            return $this->functionLikeNode->getAttribute('startLine');
-        }
+        $startLine = $this->functionLikeNode->getAttribute('startLine');
 
-        return false;
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getStaticVariables(): array
     {
@@ -295,9 +313,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isInternal(): bool
     {
-        // never can be an internal method, except for the Enum magic methods
-        $isEnumMethod = $this instanceof ReflectionMethod && $this->getDeclaringClass()->isEnum();
-        return $isEnumMethod && in_array($this->getName(), ['cases', 'tryFrom', 'from']);
+        return false;
     }
 
     /**
@@ -305,9 +321,7 @@ trait ReflectionFunctionLikeTrait
      */
     public function isUserDefined(): bool
     {
-        // always user-defined method, except for the Enum magic methods
-        $isEnumMethod = $this instanceof ReflectionMethod && $this->getDeclaringClass()->isEnum();
-        return !($isEnumMethod && in_array($this->getName(), ['cases', 'tryFrom', 'from']));
+        return true;
     }
 
     /**

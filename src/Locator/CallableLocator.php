@@ -12,22 +12,18 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection\Locator;
 
+use Closure;
 use Go\ParserReflection\LocatorInterface;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
  * @see \Go\ParserReflection\Locator\CallableLocatorTest
  */
-class CallableLocator implements LocatorInterface
+final readonly class CallableLocator implements LocatorInterface
 {
-    /**
-     * @var callable
-     */
-    private $callable;
 
-    public function __construct(callable $callable)
+    public function __construct(private Closure $callable)
     {
-        $this->callable = $callable;
     }
 
     /**
@@ -37,6 +33,8 @@ class CallableLocator implements LocatorInterface
      */
     public function locateClass(string $className): false|string
     {
-        return call_user_func($this->callable, ltrim($className, '\\'));
+        $result = ($this->callable)(ltrim($className, '\\'));
+
+        return is_string($result) ? $result : false;
     }
 }

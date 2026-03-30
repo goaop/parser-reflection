@@ -7,7 +7,7 @@ namespace Go\ParserReflection\Stub {
 
     function simpleIntArg(int $value) {}
     function simpleArrayOut() : array {}
-    function optionalCallableArg(callable $argument = null) : callable {}
+    function optionalCallableArg(callable $argument) : callable {}
     function objectOut() : \Exception
     {
         return new \Exception();

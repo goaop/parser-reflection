@@ -23,10 +23,8 @@ use Go\ParserReflection\ReflectionException;
  */
 class ComposerLocator implements LocatorInterface
 {
-    /**
-     * @var ClassLoader
-     */
-    private $loader;
+
+    private ClassLoader $loader;
 
     public function __construct(?ClassLoader $composerLoader = null)
     {
@@ -54,7 +52,8 @@ class ComposerLocator implements LocatorInterface
     {
         $filePath = $this->loader->findFile(ltrim($className, '\\'));
         if (!empty($filePath)) {
-            $filePath = PathResolver::realpath($filePath);
+            $resolvedPath = PathResolver::realpath($filePath);
+            $filePath = is_string($resolvedPath) ? $resolvedPath : false;
         }
 
         return $filePath;

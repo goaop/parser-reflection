@@ -13,21 +13,30 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
-use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use PhpParser\Node\Name;
+use PhpParser\Node\Param;
+use PhpParser\Node\Stmt\ClassConst;
+use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\EnumCase;
+use PhpParser\Node\Stmt\Function_;
+use PhpParser\Node\Stmt\Property;
 
 trait AttributeResolverTrait
 {
     /**
+     * Returns the AST node that contains attribute groups for this reflection element.
+     */
+    abstract protected function getNodeForAttributes(): ClassLike|ClassMethod|Function_|Param|ClassConst|EnumCase|Property;
+
+    /**
+     * @param class-string<object>|null $name
      * @return ReflectionAttribute[]
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
-        if ($this instanceof ReflectionProperty) {
-            $node = $this->getTypeNode();
-        } else {
-            $node = $this->getNode();
-        }
+        $node = $this->getNodeForAttributes();
 
         $attributes = [];
         $nodeExpressionResolver = new NodeExpressionResolver($this);
@@ -45,13 +54,14 @@ trait AttributeResolverTrait
                 if ($attributeNameNode->hasAttribute('resolvedName')) {
                     $attributeNameNode = $attributeNameNode->getAttribute('resolvedName');
                 }
+                $resolvedAttrName = self::resolveAttributeClassName($attributeNameNode);
                 if ($name === null) {
-                    $attributes[] = new ReflectionAttribute($attributeNameNode->toString(), $this, $arguments, $this->isAttributeRepeated($attributeNameNode->toString(), $node->attrGroups));
+                    $attributes[] = new ReflectionAttribute($resolvedAttrName, $this, $arguments, $this->isAttributeRepeated($resolvedAttrName, $node->attrGroups));
 
                     continue;
                 }
 
-                if ($name !== $attributeNameNode->toString()) {
+                if ($name !== $resolvedAttrName) {
                     continue;
                 }
 
@@ -62,6 +72,31 @@ trait AttributeResolverTrait
         return $attributes;
     }
 
+    /**
+     * Normalizes an attribute class name from a Name node, without triggering autoloading
+     * or registering any class aliases, to keep reflection side-effect free.
+     *
+     * @param mixed $nameNode
+     * @return class-string<object>
+     */
+    private static function resolveAttributeClassName(mixed $nameNode): string
+    {
+        $className = $nameNode instanceof Name
+            ? $nameNode->toString()
+            : (is_scalar($nameNode) ? (string) $nameNode : '');
+
+        $className = ltrim($className, '\\');
+
+        if ($className === '') {
+            throw new \LogicException('Unable to resolve attribute class name from node');
+        }
+
+        return $className;
+    }
+
+    /**
+     * @param \PhpParser\Node\AttributeGroup[] $attrGroups
+     */
     private function isAttributeRepeated(string $attributeName, array $attrGroups): bool
     {
         $count = 0;
@@ -71,7 +106,10 @@ trait AttributeResolverTrait
                 $attributeNameNode = $attr->name;
                 // If we have resoled node name, then we should use it instead
                 if ($attributeNameNode->hasAttribute('resolvedName')) {
-                    $attributeNameNode = $attributeNameNode->getAttribute('resolvedName');
+                    $resolvedNameNode = $attributeNameNode->getAttribute('resolvedName');
+                    if ($resolvedNameNode instanceof Name) {
+                        $attributeNameNode = $resolvedNameNode;
+                    }
                 }
 
                 if ($attributeNameNode->toString() === $attributeName) {

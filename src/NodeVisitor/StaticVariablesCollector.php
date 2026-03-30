@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection\NodeVisitor;
 
+use Go\ParserReflection\ReflectionFileNamespace;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
@@ -23,17 +24,22 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 {
     /**
      * Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     *
+     * @var \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null
      */
-    private mixed $context;
+    private \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
 
+    /**
+     * @var array<string, mixed>
+     */
     private array $staticVariables = [];
 
     /**
      * Default constructor
      *
-     * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     * @param \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      */
-    public function __construct(mixed $context)
+    public function __construct(\ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context)
     {
         $this->context = $context;
     }
@@ -62,7 +68,11 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 
                 if ($staticVariable->var->name instanceof Node\Expr) {
                     $expressionSolver->process($staticVariable->var->name);
-                    $name = $expressionSolver->getValue();
+                    $resolvedName = $expressionSolver->getValue();
+                    if (!is_string($resolvedName)) {
+                        throw new \InvalidArgumentException("Unknown value for the key, " . gettype($resolvedName) . " has given, but string is expected");
+                    }
+                    $name = $resolvedName;
                 } else {
                     $name = $staticVariable->var->name;
                 }
@@ -75,6 +85,8 @@ class StaticVariablesCollector extends NodeVisitorAbstract
 
     /**
      * Returns an associative map of static variables in the method/function body
+     *
+     * @return array<string, mixed>
      */
     public function getStaticVariables(): array
     {

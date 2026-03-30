@@ -26,10 +26,16 @@ use ReflectionClassConstant as BaseReflectionClassConstant;
 /**
  * @see \Go\ParserReflection\ReflectionClassConstantTest
  */
-class ReflectionClassConstant extends BaseReflectionClassConstant
+final class ReflectionClassConstant extends BaseReflectionClassConstant
 {
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;
+
+    /**
+     * Re-declare to remove PHP 8.4 { get; } hooks so these properties can be unset in constructor
+     */
+    public string $name;
+    public string $class;
 
     /**
      * Concrete class constant node
@@ -47,7 +53,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * Parses class constants from the concrete class node
      *
-     * @return ReflectionClassConstant[]
+     * @return array<string, ReflectionClassConstant>
      */
     public static function collectFromClassNode(ClassLike $classLikeNode, string $reflectionClassFQN): array
     {
@@ -57,7 +63,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             if ($classLevelNode instanceof ClassConst) {
                 foreach ($classLevelNode->consts as $const) {
                     $classConstName = $const->name->toString();
-                    $classConstants[$classConstName] = new static(
+                    $classConstants[$classConstName] = new self(
                         $reflectionClassFQN,
                         $classConstName,
                         $classLevelNode,
@@ -94,6 +100,9 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         if (!$classConstNode) {
             [$classConstNode, $constNode] = ReflectionEngine::parseClassConstant($className, $classConstantName);
         }
+        if ($constNode === null) {
+            throw new \InvalidArgumentException("Const node was not found for $className::$classConstantName");
+        }
         // Let's unset original read-only property to have a control over it via __get
         unset($this->name, $this->class);
 
@@ -103,16 +112,20 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
         $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
 
         // We can statically resolve value only fot ClassConst, as for EnumCase we need to have object itself as default
-        if ($classConstNode instanceof ClassConst) {
+        if ($classConstNode instanceof ClassConst && $this->constOrEnumCaseNode instanceof Const_) {
             $expressionSolver->process($this->constOrEnumCaseNode->value);
             $this->value = $expressionSolver->getValue();
         }
 
-        if ($this->hasType()) {
+        if ($this->hasType() && $this->classConstOrEnumCaseNode instanceof ClassConst && $this->classConstOrEnumCaseNode->type !== null) {
             // If we have null value, this handled internally as nullable type too
             $hasDefaultNull = $this->getValue() === null;
 
-            $typeResolver = new TypeExpressionResolver($this->getDeclaringClass());
+            $declaringClass  = $this->getDeclaringClass();
+            $parentClass     = $declaringClass->getParentClass();
+            $parentClassName = ($parentClass !== false) ? $parentClass->getName() : null;
+
+            $typeResolver = new TypeExpressionResolver($this->className, $parentClassName);
             $typeResolver->process($this->classConstOrEnumCaseNode->type, $hasDefaultNull);
 
             $this->type = $typeResolver->getType();
@@ -132,6 +145,8 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
 
     /**
      * @inheritDoc
+     *
+     * @return \ReflectionClass<object>
      */
     public function getDeclaringClass(): \ReflectionClass
     {
@@ -248,7 +263,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
     public function __toString(): string
     {
         # Starting from PHP7.3 gettype returns different names, need to remap them
-        static $typeMap = [
+        $typeMap = [
             'integer' => 'int',
             'boolean' => 'bool',
             'double'  => 'float',
@@ -266,7 +281,7 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             }
             $valueType = new ReflectionType($type, false);
         } else {
-            $valueType = $this->type;
+            $valueType = $this->type ?? new ReflectionType('mixed', false);
         }
 
         return sprintf(
@@ -274,11 +289,19 @@ class ReflectionClassConstant extends BaseReflectionClassConstant
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
             ReflectionType::convertToDisplayType($valueType),
             $this->getName(),
-            is_object($value) ? 'Object' : $value
+            is_object($value) ? 'Object' : (is_scalar($value) || $value === null ? $value : '')
         );
     }
 
     public function getNode(): ClassConst|EnumCase
+    {
+        return $this->classConstOrEnumCaseNode;
+    }
+
+    /**
+     * Returns the AST node that contains attribute groups for this class constant.
+     */
+    protected function getNodeForAttributes(): ClassConst|EnumCase
     {
         return $this->classConstOrEnumCaseNode;
     }

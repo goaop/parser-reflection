@@ -86,6 +86,9 @@ class ReflectionEngine
             $refClass      = new \ReflectionClass($fullClassName);
             $classFileName = $refClass->getFileName();
         } else {
+            if (self::$locator === null) {
+                throw new \LogicException('ReflectionEngine locator is not initialized. Call ReflectionEngine::init() first.');
+            }
             $classFileName = self::$locator->locateClass($fullClassName);
         }
 
@@ -128,16 +131,18 @@ class ReflectionEngine
      *
      * @see https://dev.to/greg0ire/how-to-deprecate-a-type-in-php-48cf
      */
+    /**
+     * @param Node[] $nodes
+     */
     protected static function findClassLikeNodeByClassName(array $nodes, string $className): ?ClassLike
     {
         foreach ($nodes as $node) {
-            if ($node instanceof ClassLike && $node->name->toString() == $className) {
+            if ($node instanceof ClassLike && $node->name !== null && $node->name->toString() == $className) {
                 return $node;
             }
             if ($node instanceof Node\Stmt\If_
                 && $node->cond instanceof Node\Expr\ConstFetch
-                && isset($node->cond->name->parts[0])
-                && $node->cond->name->parts[0] === 'false'
+                && $node->cond->name->toString() === 'false'
             ) {
                 $result = self::findClassLikeNodeByClassName($node->stmts, $className);
 
@@ -170,7 +175,7 @@ class ReflectionEngine
     /**
      * Parses class property
      *
-     * @return array Pair of [Property and PropertyItem] nodes
+     * @return array{0: \PhpParser\Node\Stmt\Property, 1: \PhpParser\Node\PropertyItem} Pair of [Property and PropertyItem] nodes
      */
     public static function parseClassProperty(string $fullClassName, string $propertyName): array
     {
@@ -193,7 +198,7 @@ class ReflectionEngine
     /**
      * Parses class constants
      *
-     * @return array Pair of [ClassConst and Const_] nodes
+     * @return array{0: \PhpParser\Node\Stmt\ClassConst|\PhpParser\Node\Stmt\EnumCase, 1: \PhpParser\Node\Const_|\PhpParser\Node\Stmt\EnumCase} Pair of [ClassConst and Const_] nodes
      */
     public static function parseClassConstant(string $fullClassName, string $constantName): array
     {
@@ -222,7 +227,8 @@ class ReflectionEngine
      */
     public static function parseFile(string $fileName, ?string $fileContent = null): array
     {
-        $fileName = PathResolver::realpath($fileName);
+        $resolvedFileName = PathResolver::realpath($fileName);
+        $fileName = is_string($resolvedFileName) ? $resolvedFileName : $fileName;
         if (isset(self::$parsedFiles[$fileName]) && !isset($fileContent)) {
             return self::$parsedFiles[$fileName];
         }
@@ -233,8 +239,11 @@ class ReflectionEngine
 
         if (!isset($fileContent)) {
             $fileContent = file_get_contents($fileName);
+            if ($fileContent === false) {
+                throw new ReflectionException("Could not read file: $fileName");
+            }
         }
-        $treeNodes = self::$parser->parse($fileContent);
+        $treeNodes = self::$parser->parse($fileContent) ?? [];
         $treeNodes = self::$traverser->traverse($treeNodes);
 
         self::$parsedFiles[$fileName] = $treeNodes;

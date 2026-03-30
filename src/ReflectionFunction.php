@@ -15,7 +15,6 @@ use Closure;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
-use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Stmt\Function_;
 use ReflectionFunction as BaseReflectionFunction;
 
@@ -23,7 +22,7 @@ use ReflectionFunction as BaseReflectionFunction;
  * AST-based reflection for function
  * @see \Go\ParserReflection\ReflectionFunctionTest
  */
-class ReflectionFunction extends BaseReflectionFunction
+final class ReflectionFunction extends BaseReflectionFunction
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionFunctionLikeTrait;
@@ -48,6 +47,8 @@ class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * Emulating original behaviour of reflection
+     *
+     * @return array<string, string>
      */
     public function __debugInfo(): array
     {
@@ -65,7 +66,19 @@ class ReflectionFunction extends BaseReflectionFunction
      */
     public function getNode(): Function_
     {
+        if (!$this->functionLikeNode instanceof Function_) {
+            throw new \LogicException('Expected Function_ node');
+        }
+
         return $this->functionLikeNode;
+    }
+
+    /**
+     * Returns the AST node that contains attribute groups for this function.
+     */
+    protected function getNodeForAttributes(): Function_
+    {
+        return $this->getNode();
     }
 
     /**
@@ -90,6 +103,8 @@ class ReflectionFunction extends BaseReflectionFunction
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<int, mixed> $args
      */
     public function invokeArgs(array $args): mixed
     {
@@ -104,7 +119,7 @@ class ReflectionFunction extends BaseReflectionFunction
      * Only internal functions can be disabled using disable_functions directive.
      * User-defined functions are unaffected.
      */
-    #[Deprecated('ReflectionFunction::isDisabled() is deprecated', since: "8.0")]
+    #[\Deprecated('ReflectionFunction::isDisabled() is deprecated', since: "8.0")]
     public function isDisabled(): bool
     {
         return false;
@@ -118,6 +133,11 @@ class ReflectionFunction extends BaseReflectionFunction
         $paramFormat      = ($this->getNumberOfParameters() > 0) ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $reflectionFormat = "%sFunction [ <user> function %s ] {\n  @@ %s %d - %d{$paramFormat}\n}\n";
 
+        $paramStr = '';
+        foreach ($this->getParameters() as $param) {
+            $paramStr .= "\n    " . $param;
+        }
+
         return sprintf(
             $reflectionFormat,
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
@@ -126,7 +146,7 @@ class ReflectionFunction extends BaseReflectionFunction
             $this->getStartLine(),
             $this->getEndLine(),
             count($this->getParameters()),
-            array_reduce($this->getParameters(), static fn($str, ReflectionParameter $param) => $str . "\n    " . $param, '')
+            $paramStr
         );
     }
 

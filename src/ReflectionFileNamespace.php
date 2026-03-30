@@ -45,16 +45,22 @@ class ReflectionFileNamespace
 
     /**
      * Map of constants in the namespace
+     *
+     * @var array<string, mixed>
      */
     protected array $fileConstants;
 
     /**
      * Map of constants in the namespace including defined via "define(...)"
+     *
+     * @var array<string, mixed>
      */
     protected array $fileConstantsWithDefined;
 
     /**
      * List of imported namespaces (aliases)
+     *
+     * @var array<string, string>
      */
     protected array $fileNamespaceAliases;
 
@@ -75,7 +81,8 @@ class ReflectionFileNamespace
      */
     public function __construct(string $fileName, string $namespaceName, ?Namespace_ $namespaceNode = null)
     {
-        $fileName = PathResolver::realpath($fileName);
+        $resolvedFileName = PathResolver::realpath($fileName);
+        $fileName = is_string($resolvedFileName) ? $resolvedFileName : $fileName;
         if (!isset($namespaceNode)) {
             $namespaceNode = ReflectionEngine::parseFileNamespace($fileName, $namespaceName);
         }
@@ -129,6 +136,8 @@ class ReflectionFileNamespace
      * Returns a list of defined constants in the namespace
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
+     *
+     * @return array<string, mixed>
      */
     public function getConstants(bool $withDefined = false): array
     {
@@ -155,7 +164,7 @@ class ReflectionFileNamespace
         $docComment = false;
         $comments   = $this->namespaceNode->getAttribute('comments');
 
-        if ($comments) {
+        if (is_array($comments) && isset($comments[0]) && ($comments[0] instanceof \PhpParser\Comment || is_string($comments[0]))) {
             $docComment = (string)$comments[0];
         }
 
@@ -167,11 +176,9 @@ class ReflectionFileNamespace
      */
     public function getEndLine(): int|false
     {
-        if ($this->namespaceNode->hasAttribute('endLine')) {
-            return $this->namespaceNode->getAttribute('endLine');
-        }
+        $endLine = $this->namespaceNode->getAttribute('endLine');
 
-        return false;
+        return is_int($endLine) ? $endLine : false;
     }
 
     /**
@@ -222,6 +229,8 @@ class ReflectionFileNamespace
 
     /**
      * Returns a list of namespace aliases
+     *
+     * @return array<string, string>
      */
     public function getNamespaceAliases(): array
     {
@@ -247,11 +256,13 @@ class ReflectionFileNamespace
      */
     public function getLastTokenPosition(): int
     {
-        $endNamespaceTokenPosition = $this->namespaceNode->getAttribute('endTokenPos');
+        $endNamespaceTokenPosRaw = $this->namespaceNode->getAttribute('endTokenPos');
+        $endNamespaceTokenPosition = is_int($endNamespaceTokenPosRaw) ? $endNamespaceTokenPosRaw : 0;
 
         /** @var Node $lastNamespaceNode */
         $lastNamespaceNode         = end($this->namespaceNode->stmts);
-        $endStatementTokenPosition = $lastNamespaceNode->getAttribute('endTokenPos');
+        $endStatementTokenPosRaw   = $lastNamespaceNode->getAttribute('endTokenPos');
+        $endStatementTokenPosition = is_int($endStatementTokenPosRaw) ? $endStatementTokenPosRaw : 0;
 
         return max($endNamespaceTokenPosition, $endStatementTokenPosition);
     }
@@ -261,11 +272,9 @@ class ReflectionFileNamespace
      */
     public function getStartLine(): int|false
     {
-        if ($this->namespaceNode->hasAttribute('startLine')) {
-            return $this->namespaceNode->getAttribute('startLine');
-        }
+        $startLine = $this->namespaceNode->getAttribute('startLine');
 
-        return false;
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**
@@ -309,7 +318,7 @@ class ReflectionFileNamespace
         $namespaceName = $this->getName();
         // classes can be only top-level nodes in the namespace, so we can scan them directly
         foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
-            if ($namespaceLevelNode instanceof ClassLike) {
+            if ($namespaceLevelNode instanceof ClassLike && $namespaceLevelNode->name !== null) {
                 $classShortName = $namespaceLevelNode->name->toString();
                 $className = $namespaceName ? $namespaceName .'\\' . $classShortName : $classShortName;
 
@@ -349,6 +358,8 @@ class ReflectionFileNamespace
      * Searches for constants in the given AST
      *
      * @param bool $withDefined Include constants defined via "define(...)" in results.
+     *
+     * @return array<string, mixed>
      */
     private function findConstants(bool $withDefined = false): array
     {
@@ -377,12 +388,20 @@ class ReflectionFileNamespace
                 ) {
                     try {
                         $functionCallNode = $namespaceLevelNode->expr;
-                        $expressionSolver->process($functionCallNode->args[0]->value);
+                        $arg0 = $functionCallNode->args[0];
+                        $arg1 = $functionCallNode->args[1];
+                        if (!$arg0 instanceof \PhpParser\Node\Arg || !$arg1 instanceof \PhpParser\Node\Arg) {
+                            throw new ReflectionException('define() call uses unsupported argument type (e.g. variadic placeholder)');
+                        }
+                        $expressionSolver->process($arg0->value);
                         $constantName = $expressionSolver->getValue();
 
-                        $expressionSolver->process($functionCallNode->args[1]->value);
+                        $expressionSolver->process($arg1->value);
                         $constantValue = $expressionSolver->getValue();
 
+                        if (!is_string($constantName)) {
+                            throw new ReflectionException(sprintf('define() constant name must be a string, got %s', gettype($constantName)));
+                        }
                         $constants[$constantName] = $constantValue;
                     } catch (\Throwable) {
                         // Ignore all possible errors during evaluation of runtime constants defined in the code
@@ -396,6 +415,8 @@ class ReflectionFileNamespace
 
     /**
      * Searches for namespace aliases for the current block
+     *
+     * @return array<string, string>
      */
     private function findNamespaceAliases(): array
     {

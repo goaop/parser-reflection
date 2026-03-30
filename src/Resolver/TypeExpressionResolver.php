@@ -37,13 +37,6 @@ class TypeExpressionResolver
 {
 
     /**
-     * Current reflection context for parsing
-     */
-    private
-        \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|
-        \ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
-
-    /**
      * Whether this type has explicit null value set
      */
     private bool $hasDefaultNull = false;
@@ -60,9 +53,10 @@ class TypeExpressionResolver
 
     private \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null $type;
 
-    public function __construct($context)
-    {
-        $this->context = $context;
+    public function __construct(
+        private readonly ?string $selfClassName = null,
+        private readonly ?string $parentClassName = null,
+    ) {
     }
 
     /**
@@ -86,7 +80,7 @@ class TypeExpressionResolver
      *
      * @throws ReflectionException If couldn't resolve value for given Node
      */
-    final protected function resolve(Node $node): mixed
+    final protected function resolve(Node $node): ReflectionNamedType|ReflectionUnionType|ReflectionIntersectionType|null
     {
         $type = null;
         try {
@@ -97,7 +91,8 @@ class TypeExpressionResolver
             if (!method_exists($this, $methodName)) {
                 throw new ReflectionException("Could not find handler for the " . __CLASS__ . "::{$methodName} method");
             }
-            $type = $this->$methodName($node);
+            $resolvedType = $this->$methodName($node);
+            $type = ($resolvedType instanceof ReflectionNamedType || $resolvedType instanceof ReflectionUnionType || $resolvedType instanceof ReflectionIntersectionType) ? $resolvedType : null;
         } finally {
             array_pop($this->nodeStack);
             --$this->nodeLevel;
@@ -108,20 +103,28 @@ class TypeExpressionResolver
 
     private function resolveUnionType(Node\UnionType $unionType): ReflectionUnionType
     {
-        $resolvedTypes = array_map(
-            fn(Identifier|IntersectionType|Name $singleType) => $this->resolve($singleType),
-            $unionType->types
-        );
+        /** @var list<ReflectionIntersectionType|ReflectionNamedType> $resolvedTypes */
+        $resolvedTypes = [];
+        foreach ($unionType->types as $singleType) {
+            $resolved = $this->resolve($singleType);
+            if ($resolved instanceof ReflectionIntersectionType || $resolved instanceof ReflectionNamedType) {
+                $resolvedTypes[] = $resolved;
+            }
+        }
 
         return new ReflectionUnionType(...$resolvedTypes);
     }
 
     private function resolveIntersectionType(Node\IntersectionType $intersectionType): ReflectionIntersectionType
     {
-        $resolvedTypes = array_map(
-            fn(Identifier|IntersectionType|Name $singleType) => $this->resolve($singleType),
-            $intersectionType->types
-        );
+        /** @var list<ReflectionNamedType> $resolvedTypes */
+        $resolvedTypes = [];
+        foreach ($intersectionType->types as $singleType) {
+            $resolved = $this->resolve($singleType);
+            if ($resolved instanceof ReflectionNamedType) {
+                $resolvedTypes[] = $resolved;
+            }
+        }
 
         return new ReflectionIntersectionType(...$resolvedTypes);
     }
@@ -129,8 +132,9 @@ class TypeExpressionResolver
     private function resolveNullableType(Node\NullableType $node): ReflectionNamedType
     {
         $type = $this->resolve($node->type);
+        $typeName = $type instanceof ReflectionNamedType ? $type->getName() : '';
 
-        return new ReflectionNamedType($type->getName(), true, false);
+        return new ReflectionNamedType($typeName, true, false);
     }
 
     private function resolveIdentifier(Node\Identifier $node): ReflectionNamedType
@@ -144,10 +148,26 @@ class TypeExpressionResolver
     private function resolveName(Name $node): ReflectionNamedType
     {
         if ($node->hasAttribute('resolvedName')) {
-            $node = $node->getAttribute('resolvedName');
+            $resolvedNode = $node->getAttribute('resolvedName');
+            if ($resolvedNode instanceof Name) {
+                $node = $resolvedNode;
+            }
         }
 
-        return new ReflectionNamedType($node->toString(), $this->hasDefaultNull, false);
+        $typeName = $node->toString();
+
+        // PHP 8.5+ changed ReflectionNamedType::getName() to return the actual FQCN for 'self'
+        // and 'parent', whereas PHP 8.4 and earlier preserve the keywords as-is.
+        // 'static' is always kept as-is (late static binding, preserved by native reflection).
+        if (PHP_VERSION_ID >= 80500) {
+            if ($typeName === 'self') {
+                $typeName = $this->selfClassName ?? $typeName;
+            } elseif ($typeName === 'parent') {
+                $typeName = $this->parentClassName ?? $typeName;
+            }
+        }
+
+        return new ReflectionNamedType($typeName, $this->hasDefaultNull, false);
     }
 
     private function resolveNameFullyQualified(Name\FullyQualified $node): ReflectionNamedType

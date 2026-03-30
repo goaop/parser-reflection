@@ -26,10 +26,10 @@ class PathResolver
     /**
      * Custom replacement for realpath() and stream_resolve_include_path()
      *
-     * @param string|array $somePath             Path without normalization or array of paths
-     * @param bool         $shouldCheckExistence Flag for checking existence of resolved filename
+     * @param string|array<int, string> $somePath             Path without normalization or array of paths
+     * @param bool                      $shouldCheckExistence Flag for checking existence of resolved filename
      *
-     * @return array|bool|string
+     * @return ($somePath is array ? array<int, string|false> : string|false)
      */
     public static function realpath($somePath, $shouldCheckExistence = false)
     {
@@ -50,13 +50,14 @@ class PathResolver
             return $fastPath;
         }
 
-        $isRelative = !$pathScheme && ($path[0] !== '/') && ($path[1] !== ':');
+        $isWindowsAbsolutePath = $path !== null && strlen($path) > 1 && preg_match('/^[A-Za-z]:/', $path) === 1;
+        $isRelative = !$pathScheme && $path !== null && !str_starts_with($path, '/') && !$isWindowsAbsolutePath;
         if ($isRelative) {
             $path = getcwd() . DIRECTORY_SEPARATOR . $path;
         }
 
         // resolve path parts (single dot, double dot and double delimiters)
-        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path ?? '');
         if (strpos($path, '.') !== false) {
             $parts     = explode(DIRECTORY_SEPARATOR, $path);
             $absolutes = [];

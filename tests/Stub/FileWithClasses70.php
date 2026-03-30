@@ -22,7 +22,7 @@ class ClassWithPhp70ScalarTypeHints
     public function acceptsBool(bool $value) {}
     public function acceptsVariadicInteger(int ...$values) {}
     public function acceptsDefaultString(string $class = ReflectionMethod::class, string $name = P::class) {}
-    public function acceptsStringDefaultToNull(string $someName = null) {}
+    public function acceptsStringDefaultToNull(string $someName) {}
 }
 
 class ClassWithPhp70ReturnTypeHints

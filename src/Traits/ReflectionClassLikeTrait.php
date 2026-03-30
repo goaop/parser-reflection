@@ -45,25 +45,29 @@ trait ReflectionClassLikeTrait
 
     /**
      * Short name of the class, without namespace
+     *
+     * @var non-empty-string
      */
     protected string $className;
 
     /**
      * List of all constants from the class or null if not initialized yet
+     *
+     * @var array<string, mixed>|null
      */
     protected ?array $constants;
 
     /**
      * Interfaces or null if not initialized yet
      *
-     * @var \ReflectionClass[]|null
+     * @var \ReflectionClass<object>[]|null
      */
     protected ?array $interfaceClasses;
 
     /**
      * List of traits or null if not initialized yet
      *
-     * @var  \ReflectionClass[]|null
+     * @var \ReflectionClass<object>[]|null
      */
     protected ?array $traits;
 
@@ -75,7 +79,7 @@ trait ReflectionClassLikeTrait
     protected array $traitAdaptations = [];
 
     /**
-     * @var ReflectionMethod[]
+     * @var array<string, \ReflectionMethod>|null
      */
     protected ?array $methods;
 
@@ -86,16 +90,18 @@ trait ReflectionClassLikeTrait
 
     /**
      * Parent class, or false if not present, null if uninitialized yet
+     *
+     * @var \ReflectionClass<object>|false|null
      */
     protected null|\ReflectionClass|false $parentClass;
 
     /**
-     * @var ReflectionProperty[]
+     * @var array<string, \ReflectionProperty>|null
      */
     protected ?array $properties;
 
     /**
-     * @var ReflectionClassConstant[]
+     * @var array<string, \ReflectionClassConstant>|null
      */
     protected ?array $classConstants;
 
@@ -136,16 +142,18 @@ trait ReflectionClassLikeTrait
             }
         }
 
-        $buildString = static function (array $items, $indentLevel = 4) {
+        $buildString = static function (array $items, int $indentLevel = 4): string {
             if (!count($items)) {
                 return '';
             }
-            $indent = "\n" . str_repeat(' ', $indentLevel);
+            $indent  = "\n" . str_repeat(' ', $indentLevel);
+            $joined  = implode("\n", array_map('strval', array_filter($items, 'is_scalar')))
+                . implode("\n", array_map(static fn(\Stringable $item): string => (string) $item, array_filter($items, fn($item): bool => $item instanceof \Stringable)));
 
-            return $indent . implode($indent, explode("\n", implode("\n", $items)));
+            return $indent . implode($indent, explode("\n", $joined));
         };
 
-        $buildConstants = static function (array $items, $indentLevel = 4) {
+        $buildConstants = static function (array $items, int $indentLevel = 4): string {
             $str = '';
             foreach ($items as $name => $value) {
                 $str .= "\n" . str_repeat(' ', $indentLevel);
@@ -153,7 +161,7 @@ trait ReflectionClassLikeTrait
                     'Constant [ %s %s ] { %s }',
                     gettype($value),
                     $name,
-                    $value
+                    is_scalar($value) || $value === null ? $value : ''
                 );
             }
 
@@ -203,7 +211,7 @@ trait ReflectionClassLikeTrait
     public function getConstant(string $name): mixed
     {
         if ($this->hasConstant($name)) {
-            return $this->constants[$name];
+            return $this->getConstants()[$name];
         }
 
         return false;
@@ -211,25 +219,45 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
     public function getConstants(?int $filter = null): array
     {
         if (!isset($this->constants)) {
-            $this->constants = $this->recursiveCollect(
-                function (array &$result, \ReflectionClass $instance) {
-                    $result += $instance->getConstants();
-                }
-            );
+            $this->constants = $this->collectInheritedConstants();
             $this->collectSelfConstants();
         }
 
-        return $this->constants;
+        return $this->constants ?? [];
+    }
+
+    /**
+     * Collects constants from parent classes, traits, and interfaces.
+     *
+     * @return array<string, mixed>
+     */
+    private function collectInheritedConstants(): array
+    {
+        $result = [];
+        foreach ($this->getTraits() as $trait) {
+            $result += $trait->getConstants();
+        }
+        $parentClass = $this->getParentClass();
+        if ($parentClass !== false) {
+            $result += $parentClass->getConstants();
+        }
+        foreach (ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode) as $interface) {
+            $result += $interface->getConstants();
+        }
+
+        return $result;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getConstructor(): ?ReflectionMethod
+    public function getConstructor(): ?\ReflectionMethod
     {
         try {
             $constructor = $this->getMethod('__construct');
@@ -245,7 +273,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.getdefaultproperties.php
      *
-     * @return array An array of default properties, with the key being the name of the property and the value being
+     * @return array<string, mixed> An array of default properties, with the key being the name of the property and the value being
      * the default value of the property or NULL if the property doesn't have a default value
      */
     public function getDefaultProperties(): array
@@ -270,7 +298,8 @@ trait ReflectionClassLikeTrait
                     $defaultValues[$propertyName] = $property->getValue();
                 } elseif (!$isStaticProperty) {
                     // Internal reflection and dynamic property
-                    $classProperties = $property->getDeclaringClass()->getDefaultProperties();
+                    $declaringClass  = $property->getDeclaringClass();
+                    $classProperties = $declaringClass->getDefaultProperties();
 
                     $defaultValues[$propertyName] = $classProperties[$propertyName];
                 }
@@ -292,7 +321,9 @@ trait ReflectionClassLikeTrait
 
     public function getEndLine(): int|false
     {
-        return $this->classLikeNode->getAttribute('endLine');
+        $endLine = $this->classLikeNode->getAttribute('endLine');
+
+        return is_int($endLine) ? $endLine : false;
     }
 
     public function getExtension(): ?ReflectionExtension
@@ -307,7 +338,9 @@ trait ReflectionClassLikeTrait
 
     public function getFileName(): string|false
     {
-        return $this->classLikeNode->getAttribute('fileName');
+        $fileName = $this->classLikeNode->getAttribute('fileName');
+
+        return is_string($fileName) ? $fileName : false;
     }
 
     /**
@@ -320,16 +353,20 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>[]
      */
     public function getInterfaces(): array
     {
         if (!isset($this->interfaceClasses)) {
             $this->interfaceClasses = $this->recursiveCollect(
-                function (array &$result, \ReflectionClass $instance) {
+                function (\ReflectionClass $instance, bool $isParent): array {
+                    $result = [];
                     if ($instance->isInterface()) {
                         $result[$instance->name] = $instance;
                     }
-                    $result += $instance->getInterfaces();
+
+                    return $result + $instance->getInterfaces();
                 }
             );
         }
@@ -339,8 +376,6 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritdoc}
-     *
-     * @return ReflectionMethod
      */
     public function getMethod(string $name): \ReflectionMethod
     {
@@ -356,21 +391,22 @@ trait ReflectionClassLikeTrait
     /**
      * {@inheritdoc}
      *
-     * @return ReflectionMethod[]
+     * @return \ReflectionMethod[]
      */
     public function getMethods(int|null $filter = null): array
     {
         if (!isset($this->methods)) {
             $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this);
             $parentMethods = $this->recursiveCollect(
-                function (array &$result, \ReflectionClass $instance, $isParent) {
+                function (\ReflectionClass $instance, bool $isParent): array {
                     $reflectionMethods = [];
                     foreach ($instance->getMethods() as $reflectionMethod) {
                         if (!$isParent || !$reflectionMethod->isPrivate()) {
                             $reflectionMethods[$reflectionMethod->name] = $reflectionMethod;
                         }
                     }
-                    $result += $reflectionMethods;
+
+                    return $reflectionMethods;
                 }
             );
             $methods = $directMethods + $parentMethods;
@@ -429,12 +465,28 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return class-string<object>
      */
     public function getName(): string
     {
         $namespaceName = $this->namespaceName ? $this->namespaceName . '\\' : '';
+        $fullName = $namespaceName . $this->getShortName();
 
-        return $namespaceName . $this->getShortName();
+        return $this->resolveAsClassString($fullName);
+    }
+
+    /**
+     * Returns a fully-qualified class name. The name is semantically a class-string (it comes
+     * from the AST of a PHP class declaration), but PHPStan cannot verify this without
+     * autoloading, which would violate the library's contract of reflecting without loading.
+     *
+     * @param non-empty-string $name
+     * @return class-string<object>
+     */
+    private function resolveAsClassString(string $name): string
+    {
+        return $name;
     }
 
     /**
@@ -447,6 +499,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>|false
      */
     public function getParentClass(): \ReflectionClass|false
     {
@@ -470,21 +524,22 @@ trait ReflectionClassLikeTrait
      *
      * @inheritDoc
      *
-     * @return ReflectionProperty[]
+     * @return \ReflectionProperty[]
      */
     public function getProperties(int|null $filter = null): array
     {
         if (!isset($this->properties)) {
             $directProperties = ReflectionProperty::collectFromClassNode($this->classLikeNode, $this->getName());
             $parentProperties = $this->recursiveCollect(
-                function (array &$result, \ReflectionClass $instance, $isParent) {
+                function (\ReflectionClass $instance, bool $isParent): array {
                     $reflectionProperties = [];
                     foreach ($instance->getProperties() as $reflectionProperty) {
                         if (!$isParent || !$reflectionProperty->isPrivate()) {
                             $reflectionProperties[$reflectionProperty->name] = $reflectionProperty;
                         }
                     }
-                    $result += $reflectionProperties;
+
+                    return $reflectionProperties;
                 }
             );
             $properties = $directProperties + $parentProperties;
@@ -549,14 +604,15 @@ trait ReflectionClassLikeTrait
                 $this->getName()
             );
             $parentClassConstants = $this->recursiveCollect(
-                function (array &$result, \ReflectionClass $instance, $isParent) {
+                function (\ReflectionClass $instance, bool $isParent): array {
                     $reflectionClassConstants = [];
                     foreach ($instance->getReflectionConstants() as $reflectionClassConstant) {
                         if (!$isParent || !$reflectionClassConstant->isPrivate()) {
                             $reflectionClassConstants[$reflectionClassConstant->name] = $reflectionClassConstant;
                         }
                     }
-                    $result += $reflectionClassConstants;
+
+                    return $reflectionClassConstants;
                 }
             );
             $classConstants = $directClassConstants + $parentClassConstants;
@@ -569,6 +625,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @return non-empty-string
      */
     public function getShortName(): string
     {
@@ -581,10 +639,12 @@ trait ReflectionClassLikeTrait
             $attrGroups = $this->classLikeNode->attrGroups;
             $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
 
-            return $lastAttrGroupsEndLine + 1;
+            return is_int($lastAttrGroupsEndLine) ? $lastAttrGroupsEndLine + 1 : false;
         }
 
-        return $this->classLikeNode->getAttribute('startLine');
+        $startLine = $this->classLikeNode->getAttribute('startLine');
+
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**
@@ -592,7 +652,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.gettraitaliases.php
      *
-     * @return array an array with new method names in keys and original names (in the format
+     * @return array<string, string> an array with new method names in keys and original names (in the format
      *                    "TraitName::original") in values.
      */
     public function getTraitAliases(): array
@@ -601,7 +661,7 @@ trait ReflectionClassLikeTrait
         $traits  = $this->getTraits();
         foreach ($this->traitAdaptations as $adaptation) {
             if ($adaptation instanceof TraitUseAdaptation\Alias) {
-                $methodName = $adaptation->method;
+                $methodName = (string) $adaptation->method;
                 $traitName  = null;
                 foreach ($traits as $trait) {
                     if ($trait->hasMethod($methodName)) {
@@ -609,7 +669,7 @@ trait ReflectionClassLikeTrait
                         break;
                     }
                 }
-                $aliases[$adaptation->newName] = $traitName . '::' . $methodName;
+                $aliases[(string) $adaptation->newName] = $traitName . '::' . $methodName;
             }
         }
 
@@ -631,7 +691,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.gettraits.php
      *
-     * @return \ReflectionClass[]
+     * @return \ReflectionClass<object>[]
      */
     public function getTraits(): array
     {
@@ -689,6 +749,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @param \ReflectionClass<object>|string $interfaceName
      */
     public function implementsInterface(\ReflectionClass|string $interfaceName): bool
     {
@@ -828,6 +890,8 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * @param \ReflectionClass<object>|string $class
      */
     public function isSubclassOf(\ReflectionClass|string $class): bool
     {
@@ -880,6 +944,8 @@ trait ReflectionClassLikeTrait
      * Gets static properties
      *
      * @link http://php.net/manual/en/reflectionclass.getstaticproperties.php
+     *
+     * @return array<string, mixed>
      */
     public function getStaticProperties(): array
     {
@@ -935,7 +1001,7 @@ trait ReflectionClassLikeTrait
      *
      * @link http://php.net/manual/en/reflectionclass.newinstanceargs.php
      *
-     * @param array $args The parameters to be passed to the class constructor as an array.
+     * @param array<int, mixed> $args The parameters to be passed to the class constructor as an array.
      */
     public function newInstanceArgs(array $args = []): ?object
     {
@@ -971,6 +1037,11 @@ trait ReflectionClassLikeTrait
         parent::setStaticPropertyValue($name, $value);
     }
 
+    /**
+     * @template TValue
+     * @param \Closure(\ReflectionClass<object>, bool): array<string, TValue> $collector
+     * @return array<string, TValue>
+     */
     private function recursiveCollect(Closure $collector): array
     {
         $result   = [];
@@ -978,17 +1049,17 @@ trait ReflectionClassLikeTrait
 
         $traits = $this->getTraits();
         foreach ($traits as $trait) {
-            $collector($result, $trait, !$isParent);
+            $result += $collector($trait, false);
         }
 
         $parentClass = $this->getParentClass();
         if ($parentClass) {
-            $collector($result, $parentClass, $isParent);
+            $result += $collector($parentClass, $isParent);
         }
 
         $interfaces = ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode);
         foreach ($interfaces as $interface) {
-            $collector($result, $interface, $isParent);
+            $result += $collector($interface, $isParent);
         }
 
         return $result;
@@ -1011,7 +1082,7 @@ trait ReflectionClassLikeTrait
                         $expressionSolver->process($nodeConstant->value);
                         $localConstants[$nodeConstant->name->toString()] = $expressionSolver->getValue();
 
-                        $this->constants = $localConstants + $this->constants;
+                        $this->constants = $localConstants + ($this->constants ?? []);
                     }
                 }
             }

@@ -14,7 +14,6 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
-use JetBrains\PhpStorm\Deprecated;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
@@ -27,7 +26,7 @@ use ReflectionMethod as BaseReflectionMethod;
  * AST-based reflection for the method in a class
  * @see \Go\ParserReflection\ReflectionMethodTest
  */
-class ReflectionMethod extends BaseReflectionMethod
+final class ReflectionMethod extends BaseReflectionMethod
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionFunctionLikeTrait;
@@ -64,16 +63,38 @@ class ReflectionMethod extends BaseReflectionMethod
         unset($this->name, $this->class);
     }
 
+    protected function getDeclaringClassNameForTypes(): string
+    {
+        return $this->getDeclaringClass()->getName();
+    }
+
+    protected function getParentClassNameForTypes(): ?string
+    {
+        $parent = $this->getDeclaringClass()->getParentClass();
+
+        return ($parent !== false) ? $parent->getName() : null;
+    }
+
     /**
      * Returns an AST-node for method
      */
     public function getNode(): ClassMethod
     {
-        return $this->functionLikeNode;
+        return $this->getClassMethodNode();
+    }
+
+    /**
+     * Returns the AST node that contains attribute groups for this method.
+     */
+    protected function getNodeForAttributes(): ClassMethod
+    {
+        return $this->getClassMethodNode();
     }
 
     /**
      * Emulating original behaviour of reflection
+     *
+     * @return array<string, string>
      */
     public function __debugInfo(): array
     {
@@ -159,10 +180,37 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>
      */
     public function getDeclaringClass(): \ReflectionClass
     {
         return $this->declaringClass ?? new ReflectionClass($this->className);
+    }
+
+    /**
+     * Checks if this method is an Enum magic method (cases/from/tryFrom).
+     */
+    private function isEnumMagicMethod(): bool
+    {
+        return $this->getDeclaringClass()->isEnum()
+            && in_array($this->getName(), ['cases', 'tryFrom', 'from'], true);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isInternal(): bool
+    {
+        return $this->isEnumMagicMethod();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isUserDefined(): bool
+    {
+        return !$this->isEnumMagicMethod();
     }
 
     /**
@@ -245,6 +293,8 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<int, mixed> $args
      */
     public function invokeArgs(?object $object, array $args): mixed
     {
@@ -320,7 +370,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    #[Deprecated(reason: "Usage of ReflectionMethod::setAccessible() has no effect.", since: "8.1")]
+    #[\Deprecated("Usage of ReflectionMethod::setAccessible() has no effect.", since: "8.1")]
     public function setAccessible(bool $accessible): void
     {
     }
@@ -331,7 +381,7 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param ClassLike $classLikeNode Class-like node
      * @param ReflectionClass $reflectionClass Reflection of the class
      *
-     * @return ReflectionMethod[]
+     * @return array<string, ReflectionMethod>
      */
     public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass): array
     {
@@ -383,7 +433,7 @@ class ReflectionMethod extends BaseReflectionMethod
             ->setReturnType('array')
             ->getNode();
         
-        return new static(
+        return new self(
             $reflectionClass->name,
             'cases',
             $casesMethodNode,
@@ -403,7 +453,7 @@ class ReflectionMethod extends BaseReflectionMethod
             ->setReturnType('static')
             ->getNode();
 
-        return new static(
+        return new self(
             $reflectionClass->name,
             'from',
             $fromMethodNode,
@@ -423,7 +473,7 @@ class ReflectionMethod extends BaseReflectionMethod
             ->setReturnType('?static')
             ->getNode();
 
-        return new static(
+        return new self(
             $reflectionClass->name,
             'tryFrom',
             $fromMethodNode,
@@ -436,6 +486,10 @@ class ReflectionMethod extends BaseReflectionMethod
      */
     private function getClassMethodNode(): ClassMethod
     {
+        if (!$this->functionLikeNode instanceof ClassMethod) {
+            throw new \LogicException('Expected ClassMethod node');
+        }
+
         return $this->functionLikeNode;
     }
 }
