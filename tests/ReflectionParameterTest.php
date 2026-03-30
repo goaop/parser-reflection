@@ -51,14 +51,15 @@ class ReflectionParameterTest extends AbstractTestCase
         ReflectionParameter $parsedParameter,
         \ReflectionParameter        $originalRefParameter
     ): void {
-        $originalParamClass = $originalRefParameter->getClass();
-        $parsedParamClass   = $parsedParameter->getClass();
+        $originalParamType = $originalRefParameter->getType();
+        $parsedParamType   = $parsedParameter->getType();
 
-        if (isset($originalParamClass)) {
-            $this->assertNotNull($parsedParamClass, "Original param class is: {$originalParamClass->name}");
-            $this->assertSame($originalParamClass->getName(), $parsedParamClass->getName());
+        if (isset($originalParamType)) {
+            $this->assertNotNull($parsedParamType, "Original param type is: {$originalParamType}");
+            $this->assertInstanceOf($originalParamType::class, $parsedParamType, "Parsed param type is: {$parsedParamType}");
+            $this->assertSame((string)$originalParamType, (string)$parsedParamType);
         } else {
-            $this->assertNull($parsedParamClass);
+            $this->assertNull($parsedParamType);
         }
     }
 

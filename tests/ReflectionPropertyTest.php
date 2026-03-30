@@ -35,6 +35,15 @@ class ReflectionPropertyTest extends AbstractTestCase
         $propertyName   = $refProperty->getName();
         $className      = $parsedClass->getName();
         $parsedProperty = $parsedClass->getProperty($propertyName);
+        // Covers: ReflectionProperty::getDefaultValue() for a property without a default value is deprecated
+        if ($getterName === 'getDefaultValue' && !$refProperty->hasDefaultValue()) {
+            $this->markTestSkipped("Skipping getDefaultValue() for a property without a default value, it is deprecated");
+        }
+
+        // Covers: misc accessors for a trait property without an object
+        if (in_array($getterName, ['getValue', 'getDefaultValue', 'isInitialized', '__toString'], true) && $parsedClass->isTrait()) {
+            $this->markTestSkipped("Skipping accessing trait property without a class, it is deprecated");
+        }
         $expectedValue  = $refProperty->$getterName();
         $actualValue    = $parsedProperty->$getterName();
         // I would like to completely stop maintaining the __toString method
@@ -80,7 +89,7 @@ class ReflectionPropertyTest extends AbstractTestCase
             $parsedProperty->hasDefaultValue(),
             "Presence of default value for property {$className}:{$propertyName} should be equal"
         );
-        if ($originalRefProperty->isStatic()) {
+        if ($originalRefProperty->isStatic() && !$parsedRefClass->isTrait()) {
             $actualValue = $parsedProperty->getValue();
             $this->assertSame($originalRefProperty->getValue(), $actualValue);
         } elseif ($originalRefProperty->hasDefaultValue() && $parsedRefClass->isInstantiable()) {
