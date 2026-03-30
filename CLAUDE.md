@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Parser Reflection is a **deprecated** PHP library (deprecated in favor of [BetterReflection](https://github.com/Roave/BetterReflection)) that extends PHP's internal reflection classes using nikic/PHP-Parser for static analysis. It reflects PHP code without loading classes into memory by parsing source files into an AST.
 
-Requires PHP >=8.2. Namespace: `Go\ParserReflection\`.
+Requires PHP >=8.4. Namespace: `Go\ParserReflection\`.
 
 ## Commands
 

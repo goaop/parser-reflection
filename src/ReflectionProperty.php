@@ -491,6 +491,13 @@ final class ReflectionProperty extends BaseReflectionProperty
     {
         $this->initializeInternalReflection();
 
+        if (func_num_args() < 2) {
+            // Single-argument form: sets a static property value (PHP 8.4+ canonical form).
+            parent::setValue(null, $objectOrValue);
+
+            return;
+        }
+
         if (!$this->isStatic() && $objectOrValue !== null && !is_object($objectOrValue)) {
             throw new \InvalidArgumentException('Expected object or null for $objectOrValue on non-static property');
         }
