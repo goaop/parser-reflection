@@ -156,12 +156,15 @@ class TypeExpressionResolver
 
         $typeName = $node->toString();
 
-        // Resolve self/parent to the actual class names when context is available.
-        // 'static' is intentionally kept as-is (late static binding, preserved by native reflection).
-        if ($typeName === 'self') {
-            $typeName = $this->selfClassName ?? $typeName;
-        } elseif ($typeName === 'parent') {
-            $typeName = $this->parentClassName ?? $typeName;
+        // PHP 8.5+ changed ReflectionNamedType::getName() to return the actual FQCN for 'self'
+        // and 'parent', whereas PHP 8.4 and earlier preserve the keywords as-is.
+        // 'static' is always kept as-is (late static binding, preserved by native reflection).
+        if (PHP_VERSION_ID >= 80500) {
+            if ($typeName === 'self') {
+                $typeName = $this->selfClassName ?? $typeName;
+            } elseif ($typeName === 'parent') {
+                $typeName = $this->parentClassName ?? $typeName;
+            }
         }
 
         return new ReflectionNamedType($typeName, $this->hasDefaultNull, false);
