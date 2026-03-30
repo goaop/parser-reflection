@@ -15,9 +15,7 @@ namespace Go\ParserReflection\Resolver;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
-use Go\ParserReflection\ReflectionNamedType;
 use PhpParser\Node;
-use PhpParser\Node\Const_;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
@@ -229,14 +227,14 @@ class NodeExpressionResolver
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
             if (!$argumentNode instanceof Node\Arg) {
-                continue;
+                throw new ReflectionException('Cannot statically resolve a variadic placeholder argument in a function call');
             }
             $value = $this->resolve($argumentNode->value);
             // if function uses named arguments, then unpack argument name first
             if (isset($argumentNode->name)) {
                 $name = $this->resolve($argumentNode->name);
                 if (!is_string($name) && !is_int($name)) {
-                    continue;
+                    throw new ReflectionException(sprintf('Named argument key must be string or int, got %s', gettype($name)));
                 }
                 $resolvedArgs[$name] = $value;
             } else {
@@ -286,14 +284,14 @@ class NodeExpressionResolver
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
             if (!$argumentNode instanceof Node\Arg) {
-                continue;
+                throw new ReflectionException('Cannot statically resolve a variadic placeholder argument in a constructor call');
             }
             $value = $this->resolve($argumentNode->value);
             // if constructor uses named arguments, then unpack argument name first
             if (isset($argumentNode->name)) {
                 $name = $this->resolve($argumentNode->name);
                 if (!is_string($name) && !is_int($name)) {
-                    continue;
+                    throw new ReflectionException(sprintf('Named argument key must be string or int, got %s', gettype($name)));
                 }
                 $resolvedArgs[$name] = $value;
             } else {
@@ -550,7 +548,7 @@ class NodeExpressionResolver
             if (isset($arrayItem->key)) {
                 $itemKey = $this->resolve($arrayItem->key);
                 if (!is_string($itemKey) && !is_int($itemKey)) {
-                    continue;
+                    throw new ReflectionException(sprintf('Array key must be string or int, got %s', gettype($itemKey)));
                 }
             } else {
                 $itemKey = $itemIndex;

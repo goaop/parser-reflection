@@ -22,7 +22,7 @@
     }
   },
   "require": {
-    "php": ">=8.2",
+    "php": ">=8.4",
     "nikic/php-parser": "^5.4"
   },
   "require-dev": {

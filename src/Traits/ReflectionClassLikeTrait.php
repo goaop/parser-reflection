@@ -477,29 +477,16 @@ trait ReflectionClassLikeTrait
     }
 
     /**
-     * Resolves a fully-qualified class name string as a class-string type.
-     * Classes reflected via AST may not be loaded yet; this method attempts autoloading
-     * and falls back to returning the name as-is (which is valid since class names ARE class-strings).
+     * Returns a fully-qualified class name. The name is semantically a class-string (it comes
+     * from the AST of a PHP class declaration), but PHPStan cannot verify this without
+     * autoloading, which would violate the library's contract of reflecting without loading.
      *
      * @param non-empty-string $name
      * @return class-string<object>
      */
     private function resolveAsClassString(string $name): string
     {
-        if (class_exists($name, false) || interface_exists($name, false) || trait_exists($name, false) || enum_exists($name, false)) {
-            return $name;
-        }
-        // Trigger autoloading for the class - this resolves the type for PHPStan
-        if (class_exists($name) || interface_exists($name) || trait_exists($name) || enum_exists($name)) {
-            return $name;
-        }
-        // For AST-only classes not yet loadable, register as stdClass alias so PHPStan can narrow the type
-        class_alias(\stdClass::class, $name);
-        $registeredName = $name;
-        if (class_exists($registeredName, false)) {
-            return $registeredName;
-        }
-        throw new \LogicException("class_alias failed unexpectedly for class name: $name");
+        return $name;
     }
 
     /**

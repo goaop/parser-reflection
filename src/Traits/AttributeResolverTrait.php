@@ -73,35 +73,25 @@ trait AttributeResolverTrait
     }
 
     /**
-     * Resolves the attribute class name from a Name node, returning it as a class-string.
-     *
-     * Attribute names in PHP are always class names. This method attempts to load the class
-     * via autoloading so PHPStan can narrow the type. For classes that cannot be autoloaded
-     * (e.g., optional dependency attributes), a cache entry is used.
+     * Normalizes an attribute class name from a Name node, without triggering autoloading
+     * or registering any class aliases, to keep reflection side-effect free.
      *
      * @param mixed $nameNode
      * @return class-string<object>
      */
     private static function resolveAttributeClassName(mixed $nameNode): string
     {
-        $className = $nameNode instanceof Name ? $nameNode->toString() : (is_scalar($nameNode) ? (string) $nameNode : '');
+        $className = $nameNode instanceof Name
+            ? $nameNode->toString()
+            : (is_scalar($nameNode) ? (string) $nameNode : '');
+
         $className = ltrim($className, '\\');
-        // Fast path: already loaded without autoloading
-        if (class_exists($className, false) || interface_exists($className, false) || trait_exists($className, false) || enum_exists($className, false)) {
-            return $className;
+
+        if ($className === '') {
+            throw new \LogicException('Unable to resolve attribute class name from node');
         }
-        // Try with autoloading
-        if (class_exists($className) || interface_exists($className) || trait_exists($className) || enum_exists($className)) {
-            return $className;
-        }
-        // For optional/not-installed attribute classes (e.g. JetBrains PhpStorm attributes),
-        // register as stdClass alias so the type is narrowable by PHPStan via class_exists()
-        class_alias(\stdClass::class, $className);
-        $registeredName = $className;
-        if (class_exists($registeredName, false)) {
-            return $registeredName;
-        }
-        throw new \LogicException("class_alias failed unexpectedly for attribute class: $className");
+
+        return $className;
     }
 
     /**

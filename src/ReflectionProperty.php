@@ -219,16 +219,16 @@ final class ReflectionProperty extends BaseReflectionProperty
         if ($this->isReadOnly()) {
             $modifiers += self::IS_READONLY;
         }
-        if (PHP_VERSION_ID >= 80400 && $this->isAbstract()) {
+        if ($this->isAbstract()) {
             $modifiers += self::IS_ABSTRACT;
         }
-        if (PHP_VERSION_ID >= 80400 && $this->isFinal()) {
+        if ($this->isFinal()) {
             $modifiers += self::IS_FINAL;
         }
-        if (PHP_VERSION_ID >= 80400 && $this->isProtectedSet()) {
+        if ($this->isProtectedSet()) {
             $modifiers += self::IS_PROTECTED_SET;
         }
-        if (PHP_VERSION_ID >= 80400 && $this->isPrivateSet()) {
+        if ($this->isPrivateSet()) {
             $modifiers += self::IS_PRIVATE_SET;
         }
 
@@ -491,10 +491,13 @@ final class ReflectionProperty extends BaseReflectionProperty
     {
         $this->initializeInternalReflection();
 
-        if ($objectOrValue !== null && !is_object($objectOrValue)) {
-            throw new \InvalidArgumentException('Expected object or null for $objectOrValue');
+        if (!$this->isStatic() && $objectOrValue !== null && !is_object($objectOrValue)) {
+            throw new \InvalidArgumentException('Expected object or null for $objectOrValue on non-static property');
         }
-        parent::setValue($objectOrValue, $value);
+        // For static properties the object argument must be null; for instance properties it must be an object.
+        // After the guard above we know: isStatic() || objectOrValue === null || is_object(objectOrValue).
+        $objectArg = is_object($objectOrValue) ? $objectOrValue : null;
+        parent::setValue($objectArg, $value);
     }
 
     /**

@@ -23,10 +23,8 @@ use Go\ParserReflection\ReflectionException;
  */
 class ComposerLocator implements LocatorInterface
 {
-    /**
-     * @var ClassLoader
-     */
-    private $loader;
+
+    private ClassLoader $loader;
 
     public function __construct(?ClassLoader $composerLoader = null)
     {

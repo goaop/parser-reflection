@@ -12,14 +12,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection\NodeVisitor;
 
-use Go\ParserReflection\ReflectionAttribute;
-use Go\ParserReflection\ReflectionClass;
-use Go\ParserReflection\ReflectionClassConstant;
 use Go\ParserReflection\ReflectionFileNamespace;
-use Go\ParserReflection\ReflectionFunction;
-use Go\ParserReflection\ReflectionMethod;
-use Go\ParserReflection\ReflectionParameter;
-use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
 use PhpParser\NodeVisitorAbstract;
@@ -77,7 +70,7 @@ class StaticVariablesCollector extends NodeVisitorAbstract
                     $expressionSolver->process($staticVariable->var->name);
                     $resolvedName = $expressionSolver->getValue();
                     if (!is_string($resolvedName)) {
-                        continue;
+                        throw new \InvalidArgumentException("Unknown value for the key, " . gettype($resolvedName) . " has given, but string is expected");
                     }
                     $name = $resolvedName;
                 } else {

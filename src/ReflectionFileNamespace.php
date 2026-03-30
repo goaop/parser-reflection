@@ -391,7 +391,7 @@ class ReflectionFileNamespace
                         $arg0 = $functionCallNode->args[0];
                         $arg1 = $functionCallNode->args[1];
                         if (!$arg0 instanceof \PhpParser\Node\Arg || !$arg1 instanceof \PhpParser\Node\Arg) {
-                            continue;
+                            throw new ReflectionException('define() call uses unsupported argument type (e.g. variadic placeholder)');
                         }
                         $expressionSolver->process($arg0->value);
                         $constantName = $expressionSolver->getValue();
@@ -400,7 +400,7 @@ class ReflectionFileNamespace
                         $constantValue = $expressionSolver->getValue();
 
                         if (!is_string($constantName)) {
-                            continue;
+                            throw new ReflectionException(sprintf('define() constant name must be a string, got %s', gettype($constantName)));
                         }
                         $constants[$constantName] = $constantValue;
                     } catch (\Throwable) {

@@ -50,7 +50,8 @@ class PathResolver
             return $fastPath;
         }
 
-        $isRelative = !$pathScheme && $path !== null && ($path[0] !== '/') && ($path[1] !== ':');
+        $isWindowsAbsolutePath = $path !== null && strlen($path) > 1 && preg_match('/^[A-Za-z]:/', $path) === 1;
+        $isRelative = !$pathScheme && $path !== null && !str_starts_with($path, '/') && !$isWindowsAbsolutePath;
         if ($isRelative) {
             $path = getcwd() . DIRECTORY_SEPARATOR . $path;
         }
