@@ -25,6 +25,18 @@ class ClassWithPhp84PropertyHooks
     }
 }
 
+class ClassWithPhp84PromotedPropertyHooks
+{
+    private string $backing = 'default';
+
+    public function __construct(
+        public string $name {
+            get => $this->backing;
+            set => $this->backing = strtoupper($value);
+        },
+    ) {}
+}
+
 /* Not supported yet
 interface InterfaceWithPhp84AbstractProperty
 {

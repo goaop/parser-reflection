@@ -294,7 +294,7 @@ final class ReflectionProperty extends BaseReflectionProperty
      */
     public function hasHooks(): bool
     {
-        return $this->propertyOrPromotedParam instanceof Property && !empty($this->propertyOrPromotedParam->hooks);
+        return !empty($this->propertyOrPromotedParam->hooks);
     }
 
     /**
@@ -302,10 +302,6 @@ final class ReflectionProperty extends BaseReflectionProperty
      */
     public function hasHook(\PropertyHookType $type): bool
     {
-        if (!$this->propertyOrPromotedParam instanceof Property) {
-            return false;
-        }
-
         foreach ($this->propertyOrPromotedParam->hooks as $hook) {
             if ($hook->name->toLowerString() === $type->value) {
                 return true;
