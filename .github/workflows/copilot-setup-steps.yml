@@ -39,4 +39,4 @@ jobs:
           ini-values: memory_limit=-1
 
       - name: Install Composer dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
+        run: composer config --global process-timeout 2000 && composer install --prefer-source --no-interaction --no-progress
