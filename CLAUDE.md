@@ -11,7 +11,7 @@ Requires PHP >=8.4. Namespace: `Go\ParserReflection\`.
 ## Agent runtime requirement
 
 - Agents must run on PHP **8.4 or higher**.
-- If the runtime is PHP **8.3.x**, stop and report that dependency installation and test validation cannot be performed in that environment.
+- If the runtime is PHP **8.3.x**, agents should not attempt dependency installation or test validation and should report that PHP **8.4+** is required.
 
 ## Commands
 
