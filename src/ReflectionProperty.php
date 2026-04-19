@@ -17,7 +17,6 @@ use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use PhpParser\Node\Expr;
-use PhpParser\Node\Identifier;
 use PhpParser\Node\Param;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
@@ -288,6 +287,32 @@ final class ReflectionProperty extends BaseReflectionProperty
     public function hasType(): bool
     {
         return isset($this->propertyOrPromotedParam->type);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasHooks(): bool
+    {
+        return $this->propertyOrPromotedParam instanceof Property && !empty($this->propertyOrPromotedParam->hooks);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function hasHook(\PropertyHookType $type): bool
+    {
+        if (!$this->propertyOrPromotedParam instanceof Property) {
+            return false;
+        }
+
+        foreach ($this->propertyOrPromotedParam->hooks as $hook) {
+            if ($hook->name->toLowerString() === $type->value) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

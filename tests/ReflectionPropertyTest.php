@@ -163,6 +163,23 @@ class ReflectionPropertyTest extends AbstractTestCase
         }
     }
 
+    #[DataProvider('propertyHooksDataProvider')]
+    public function testHasHookMethod(
+        ReflectionClass $parsedRefClass,
+        \ReflectionProperty $originalRefProperty,
+        \PropertyHookType $hookType
+    ): void {
+        $propertyName      = $originalRefProperty->getName();
+        $className         = $parsedRefClass->getName();
+        $parsedRefProperty = $parsedRefClass->getProperty($propertyName);
+
+        $this->assertSame(
+            $originalRefProperty->hasHook($hookType),
+            $parsedRefProperty->hasHook($hookType),
+            "Presence of {$hookType->value} hook for property {$className}:{$propertyName} should be equal"
+        );
+    }
+
     /**
      * Provides full test-case list in the form [ParsedClass, \ReflectionProperty to check]
      */
@@ -180,6 +197,26 @@ class ReflectionPropertyTest extends AbstractTestCase
     }
 
     /**
+     * Provides full test-case list in the form [ParsedClass, \ReflectionProperty to check, hook type]
+     */
+    public static function propertyHooksDataProvider(): \Generator
+    {
+        if (PHP_VERSION_ID < 80400) {
+            return;
+        }
+
+        foreach (self::propertiesDataProvider() as $prefix => [$parsedClass, $classProperty]) {
+            foreach (\PropertyHookType::cases() as $hookType) {
+                yield $prefix . ' ' . $parsedClass->getName() . '->' . $classProperty->getName() . ' hook:' . $hookType->value => [
+                    $parsedClass,
+                    $classProperty,
+                    $hookType,
+                ];
+            }
+        }
+    }
+
+    /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
      */
     protected static function getGettersToCheck(): array
@@ -191,7 +228,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         ];
 
         if (PHP_VERSION_ID >= 80400) {
-            array_push($getters, 'isAbstract', 'isProtectedSet', 'isPrivateSet', 'isFinal');
+            array_push($getters, 'isAbstract', 'isProtectedSet', 'isPrivateSet', 'isFinal', 'hasHooks');
         }
 
         return $getters;
