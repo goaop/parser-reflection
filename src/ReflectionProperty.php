@@ -16,13 +16,19 @@ use Go\ParserReflection\Traits\InitializationTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
+use PhpParser\Modifiers;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Param;
+use PhpParser\Node\PropertyHook;
 use PhpParser\Node\PropertyItem;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\Return_;
+use PropertyHookType;
 use Reflection;
 use ReflectionProperty as BaseReflectionProperty;
 
@@ -300,7 +306,7 @@ final class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function hasHook(\PropertyHookType $type): bool
+    public function hasHook(PropertyHookType $type): bool
     {
         foreach ($this->propertyOrPromotedParam->hooks as $hook) {
             if ($hook->name->toLowerString() === $type->value) {
@@ -314,7 +320,7 @@ final class ReflectionProperty extends BaseReflectionProperty
     /**
      * {@inheritDoc}
      */
-    public function getHook(\PropertyHookType $type): ?ReflectionMethod
+    public function getHook(PropertyHookType $type): ?ReflectionMethod
     {
         foreach ($this->propertyOrPromotedParam->hooks as $hook) {
             if ($hook->name->toLowerString() === $type->value) {
@@ -542,7 +548,7 @@ final class ReflectionProperty extends BaseReflectionProperty
     /**
      * Converts a PropertyHook AST node into a synthetic ClassMethod node and wraps it in a ReflectionMethod.
      */
-    private function createMethodFromHook(\PhpParser\Node\PropertyHook $hook, \PropertyHookType $type): ReflectionMethod
+    private function createMethodFromHook(PropertyHook $hook, PropertyHookType $type): ReflectionMethod
     {
         $propertyName = $this->getName();
         $hookMethodName = '$' . $propertyName . '::' . $type->value;
@@ -550,10 +556,10 @@ final class ReflectionProperty extends BaseReflectionProperty
         // Build the method body (stmts)
         if ($hook->body instanceof Expr) {
             // Short hook: convert expression to return statement (for get) or expression statement (for set)
-            if ($type === \PropertyHookType::Get) {
-                $stmts = [new \PhpParser\Node\Stmt\Return_($hook->body)];
+            if ($type === PropertyHookType::Get) {
+                $stmts = [new Return_($hook->body)];
             } else {
-                $stmts = [new \PhpParser\Node\Stmt\Expression($hook->body)];
+                $stmts = [new Expression($hook->body)];
             }
         } elseif (is_array($hook->body)) {
             $stmts = $hook->body;
@@ -564,7 +570,7 @@ final class ReflectionProperty extends BaseReflectionProperty
 
         // Build parameters
         $params = $hook->params;
-        if ($type === \PropertyHookType::Set && empty($params)) {
+        if ($type === PropertyHookType::Set && empty($params)) {
             // Implicit $value parameter with the property's type
             $params = [new Param(
                 var: new Expr\Variable('value'),
@@ -573,16 +579,16 @@ final class ReflectionProperty extends BaseReflectionProperty
         }
 
         // Build return type
-        if ($type === \PropertyHookType::Get) {
+        if ($type === PropertyHookType::Get) {
             $returnType = $this->propertyOrPromotedParam->type;
         } else {
-            $returnType = new \PhpParser\Node\Identifier('void');
+            $returnType = new Identifier('void');
         }
 
         $classMethodNode = new ClassMethod(
             $hookMethodName,
             [
-                'flags'      => \PhpParser\Modifiers::PUBLIC,
+                'flags'      => Modifiers::PUBLIC,
                 'byRef'      => $hook->byRef,
                 'params'     => $params,
                 'returnType' => $returnType,
