@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Stub\ChildClassWithOverride;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ReflectionMethodTest extends AbstractTestCase
@@ -131,6 +132,36 @@ class ReflectionMethodTest extends AbstractTestCase
             $parsedPrototype   = $parsedRefMethod->getPrototype();
             $originalPrototype = $originalRefMethod->getPrototype();
             $this->assertSame($originalPrototype->getDeclaringClass()->getName(), $parsedPrototype->getDeclaringClass()->getName(), $message);
+        }
+    }
+
+    public function testOverrideAttributeParity(): void
+    {
+        if (PHP_VERSION_ID < 80300) {
+            $this->markTestSkipped('#[\Override] requires PHP 8.3+');
+        }
+
+        $parsedClass = new ReflectionClass(ChildClassWithOverride::class);
+        $nativeClass = new \ReflectionClass(ChildClassWithOverride::class);
+
+        foreach (['baseMethod', 'anotherMethod'] as $methodName) {
+            $parsedMethod = $parsedClass->getMethod($methodName);
+            $nativeMethod = $nativeClass->getMethod($methodName);
+
+            $parsedAttrs = $parsedMethod->getAttributes(\Override::class);
+            $nativeAttrs = $nativeMethod->getAttributes(\Override::class);
+
+            $this->assertCount(
+                count($nativeAttrs),
+                $parsedAttrs,
+                "Attribute count for {$methodName}() should match native reflection"
+            );
+
+            foreach ($nativeAttrs as $i => $nativeAttr) {
+                $this->assertSame($nativeAttr->getName(), $parsedAttrs[$i]->getName());
+                $this->assertSame($nativeAttr->getArguments(), $parsedAttrs[$i]->getArguments());
+                $this->assertSame($nativeAttr->isRepeated(), $parsedAttrs[$i]->isRepeated());
+            }
         }
     }
 

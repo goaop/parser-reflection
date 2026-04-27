@@ -31,3 +31,21 @@ class ClassWithPhp83TypedConstants
     final public const string FINAL_STRING_CONSTANT = 'final';
 }
 
+/**
+ * @see https://wiki.php.net/rfc/marking_overriden_methods
+ */
+class ParentClassForOverride
+{
+    public function baseMethod(): void {}
+    public function anotherMethod(): string { return 'parent'; }
+}
+
+class ChildClassWithOverride extends ParentClassForOverride
+{
+    #[\Override]
+    public function baseMethod(): void {}
+
+    #[\Override]
+    public function anotherMethod(): string { return 'child'; }
+}
+
