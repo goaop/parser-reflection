@@ -236,11 +236,9 @@ final class ReflectionProperty extends BaseReflectionProperty
         if ($this->isPrivateSet()) {
             $modifiers += self::IS_PRIVATE_SET;
         }
-
-        // Handle PHP 8.4+ asymmetric visibility modifiers
-        // Note: IS_PRIVATE_SET and IS_PROTECTED_SET are only added for properties with explicit
-        // asymmetric visibility syntax like "public private(set) $prop", not for regular readonly properties
-        // TODO: Implement when nikic/php-parser supports asymmetric visibility syntax
+        if ($this->isVirtual()) {
+            $modifiers += self::IS_VIRTUAL;
+        }
 
         return $modifiers;
     }
@@ -282,6 +280,38 @@ final class ReflectionProperty extends BaseReflectionProperty
     public function getType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
         return $this->type;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSettableType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
+    {
+        // Virtual properties (get-only hook, no backing store) return 'never'
+        if ($this->isVirtual() && !$this->hasHook(PropertyHookType::Set)) {
+            $typeResolver = new TypeExpressionResolver($this->className, null);
+            $typeResolver->process(new Identifier('never'), false);
+
+            return $typeResolver->getType();
+        }
+
+        // If there's a set hook with an explicit typed parameter, resolve that type
+        if ($this->propertyOrPromotedParam instanceof Property) {
+            foreach ($this->propertyOrPromotedParam->hooks as $hook) {
+                if ($hook->name->toLowerString() === 'set' && !empty($hook->params) && $hook->params[0]->type !== null) {
+                    $declaringClass  = $this->getDeclaringClass();
+                    $parentClass     = $declaringClass->getParentClass();
+                    $parentClassName = ($parentClass !== false) ? $parentClass->getName() : null;
+
+                    $typeResolver = new TypeExpressionResolver($this->className, $parentClassName);
+                    $typeResolver->process($hook->params[0]->type, false);
+
+                    return $typeResolver->getType();
+                }
+            }
+        }
+
+        return $this->getType();
     }
 
     /**

@@ -37,6 +37,19 @@ class ClassWithPhp84PromotedPropertyHooks
     ) {}
 }
 
+class ClassWithPhp84SettableType
+{
+    public string $narrowedSet {
+        set (string|\Stringable $value) {
+            $this->narrowedSet = (string) $value;
+        }
+    }
+
+    public string $virtualGetOnly {
+        get => 'constant';
+    }
+}
+
 /* Not supported yet
 interface InterfaceWithPhp84AbstractProperty
 {
