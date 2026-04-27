@@ -117,3 +117,11 @@ function functionWithPhp81NeverReturnType(): never
 class ClassWithPhp81FinalClassConst {
     final public const TEST = '1';
 }
+
+class ClassWithBackedEnumDefaultValue
+{
+    public function getRefusalDescription(string $channel = BackedPhp81EnumHTTPMethods::GET->value): string
+    {
+        return $channel;
+    }
+}

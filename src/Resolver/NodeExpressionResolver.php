@@ -535,6 +535,37 @@ class NodeExpressionResolver
     }
 
     /**
+     * Resolves property fetch on an object, e.g. SomeEnum::CASE->value
+     */
+    protected function resolveExprPropertyFetch(Expr\PropertyFetch $node): mixed
+    {
+        $object = $this->resolve($node->var);
+        if (!is_object($object)) {
+            throw new ReflectionException("Property fetch requires an object, got " . gettype($object));
+        }
+
+        if ($node->name instanceof Node\Identifier) {
+            $propertyName = $node->name->toString();
+        } else {
+            $resolvedName = $this->resolve($node->name);
+            if (!is_string($resolvedName)) {
+                throw new ReflectionException("Could not resolve property name for property fetch.");
+            }
+            $propertyName = $resolvedName;
+        }
+
+        if (!property_exists($object, $propertyName)) {
+            throw new ReflectionException(sprintf("Property '%s' does not exist on object of type %s", $propertyName, get_class($object)));
+        }
+
+        $this->isConstant   = false;
+        $this->constantName = null;
+        $this->isConstExpr  = true;
+
+        return $object->$propertyName;
+    }
+
+    /**
      * @return array<int|string, mixed>
      */
     protected function resolveExprArray(Expr\Array_ $node): array
@@ -803,7 +834,7 @@ class NodeExpressionResolver
             // PHP's ReflectionClass to determine if the class is user defined
             if (class_exists($className, false)) {
                 $refClass = new \ReflectionClass($className);
-                if (!$refClass->isUserDefined()) {
+                if (!$refClass->isUserDefined() || $refClass->isEnum()) {
                     return $refClass;
                 }
             }
