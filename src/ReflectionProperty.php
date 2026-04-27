@@ -388,7 +388,16 @@ final class ReflectionProperty extends BaseReflectionProperty
     public function isAbstract(): bool
     {
         if ($this->propertyOrPromotedParam instanceof Property) {
-            return $this->propertyOrPromotedParam->isAbstract();
+            if ($this->propertyOrPromotedParam->isAbstract()) {
+                return true;
+            }
+
+            // Interface properties with abstract hooks (null body) are implicitly abstract
+            foreach ($this->propertyOrPromotedParam->hooks as $hook) {
+                if ($hook->body === null) {
+                    return true;
+                }
+            }
         }
 
         return false;

@@ -50,12 +50,11 @@ class ClassWithPhp84SettableType
     }
 }
 
-/* Not supported yet
 interface InterfaceWithPhp84AbstractProperty
 {
     public string $name { get; }
+    public string $readWrite { get; set; }
 }
-*/
 
 /**
  * https://wiki.php.net/rfc/asymmetric-visibility-v2
