@@ -56,6 +56,23 @@ interface InterfaceWithPhp84AbstractProperty
     public string $readWrite { get; set; }
 }
 
+abstract class AbstractClassWithPhp84Properties
+{
+    abstract public string $name { get; }
+    abstract public string $title { get; set; }
+}
+
+class ConcreteClassImplementingInterface implements InterfaceWithPhp84AbstractProperty
+{
+    public string $name {
+        get => 'John';
+    }
+    public string $readWrite {
+        get => 'value';
+        set => strtoupper($value);
+    }
+}
+
 /**
  * https://wiki.php.net/rfc/asymmetric-visibility-v2
  */
