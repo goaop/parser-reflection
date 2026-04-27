@@ -255,6 +255,26 @@ class ReflectionParameterTest extends AbstractTestCase
     }
 
     /**
+     * Test that parameters with backed enum property fetch default values work correctly
+     */
+    public function testParametersWithBackedEnumPropertyDefault(): void
+    {
+        $fileName = __DIR__ . '/Stub/FileWithClasses81.php';
+        $reflectionFile = new ReflectionFile($fileName);
+        $parsedFileNamespace = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+
+        $parsedClass = $parsedFileNamespace->getClass('Go\ParserReflection\Stub\ClassWithBackedEnumDefaultValue');
+        $parsedMethod = $parsedClass->getMethod('getRefusalDescription');
+        $parsedParameter = $parsedMethod->getParameters()[0];
+
+        $this->assertSame('channel', $parsedParameter->getName());
+        $this->assertTrue($parsedParameter->isDefaultValueAvailable());
+
+        $defaultValue = $parsedParameter->getDefaultValue();
+        $this->assertSame('get', $defaultValue);
+    }
+
+    /**
      * @inheritDoc
      */
     static protected function getGettersToCheck(): array

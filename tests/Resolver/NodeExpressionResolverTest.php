@@ -105,4 +105,17 @@ class NodeExpressionResolverTest extends TestCase
         $value = $expressionSolver->getValue();
         $this->assertInstanceOf(\DateTimeImmutable::class, $value);
     }
+
+    /**
+     * Testing resolving property fetch on a backed enum case (e.g. Enum::CASE->value)
+     */
+    public function testResolvePropertyFetchOnEnumCase(): void
+    {
+        require_once __DIR__ . '/../Stub/FileWithClasses81.php';
+
+        $expressionNodeTree = $this->parser->parse("<?php \\Go\\ParserReflection\\Stub\\BackedPhp81EnumHTTPMethods::GET->value;");
+        $expressionSolver = new NodeExpressionResolver(NULL);
+        $expressionSolver->process($expressionNodeTree[0]);
+        $this->assertSame('get', $expressionSolver->getValue());
+    }
 }
