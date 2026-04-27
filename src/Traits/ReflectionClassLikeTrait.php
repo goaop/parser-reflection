@@ -780,7 +780,7 @@ trait ReflectionClassLikeTrait
             return true;
         }
 
-        if ($this->isInterface() && !empty($this->getMethods())) {
+        if ($this->isInterface() && (!empty($this->getMethods()) || !empty($this->getProperties()))) {
             return true;
         }
 
