@@ -1101,10 +1101,15 @@ trait ReflectionClassLikeTrait
         /** @var array<string, ReflectionClass> $traitReflections */
         $traitReflections = [];
 
-        foreach ($traits as $traitName => $traitReflection) {
-            $traitClassNode              = ReflectionEngine::parseClass($traitName);
-            $traitReflections[$traitName] = new ReflectionClass($traitName, $traitClassNode);
-            $methodNodes                 = [];
+        foreach ($traits as $traitName => $existingReflection) {
+            $traitClassNode = ReflectionEngine::parseClass($traitName);
+            // Reuse the existing ReflectionClass if it's our AST-based implementation;
+            // otherwise (when the trait was already loaded and a native instance was stored)
+            // create a new AST-based ReflectionClass for use as $declaringClass.
+            $traitReflections[$traitName] = $existingReflection instanceof ReflectionClass
+                ? $existingReflection
+                : new ReflectionClass($traitName, $traitClassNode);
+            $methodNodes = [];
             foreach ($traitClassNode->stmts as $stmt) {
                 if ($stmt instanceof ClassMethod) {
                     // Mirror what collectFromClassNode does: propagate the file name
