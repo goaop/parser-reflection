@@ -15,15 +15,19 @@ namespace Go\ParserReflection\Traits;
 use Closure;
 use Go\ParserReflection\ReflectionClass;
 use Go\ParserReflection\ReflectionClassConstant;
+use Go\ParserReflection\ReflectionEngine;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionProperty;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use PhpParser\Modifiers;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
+use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
@@ -397,19 +401,26 @@ trait ReflectionClassLikeTrait
     {
         if (!isset($this->methods)) {
             $directMethods = ReflectionMethod::collectFromClassNode($this->classLikeNode, $this);
-            $parentMethods = $this->recursiveCollect(
-                function (\ReflectionClass $instance, bool $isParent): array {
-                    $reflectionMethods = [];
-                    foreach ($instance->getMethods() as $reflectionMethod) {
-                        if (!$isParent || !$reflectionMethod->isPrivate()) {
-                            $reflectionMethods[$reflectionMethod->name] = $reflectionMethod;
-                        }
-                    }
+            $traitMethods  = $this->collectTraitMethods();
 
-                    return $reflectionMethods;
+            // Collect from parent class and interfaces only (traits are handled by collectTraitMethods)
+            $inheritedMethods = [];
+            $parentClass = $this->getParentClass();
+            if ($parentClass) {
+                foreach ($parentClass->getMethods() as $reflectionMethod) {
+                    if (!$reflectionMethod->isPrivate()) {
+                        $inheritedMethods[$reflectionMethod->name] = $reflectionMethod;
+                    }
                 }
-            );
-            $methods = $directMethods + $parentMethods;
+            }
+            $interfaces = ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode);
+            foreach ($interfaces as $interface) {
+                foreach ($interface->getMethods() as $reflectionMethod) {
+                    $inheritedMethods[$reflectionMethod->name] = $reflectionMethod;
+                }
+            }
+
+            $methods = $directMethods + $traitMethods + $inheritedMethods;
 
             $this->methods = $methods;
         }
@@ -1063,6 +1074,144 @@ trait ReflectionClassLikeTrait
         }
 
         return $result;
+    }
+
+    /**
+     * Collects methods from all used traits, applying insteadof and alias adaptations.
+     *
+     * @return array<string, \ReflectionMethod>
+     */
+    private function collectTraitMethods(): array
+    {
+        $this->getTraits(); // Ensure traits and traitAdaptations are initialized
+        $traits = $this->traits ?? [];
+
+        if (empty($traits)) {
+            return [];
+        }
+
+        // The class that uses the traits — used as $className in ReflectionMethod so that the
+        // `class` property (and __debugInfo) match native PHP behaviour.
+        $usingClassName = $this->getName();
+
+        // Parse each trait's AST and build a map of ClassMethod nodes per trait.
+        // Also keep a ReflectionClass for the trait (used as $declaringClass).
+        /** @var array<string, array<string, ClassMethod>> $traitClassMethodNodes */
+        $traitClassMethodNodes = [];
+        /** @var array<string, ReflectionClass> $traitReflections */
+        $traitReflections = [];
+
+        foreach ($traits as $traitName => $traitReflection) {
+            $traitClassNode              = ReflectionEngine::parseClass($traitName);
+            $traitReflections[$traitName] = new ReflectionClass($traitName, $traitClassNode);
+            $methodNodes                 = [];
+            foreach ($traitClassNode->stmts as $stmt) {
+                if ($stmt instanceof ClassMethod) {
+                    // Mirror what collectFromClassNode does: propagate the file name
+                    $stmt->setAttribute('fileName', $traitClassNode->getAttribute('fileName'));
+                    $methodNodes[$stmt->name->toString()] = $stmt;
+                }
+            }
+            $traitClassMethodNodes[$traitName] = $methodNodes;
+        }
+
+        // Build exclusion map from Precedence (insteadof) adaptations:
+        // $excluded[traitFQN][methodName] = true means that method from that trait is excluded
+        $excluded = [];
+        foreach ($this->traitAdaptations as $adaptation) {
+            if ($adaptation instanceof TraitUseAdaptation\Precedence) {
+                $methodName = $adaptation->method->toString();
+                foreach ($adaptation->insteadof as $excludedTraitNameNode) {
+                    $resolvedName   = $excludedTraitNameNode->getAttribute('resolvedName');
+                    $excludedFQN    = $resolvedName instanceof FullyQualified
+                        ? $resolvedName->toString()
+                        : $excludedTraitNameNode->toString();
+                    $excluded[$excludedFQN][$methodName] = true;
+                }
+            }
+        }
+
+        // Collect trait methods respecting insteadof: first non-excluded method wins
+        $traitMethods = [];
+        foreach ($traitClassMethodNodes as $traitName => $methodNodes) {
+            foreach ($methodNodes as $methodName => $methodNode) {
+                if (isset($excluded[$traitName][$methodName])) {
+                    continue; // Excluded by insteadof
+                }
+                if (isset($traitMethods[$methodName])) {
+                    continue; // Already added from an earlier trait
+                }
+                $traitMethods[$methodName] = new ReflectionMethod(
+                    $usingClassName,
+                    $methodName,
+                    $methodNode,
+                    $traitReflections[$traitName]
+                );
+            }
+        }
+
+        // Apply Alias adaptations: add methods with new names and/or changed visibility
+        foreach ($this->traitAdaptations as $adaptation) {
+            if (!($adaptation instanceof TraitUseAdaptation\Alias)) {
+                continue;
+            }
+
+            $originalMethodName = $adaptation->method->toString();
+            $newName            = $adaptation->newName !== null ? $adaptation->newName->toString() : null;
+            $newModifier        = $adaptation->newModifier;
+
+            // Find the ClassMethod node for the original method
+            $originalMethodNode = null;
+            $declaringTraitName = null;
+
+            if ($adaptation->trait !== null) {
+                // Specific trait referenced — resolve to FQCN
+                $resolvedName = $adaptation->trait->getAttribute('resolvedName');
+                $traitFQN     = $resolvedName instanceof FullyQualified
+                    ? $resolvedName->toString()
+                    : $adaptation->trait->toString();
+
+                if (isset($traitClassMethodNodes[$traitFQN][$originalMethodName])) {
+                    $originalMethodNode = $traitClassMethodNodes[$traitFQN][$originalMethodName];
+                    $declaringTraitName = $traitFQN;
+                }
+            } else {
+                // No specific trait — search all traits in declaration order
+                foreach ($traitClassMethodNodes as $traitFQN => $methodNodes) {
+                    if (isset($methodNodes[$originalMethodName])) {
+                        $originalMethodNode = $methodNodes[$originalMethodName];
+                        $declaringTraitName = $traitFQN;
+                        break;
+                    }
+                }
+            }
+
+            if ($originalMethodNode === null || $declaringTraitName === null) {
+                continue;
+            }
+
+            // Clone the AST node and apply name/visibility changes
+            $aliasMethodNode  = clone $originalMethodNode;
+            $targetMethodName = $newName ?? $originalMethodName;
+
+            if ($newName !== null) {
+                $aliasMethodNode->name = new Identifier($newName);
+            }
+            if ($newModifier !== null) {
+                // Clear existing visibility bits and apply the new modifier
+                $aliasMethodNode->flags =
+                    ($aliasMethodNode->flags & ~Modifiers::VISIBILITY_MASK) | $newModifier;
+            }
+
+            $traitMethods[$targetMethodName] = new ReflectionMethod(
+                $usingClassName,
+                $targetMethodName,
+                $aliasMethodNode,
+                $traitReflections[$declaringTraitName]
+            );
+        }
+
+        return $traitMethods;
     }
 
     /**
