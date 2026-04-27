@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -13,14 +15,18 @@ namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\NodeVisitor\GeneratorDetector;
 use Go\ParserReflection\NodeVisitor\StaticVariablesCollector;
+use Go\ParserReflection\ReflectionMethod;
 use Go\ParserReflection\ReflectionParameter;
-use Go\ParserReflection\ReflectionType;
+use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeTraverser;
+use ReflectionException;
+use ReflectionExtension;
 
 /**
  * General trait for all function-like reflections
@@ -30,87 +36,106 @@ trait ReflectionFunctionLikeTrait
     use InitializationTrait;
 
     /**
-     * @var FunctionLike
+     * Returns the name of the class this function/method belongs to, for self/parent type resolution.
+     * Overridden in ReflectionMethod; returns null for standalone functions.
      */
-    protected $functionLikeNode;
+    protected function getDeclaringClassNameForTypes(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Returns the parent class name for type resolution, or null if none.
+     * Overridden in ReflectionMethod; returns null for standalone functions.
+     */
+    protected function getParentClassNameForTypes(): ?string
+    {
+        return null;
+    }
+
+    protected FunctionLike|Function_|ClassMethod $functionLikeNode;
 
     /**
      * Namespace name
+     */
+    protected string $namespaceName = '';
+
+    /**
+     * @var ReflectionParameter[]
+     */
+    protected array $parameters;
+
+    /**
+     * {@inheritDoc}
      *
-     * @var string
+     * @return \ReflectionClass<object>|null
      */
-    protected $namespaceName = '';
-
-    /**
-     * @var array|ReflectionParameter[]
-     */
-    protected $parameters;
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getClosureScopeClass()
+    public function getClosureScopeClass(): ?\ReflectionClass
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureScopeClass');
+        return parent::getClosureScopeClass();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getClosureThis()
+    public function getClosureThis(): ?object
     {
         $this->initializeInternalReflection();
 
-        return forward_static_call('parent::getClosureThis');
+        return parent::getClosureThis();
     }
 
-    public function getDocComment()
+    public function getDocComment(): string|false
     {
         $docComment = $this->functionLikeNode->getDocComment();
 
         return $docComment ? $docComment->getText() : false;
     }
 
-    public function getEndLine()
+    public function getEndLine(): int|false
     {
-        return $this->functionLikeNode->getAttribute('endLine');
+        $endLine = $this->functionLikeNode->getAttribute('endLine');
+
+        return is_int($endLine) ? $endLine : false;
     }
 
-    public function getExtension()
+    public function getExtension(): ?ReflectionExtension
     {
         return null;
     }
 
-    public function getExtensionName()
+    public function getExtensionName(): string|false
     {
         return false;
     }
 
-    public function getFileName()
+    public function getFileName(): string|false
     {
-        return $this->functionLikeNode->getAttribute('fileName');
+        $fileName = $this->functionLikeNode->getAttribute('fileName');
+
+        return is_string($fileName) ? $fileName : false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getName()
+    public function getName(): string
     {
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
-            $functionName = $this->functionLikeNode->name;
+            $functionName = $this->functionLikeNode->name->toString();
 
             return $this->namespaceName ? $this->namespaceName . '\\' . $functionName : $functionName;
         }
 
-        return false;
+        return '';
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getNamespaceName()
+    public function getNamespaceName(): string
     {
         return $this->namespaceName;
     }
@@ -119,10 +144,8 @@ trait ReflectionFunctionLikeTrait
      * Get the number of parameters that a function defines, both optional and required.
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.getnumberofparameters.php
-     *
-     * @return int
      */
-    public function getNumberOfParameters()
+    public function getNumberOfParameters(): int
     {
         return count($this->functionLikeNode->getParams());
     }
@@ -131,10 +154,8 @@ trait ReflectionFunctionLikeTrait
      * Get the number of required parameters that a function defines.
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.getnumberofrequiredparameters.php
-     *
-     * @return int
      */
-    public function getNumberOfRequiredParameters()
+    public function getNumberOfRequiredParameters(): int
     {
         $requiredParameters = 0;
         foreach ($this->getParameters() as $parameter) {
@@ -149,19 +170,18 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function getParameters()
+    public function getParameters(): array
     {
         if (!isset($this->parameters)) {
             $parameters = [];
 
             foreach ($this->functionLikeNode->getParams() as $parameterIndex => $parameterNode) {
                 $reflectionParameter = new ReflectionParameter(
-                    $this->getName(),
-                    $parameterNode->name,
                     $parameterNode,
                     $parameterIndex,
                     $this
                 );
+
                 $parameters[] = $reflectionParameter;
             }
 
@@ -174,58 +194,63 @@ trait ReflectionFunctionLikeTrait
     /**
      * Gets the specified return type of a function
      *
-     * @return \ReflectionType
-     *
      * @link http://php.net/manual/en/reflectionfunctionabstract.getreturntype.php
      */
-    public function getReturnType()
+    public function getReturnType(): \ReflectionNamedType|\ReflectionUnionType|\ReflectionIntersectionType|null
     {
-        $isBuiltin  = false;
         $returnType = $this->functionLikeNode->getReturnType();
-        $isNullable = $returnType instanceof NullableType;
+        if ($this->hasReturnType() && $returnType !== null) {
+            $selfClassName   = $this->getDeclaringClassNameForTypes();
+            $parentClassName = $this->getParentClassNameForTypes();
 
-        if ($isNullable) {
-            $returnType = $returnType->type;
-        }
-        if (is_object($returnType)) {
-            $returnType = $returnType->toString();
-        } elseif (is_string($returnType)) {
-            $isBuiltin = true;
-        } else {
-            return null;
+            $typeResolver = new TypeExpressionResolver($selfClassName, $parentClassName);
+            $typeResolver->process($returnType, false);
+
+            return $typeResolver->getType();
         }
 
-        return new ReflectionType($returnType, $isNullable, $isBuiltin);
+        return null;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getShortName()
+    public function getShortName(): string
     {
         if ($this->functionLikeNode instanceof Function_ || $this->functionLikeNode instanceof ClassMethod) {
-            return $this->functionLikeNode->name;
+            return $this->functionLikeNode->name->toString();
         }
 
-        return false;
+        throw new ReflectionException('unable to get short name');
     }
 
-    public function getStartLine()
+    public function getStartLine(): int|false
     {
-        return $this->functionLikeNode->getAttribute('startLine');
+        if ($this->functionLikeNode->getAttrGroups() !== []) {
+            $attrGroups = $this->functionLikeNode->getAttrGroups();
+            $lastAttrGroupsEndLine = end($attrGroups)->getAttribute('endLine');
+
+            return is_int($lastAttrGroupsEndLine) ? $lastAttrGroupsEndLine + 1 : false;
+        }
+
+        $startLine = $this->functionLikeNode->getAttribute('startLine');
+
+        return is_int($startLine) ? $startLine : false;
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @return array<string, mixed>
      */
-    public function getStaticVariables()
+    public function getStaticVariables(): array
     {
-        $nodeTraverser      = new NodeTraverser(false);
+        $nodeTraverser      = new NodeTraverser();
         $variablesCollector = new StaticVariablesCollector($this);
         $nodeTraverser->addVisitor($variablesCollector);
 
         /* @see https://github.com/nikic/PHP-Parser/issues/235 */
-        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: []);
 
         return $variablesCollector->getStaticVariables();
     }
@@ -233,11 +258,10 @@ trait ReflectionFunctionLikeTrait
     /**
      * Checks if the function has a specified return type
      *
-     * @return bool
      *
      * @link http://php.net/manual/en/reflectionfunctionabstract.hasreturntype.php
      */
-    public function hasReturnType()
+    public function hasReturnType(): bool
     {
         $returnType = $this->functionLikeNode->getReturnType();
 
@@ -247,7 +271,7 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function inNamespace()
+    public function inNamespace(): bool
     {
         return !empty($this->namespaceName);
     }
@@ -255,7 +279,7 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isClosure()
+    public function isClosure(): bool
     {
         return $this->functionLikeNode instanceof Closure;
     }
@@ -263,23 +287,23 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isDeprecated()
+    public function isDeprecated(): bool
     {
-        // userland method/function/closure can not be deprecated
+        // user-land method/function/closure can not be deprecated
         return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isGenerator()
+    public function isGenerator(): bool
     {
-        $nodeTraverser = new NodeTraverser(false);
+        $nodeTraverser = new NodeTraverser();
         $nodeDetector  = new GeneratorDetector();
         $nodeTraverser->addVisitor($nodeDetector);
 
         /* @see https://github.com/nikic/PHP-Parser/issues/235 */
-        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: array());
+        $nodeTraverser->traverse($this->functionLikeNode->getStmts() ?: []);
 
         return $nodeDetector->isGenerator();
     }
@@ -287,25 +311,23 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function isInternal()
+    public function isInternal(): bool
     {
-        // never can be an internal method
         return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isUserDefined()
+    public function isUserDefined(): bool
     {
-        // always defined by user, because we parse the source code
         return true;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isVariadic()
+    public function isVariadic(): bool
     {
         foreach ($this->getParameters() as $parameter) {
             if ($parameter->isVariadic()) {
@@ -319,7 +341,7 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      */
-    public function returnsReference()
+    public function returnsReference(): bool
     {
         return $this->functionLikeNode->returnsByRef();
     }

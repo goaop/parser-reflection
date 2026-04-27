@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -10,7 +12,7 @@
 
 namespace Go\ParserReflection\NodeVisitor;
 
-use PhpParser\Node\Name\FullyQualified;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\NodeVisitorAbstract;
@@ -44,7 +46,11 @@ class RootNamespaceNormalizer extends NodeVisitorAbstract
             }
         }
         // Wrap all statements into the namespace block
-        $globalNamespaceNode = new Namespace_(new FullyQualified(''), array_slice($nodes, $lastDeclareOffset));
+        $stmts = array_values(array_filter(
+            array_slice($nodes, $lastDeclareOffset),
+            static fn ($node) => $node instanceof Stmt
+        ));
+        $globalNamespaceNode = new Namespace_(null, $stmts);
         // Replace top-level nodes with namespaced node
         array_splice($nodes, $lastDeclareOffset, count($nodes), [$globalNamespaceNode]);
 

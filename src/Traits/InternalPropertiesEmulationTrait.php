@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -17,10 +19,8 @@ trait InternalPropertiesEmulationTrait
 {
     /**
      * Magic method that should be defined to provide an info about internal properties
-     *
-     * @return array
      */
-    abstract public function ___debugInfo();
+    abstract public function __debugInfo(): array;
 
     /**
      * Magic implementation of properties
@@ -29,9 +29,9 @@ trait InternalPropertiesEmulationTrait
      *
      * @return null|mixed
      */
-    public function __get($propertyName)
+    public function __get(string $propertyName)
     {
-        $internalInfo = $this->___debugInfo();
+        $internalInfo = $this->__debugInfo();
         if (!isset($internalInfo[$propertyName])) {
             $className = get_class($this);
             trigger_error("Undefined property {$className}::\${$propertyName}");

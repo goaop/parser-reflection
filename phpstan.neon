@@ -1,0 +1,19 @@
+parameters:
+  level: 10
+  paths:
+    - src
+  ignoreErrors:
+    # Both classes are final, so "might have hooks in a subclass" is a false positive
+    - identifier: unset.possiblyHookedProperty
+      path: src/ReflectionFunction.php
+    - identifier: unset.possiblyHookedProperty
+      path: src/ReflectionMethod.php
+    # Class names from the AST are semantically class-strings by construction (they come from
+    # parsed PHP class declarations), but PHPStan cannot verify this without autoloading, which
+    # would violate the library's contract of reflecting code without loading classes.
+    - identifier: return.type
+      path: src/Traits/ReflectionClassLikeTrait.php
+      message: '#resolveAsClassString#'
+    - identifier: return.type
+      path: src/Traits/AttributeResolverTrait.php
+      message: '#resolveAttributeClassName#'

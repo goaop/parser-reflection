@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace Go\ParserReflection\Stub {
 
@@ -6,7 +7,7 @@ namespace Go\ParserReflection\Stub {
 
     function simpleIntArg(int $value) {}
     function simpleArrayOut() : array {}
-    function optionalCallableArg(callable $argument = null) : callable {}
+    function optionalCallableArg(callable $argument) : callable {}
     function objectOut() : \Exception
     {
         return new \Exception();
@@ -15,5 +16,5 @@ namespace Go\ParserReflection\Stub {
     {
     }
 
-    function builtInArgs(int $a, float $b, bool $c, string $d, object $e) : integer {}
+    function builtInArgs(int $a, float $b, bool $c, string $d, object $e) : int {}
 }

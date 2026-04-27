@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -17,66 +19,62 @@ use PhpParser\Node\Stmt\Namespace_;
 
 /**
  * AST-based reflector for the source file
+ * @see \Go\ParserReflection\ReflectionFileTest
  */
 class ReflectionFile
 {
 
     /**
-     * Name of the file for reflectino
-     *
-     * @var string
+     * Name of the file for reflection
      */
-    protected $fileName;
+    protected string $fileName;
 
     /**
      * List of namespaces in the file
      *
-     * @var ReflectionFileNamespace[]|array
+     * @var ReflectionFileNamespace[]
      */
-    protected $fileNamespaces;
+    protected array $fileNamespaces;
 
     /**
      * Top-level nodes for the file
      *
      * @var Node[]
      */
-    private $topLevelNodes;
+    private array $topLevelNodes;
 
     /**
      * ReflectionFile constructor.
      *
-     * @param string $fileName Name of the file to reflect
-     * @param null|array|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
+     * @param null|Node[] $topLevelNodes Optional corresponding list of AST nodes for that file
      */
-    public function __construct($fileName, $topLevelNodes = null)
+    public function __construct(string $fileName, ?array $topLevelNodes = null)
     {
-        $fileName            = PathResolver::realpath($fileName);
-        $this->fileName      = $fileName;
-        $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($fileName);
+        $resolvedFileName    = PathResolver::realpath($fileName);
+        $this->fileName      = is_string($resolvedFileName) ? $resolvedFileName : $fileName;
+        $this->topLevelNodes = $topLevelNodes ?: ReflectionEngine::parseFile($this->fileName);
     }
 
     /**
      * Returns a namespace from the file or false if no such a namespace
      *
-     * @param string $namespaceName
-     *
-     * @return bool|ReflectionFileNamespace
+     * @throws ReflectionException If namespace doesn't exists in the file
      */
-    public function getFileNamespace($namespaceName)
+    public function getFileNamespace(string $namespaceName): ReflectionFileNamespace
     {
         if ($this->hasFileNamespace($namespaceName)) {
             return $this->fileNamespaces[$namespaceName];
         }
 
-        return false;
+        throw new ReflectionException("Could not find the namespace " . $namespaceName . " in the file " . $this->fileName);
     }
 
     /**
      * Gets the list of namespaces in the file
      *
-     * @return array|ReflectionFileNamespace[]
+     * @return ReflectionFileNamespace[]
      */
-    public function getFileNamespaces()
+    public function getFileNamespaces(): array
     {
         if (!isset($this->fileNamespaces)) {
             $this->fileNamespaces = $this->findFileNamespaces();
@@ -87,22 +85,26 @@ class ReflectionFile
 
     /**
      * Returns the name of current reflected file
-     *
-     * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->fileName;
     }
 
     /**
-     * Returns the presence of namespace in the file
+     * Returns an AST-nodes for file
      *
-     * @param string $namespaceName Namespace to check
-     *
-     * @return bool
+     * @return Node[]
      */
-    public function hasFileNamespace($namespaceName)
+    public function getNodes(): array
+    {
+        return $this->topLevelNodes;
+    }
+
+    /**
+     * Returns the presence of namespace in the file
+     */
+    public function hasFileNamespace(string $namespaceName): bool
     {
         $namespaces = $this->getFileNamespaces();
 
@@ -111,10 +113,8 @@ class ReflectionFile
 
     /**
      * Checks if the current file is in strict mode
-     *
-     * @return bool
      */
-    public function isStrictMode()
+    public function isStrictMode(): bool
     {
         // declare statement for the strict_types can be only top-level node
         $topLevelNode = reset($this->topLevelNodes);
@@ -123,8 +123,11 @@ class ReflectionFile
         }
 
         $declareStatement = reset($topLevelNode->declares);
-        $isStrictTypeKey  = $declareStatement->key === 'strict_types';
-        $isScalarValue    = $declareStatement->value instanceof Node\Scalar\LNumber;
+        if ($declareStatement === false) {
+            return false;
+        }
+        $isStrictTypeKey  = $declareStatement->key->toString() === 'strict_types';
+        $isScalarValue    = $declareStatement->value instanceof Node\Scalar\Int_;
         $isStrictMode     = $isStrictTypeKey && $isScalarValue && $declareStatement->value->value === 1;
 
         return $isStrictMode;
@@ -133,11 +136,11 @@ class ReflectionFile
     /**
      * Searches for file namespaces in the given AST
      *
-     * @return array|ReflectionFileNamespace[]
+     * @return ReflectionFileNamespace[]
      */
-    private function findFileNamespaces()
+    private function findFileNamespaces(): array
     {
-        $namespaces = array();
+        $namespaces = [];
 
         // namespaces can be only top-level nodes, so we can scan them directly
         foreach ($this->topLevelNodes as $topLevelNode) {

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -13,9 +14,10 @@ namespace Go\ParserReflection\Stub;
 function miscScalarParameters(
     int $acceptsInteger,
     string $acceptsString,
-    float $acceptsFloat = \INF,
-    boolean $acceptsBool,
+    bool $acceptsBool,
     int $acceptsVariadicInteger,
+    array $acceptsArray = ['some' => ['value' => 'for', 'array' => 'to dump']],
+    float $acceptsFloat = \INF,
     string ...$acceptsDefaultString
 ) {
 }

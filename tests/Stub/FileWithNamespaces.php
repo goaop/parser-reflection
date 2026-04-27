@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * Namespace documentation block
@@ -7,6 +8,7 @@ namespace Go\ParserReflection\Stub
 {
     const START_MARKER = __LINE__; // Do not move it anywhere
 
+    use SomeClass\WithoutAlias;
     use ReflectionClass as UnusedReflectionClass;
     use PhpParser\Node as UnusedNode, PhpParser\Node\Expr as UnusedNodeExpr;
 

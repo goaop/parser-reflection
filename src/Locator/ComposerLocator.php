@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -17,43 +19,41 @@ use Go\ParserReflection\ReflectionException;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
+ * @see \Go\ParserReflection\Locator\ComposerLocatorTest
  */
 class ComposerLocator implements LocatorInterface
 {
-    /**
-     * @var ClassLoader
-     */
-    private $loader;
 
-    public function __construct(ClassLoader $loader = null)
+    private ClassLoader $loader;
+
+    public function __construct(?ClassLoader $composerLoader = null)
     {
-        if (!$loader) {
+        if ($composerLoader === null) {
             $loaders = spl_autoload_functions();
             foreach ($loaders as $loader) {
                 if (is_array($loader) && $loader[0] instanceof ClassLoader) {
-                    $loader = $loader[0];
+                    $composerLoader = $loader[0];
                     break;
                 }
             }
-            if (!$loader) {
-                throw new ReflectionException("Can not found a correct composer loader");
+            if ($composerLoader === null) {
+                throw new ReflectionException('Can not found a correct composer loader');
             }
         }
-        $this->loader = $loader;
+        $this->loader = $composerLoader;
     }
 
     /**
      * Returns a path to the file for given class name
      *
      * @param string $className Name of the class
-     *
-     * @return string|false Path to the file with given class or false if not found
-     */
-    public function locateClass($className)
+     **/
+    public function locateClass(string $className): false|string
     {
-        $filePath = $this->loader->findFile($className);
+        $filePath = $this->loader->findFile(ltrim($className, '\\'));
         if (!empty($filePath)) {
-            $filePath = PathResolver::realpath($filePath);
+            $resolvedPath = PathResolver::realpath($filePath);
+            $filePath = is_string($resolvedPath) ? $resolvedPath : false;
         }
 
         return $filePath;

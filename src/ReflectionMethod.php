@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -10,49 +11,51 @@
 
 namespace Go\ParserReflection;
 
+use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionFunctionLikeTrait;
+use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
+use PhpParser\Node\UnionType;
+use Reflection;
 use ReflectionMethod as BaseReflectionMethod;
 
 /**
  * AST-based reflection for the method in a class
+ * @see \Go\ParserReflection\ReflectionMethodTest
  */
-class ReflectionMethod extends BaseReflectionMethod
+final class ReflectionMethod extends BaseReflectionMethod
 {
-    use ReflectionFunctionLikeTrait, InternalPropertiesEmulationTrait;
+    use InternalPropertiesEmulationTrait;
+    use ReflectionFunctionLikeTrait;
+    use AttributeResolverTrait;
 
     /**
      * Name of the class
-     *
-     * @var string
      */
-    private $className;
+    private string $className;
 
     /**
      * Optional declaring class reference
-     *
-     * @var ReflectionClass
      */
-    private $declaringClass;
+    private ?ReflectionClass $declaringClass;
 
     /**
      * Initializes reflection instance for the method node
      *
-     * @param string $className Name of the class
-     * @param string $methodName Name of the method
-     * @param ClassMethod $classMethodNode AST-node for method
-     * @param ReflectionClass $declaringClass Optional declaring class
+     * @param ?ClassMethod     $classMethodNode AST-node for method
+     * @param ?ReflectionClass $declaringClass  Optional declaring class
      */
     public function __construct(
-        $className,
-        $methodName,
-        ClassMethod $classMethodNode = null,
-        ReflectionClass $declaringClass = null
+        string $className,
+        string $methodName,
+        ?ClassMethod $classMethodNode = null,
+        ?ReflectionClass $declaringClass = null
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
-        $this->className        = $className;
+        $this->className        = ltrim($className, '\\');
         $this->declaringClass   = $declaringClass;
         $this->functionLikeNode = $classMethodNode ?: ReflectionEngine::parseClassMethod($className, $methodName);
 
@@ -60,13 +63,43 @@ class ReflectionMethod extends BaseReflectionMethod
         unset($this->name, $this->class);
     }
 
+    protected function getDeclaringClassNameForTypes(): string
+    {
+        return $this->getDeclaringClass()->getName();
+    }
+
+    protected function getParentClassNameForTypes(): ?string
+    {
+        $parent = $this->getDeclaringClass()->getParentClass();
+
+        return ($parent !== false) ? $parent->getName() : null;
+    }
+
+    /**
+     * Returns an AST-node for method
+     */
+    public function getNode(): ClassMethod
+    {
+        return $this->getClassMethodNode();
+    }
+
+    /**
+     * Returns the AST node that contains attribute groups for this method.
+     */
+    protected function getNodeForAttributes(): ClassMethod
+    {
+        return $this->getClassMethodNode();
+    }
+
     /**
      * Emulating original behaviour of reflection
+     *
+     * @return array<string, string>
      */
-    public function ___debugInfo()
+    public function __debugInfo(): array
     {
         return [
-            'name'  => $this->getClassMethodNode()->name,
+            'name'  => $this->getClassMethodNode()->name->toString(),
             'class' => $this->className
         ];
     }
@@ -75,53 +108,70 @@ class ReflectionMethod extends BaseReflectionMethod
      * Returns the string representation of the Reflection method object.
      *
      * @link http://php.net/manual/en/reflectionmethod.tostring.php
-     *
-     * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
-        $hasReturnType    = $this->hasReturnType();
+        // Internally $this->getReturnType() !== null is the same as $this->hasReturnType()
+        $returnType       = $this->getReturnType();
+        $hasReturnType    = $returnType !== null;
         $paramsNeeded     = $hasReturnType || $this->getNumberOfParameters() > 0;
         $paramFormat      = $paramsNeeded ? "\n\n  - Parameters [%d] {%s\n  }" : '';
         $returnFormat     = $hasReturnType ? "\n  - Return [ %s ]" : '';
         $methodParameters = $this->getParameters();
-        try {
-            $prototype = $this->getPrototype();
-        } catch (\ReflectionException $e) {
-            $prototype = null;
+
+        $protoString = '';
+        if ($this->hasPrototype()) {
+            $prototype      = $this->getPrototype();
+            $prototypeClass = $prototype->getDeclaringClass()->name;
+            $parentClass    = $this->getDeclaringClass()->getParentClass();
+            // If we have the same method in parent, then we override it as well, otherwise it is prototype
+            $overrideProto = $parentClass && $parentClass->hasMethod($this->getName());
+            if ($overrideProto) {
+                $protoString .= ", overwrites {$prototypeClass}";
+            }
+            $protoString .= ", prototype {$prototypeClass}";
         }
-        $prototypeClass = $prototype ? $prototype->getDeclaringClass()->name : '';
+
+        $fileString = '';
+        if ($this->getFileName()) {
+            $fileString .= "\n  @@ " . $this->getFileName();
+            $fileString .= ' ' . $this->getStartLine();
+            $fileString .= ' - ' . $this->getEndLine();
+        }
 
         $paramString = '';
-        $identation  = str_repeat(' ', 4);
+        $indentation = str_repeat(' ', 4);
         foreach ($methodParameters as $methodParameter) {
-            $paramString .= "\n{$identation}" . $methodParameter;
+            $paramString .= "\n{$indentation}" . $methodParameter;
         }
 
         return sprintf(
-            "%sMethod [ <user%s%s%s>%s%s%s %s method %s ] {\n  @@ %s %d - %d{$paramFormat}{$returnFormat}\n}\n",
+            "%sMethod [ <%s%s%s>%s%s%s %s method %s ] {%s{$paramFormat}{$returnFormat}\n}\n",
             $this->getDocComment() ? $this->getDocComment() . "\n" : '',
-            $prototype ? ", overwrites {$prototypeClass}, prototype {$prototypeClass}" : '',
+            $this->isInternal() ? 'internal' : 'user',
+            $protoString,
             $this->isConstructor() ? ', ctor' : '',
-            $this->isDestructor() ? ', dtor' : '',
             $this->isFinal() ? ' final' : '',
             $this->isStatic() ? ' static' : '',
             $this->isAbstract() ? ' abstract' : '',
-            join(' ', \Reflection::getModifierNames($this->getModifiers() & 1792)),
+            implode(
+                ' ',
+                Reflection::getModifierNames(
+                    $this->getModifiers() & (self::IS_PUBLIC | self::IS_PROTECTED | self::IS_PRIVATE)
+                )
+            ),
             $this->getName(),
-            $this->getFileName(),
-            $this->getStartLine(),
-            $this->getEndLine(),
+            $fileString,
             count($methodParameters),
             $paramString,
-            $hasReturnType ? ReflectionType::convertToDisplayType($this->getReturnType()) : ''
+            $returnType ? ReflectionType::convertToDisplayType($returnType) : ''
         );
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getClosure($object)
+    public function getClosure($object = null): \Closure
     {
         $this->initializeInternalReflection();
 
@@ -130,16 +180,43 @@ class ReflectionMethod extends BaseReflectionMethod
 
     /**
      * {@inheritDoc}
+     *
+     * @return \ReflectionClass<object>
      */
-    public function getDeclaringClass()
+    public function getDeclaringClass(): \ReflectionClass
     {
-        return isset($this->declaringClass) ? $this->declaringClass : new ReflectionClass($this->className);
+        return $this->declaringClass ?? new ReflectionClass($this->className);
+    }
+
+    /**
+     * Checks if this method is an Enum magic method (cases/from/tryFrom).
+     */
+    private function isEnumMagicMethod(): bool
+    {
+        return $this->getDeclaringClass()->isEnum()
+            && in_array($this->getName(), ['cases', 'tryFrom', 'from'], true);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function getModifiers()
+    public function isInternal(): bool
+    {
+        return $this->isEnumMagicMethod();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isUserDefined(): bool
+    {
+        return !$this->isEnumMagicMethod();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getModifiers(): int
     {
         $modifiers = 0;
         if ($this->isPublic()) {
@@ -167,35 +244,59 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function getPrototype()
+    public function getPrototype(): \ReflectionMethod
     {
+        $allKnownParents = [];
+
         $parent = $this->getDeclaringClass()->getParentClass();
-        if (!$parent) {
-            throw new ReflectionException("No prototype");
+        if ($parent instanceof \ReflectionClass) {
+            $allKnownParents[] = $parent;
+        }
+        $allKnownParents = array_merge($allKnownParents, $this->getDeclaringClass()->getInterfaces());
+        $methodName      = $this->getName();
+        foreach ($allKnownParents as $knownParent) {
+            if ($knownParent->hasMethod($methodName)) {
+                return $knownParent->getMethod($methodName);
+            }
         }
 
-        $prototypeMethod = $parent->getMethod($this->getName());
-        if (!$prototypeMethod) {
-            throw new ReflectionException("No prototype");
+        throw new ReflectionException("Method " . $this->getDeclaringClass()->getName() . "::" . $methodName . "() does not have prototype");
+    }
+
+    public function hasPrototype(): bool
+    {
+        $allKnownParents = [];
+
+        $parent = $this->getDeclaringClass()->getParentClass();
+        if ($parent instanceof \ReflectionClass) {
+            $allKnownParents[] = $parent;
+        }
+        $allKnownParents = array_merge($allKnownParents, $this->getDeclaringClass()->getInterfaces());
+        foreach ($allKnownParents as $knownParent) {
+            if ($knownParent->hasMethod($this->getName())) {
+                return true;
+            }
         }
 
-        return $prototypeMethod;
+        return false;
     }
 
     /**
      * {@inheritDoc}
      */
-    public function invoke($object, $args = null)
+    public function invoke(?object $object, mixed ...$args): mixed
     {
         $this->initializeInternalReflection();
 
-        return call_user_func_array('parent::invoke', func_get_args());
+        return parent::invoke($object, ...$args);
     }
 
     /**
      * {@inheritDoc}
+     *
+     * @param array<int, mixed> $args
      */
-    public function invokeArgs($object, array $args)
+    public function invokeArgs(?object $object, array $args): mixed
     {
         $this->initializeInternalReflection();
 
@@ -205,7 +306,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isAbstract()
+    public function isAbstract(): bool
     {
         return $this->getDeclaringClass()->isInterface() || $this->getClassMethodNode()->isAbstract();
     }
@@ -213,23 +314,23 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isConstructor()
+    public function isConstructor(): bool
     {
-        return $this->getClassMethodNode()->name == '__construct';
+        return $this->getClassMethodNode()->name->toLowerString() === '__construct';
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isDestructor()
+    public function isDestructor(): bool
     {
-        return $this->getClassMethodNode()->name == '__destruct';
+        return $this->getClassMethodNode()->name->toLowerString() === '__destruct';
     }
 
     /**
      * {@inheritDoc}
      */
-    public function isFinal()
+    public function isFinal(): bool
     {
         return $this->getClassMethodNode()->isFinal();
     }
@@ -237,7 +338,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPrivate()
+    public function isPrivate(): bool
     {
         return $this->getClassMethodNode()->isPrivate();
     }
@@ -245,7 +346,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isProtected()
+    public function isProtected(): bool
     {
         return $this->getClassMethodNode()->isProtected();
     }
@@ -253,7 +354,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isPublic()
+    public function isPublic(): bool
     {
         return $this->getClassMethodNode()->isPublic();
     }
@@ -261,7 +362,7 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function isStatic()
+    public function isStatic(): bool
     {
         return $this->getClassMethodNode()->isStatic();
     }
@@ -269,11 +370,9 @@ class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      */
-    public function setAccessible($accessible)
+    #[\Deprecated("Usage of ReflectionMethod::setAccessible() has no effect.", since: "8.1")]
+    public function setAccessible(bool $accessible): void
     {
-        $this->initializeInternalReflection();
-
-        parent::setAccessible($accessible);
     }
 
     /**
@@ -282,9 +381,9 @@ class ReflectionMethod extends BaseReflectionMethod
      * @param ClassLike $classLikeNode Class-like node
      * @param ReflectionClass $reflectionClass Reflection of the class
      *
-     * @return array|ReflectionMethod[]
+     * @return array<string, ReflectionMethod>
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass)
+    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass): array
     {
         $methods = [];
 
@@ -292,7 +391,7 @@ class ReflectionMethod extends BaseReflectionMethod
             if ($classLevelNode instanceof ClassMethod) {
                 $classLevelNode->setAttribute('fileName', $classLikeNode->getAttribute('fileName'));
 
-                $methodName = $classLevelNode->name;
+                $methodName = $classLevelNode->name->toString();
                 $methods[$methodName] = new ReflectionMethod(
                     $reflectionClass->name,
                     $methodName,
@@ -302,26 +401,95 @@ class ReflectionMethod extends BaseReflectionMethod
             }
         }
 
+        // Enum has special `cases` (and `from`/`tryFrom` for Backed Enums) methods
+        if ($classLikeNode instanceof Enum_) {
+            $methods['cases'] = self::createEnumCasesMethod($reflectionClass);
+            // Backed enum methods emulation
+            if (isset($classLikeNode->scalarType)) {
+                $methods['from']    = self::createEnumFromMethod($reflectionClass);
+                $methods['tryFrom'] = self::createEnumTryFromMethod($reflectionClass);
+            }
+        }
+
         return $methods;
     }
 
     /**
      * Implementation of internal reflection initialization
-     *
-     * @return void
      */
-    protected function __initialize()
+    protected function __initialize(): void
     {
         parent::__construct($this->className, $this->getName());
     }
 
     /**
-     * Returns ClassMethod node to prevent all possible type checks with instanceof
-     *
-     * @return ClassMethod
+     * Ad-Hoc constructor of Enum `cases` method, which emulates PHP behaviour
      */
-    private function getClassMethodNode()
+    private static function createEnumCasesMethod(ReflectionClass $reflectionClass): ReflectionMethod
     {
+        $casesMethodNode = (new \PhpParser\Builder\Method('cases'))
+            ->makeStatic()
+            ->makePublic()
+            ->setReturnType('array')
+            ->getNode();
+        
+        return new self(
+            $reflectionClass->name,
+            'cases',
+            $casesMethodNode,
+            $reflectionClass
+        );
+    }
+
+    private static function createEnumFromMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    {
+        $valueParam = (new \PhpParser\Builder\Param('value'))
+            ->setType(new UnionType([new Identifier('string'), new Identifier('int')]))
+            ->getNode();
+        $fromMethodNode = (new \PhpParser\Builder\Method('from'))
+            ->makeStatic()
+            ->makePublic()
+            ->addParam($valueParam)
+            ->setReturnType('static')
+            ->getNode();
+
+        return new self(
+            $reflectionClass->name,
+            'from',
+            $fromMethodNode,
+            $reflectionClass
+        );
+    }
+
+    private static function createEnumTryFromMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    {
+        $valueParam = (new \PhpParser\Builder\Param('value'))
+            ->setType(new UnionType([new Identifier('string'), new Identifier('int')]))
+            ->getNode();
+        $fromMethodNode = (new \PhpParser\Builder\Method('tryFrom'))
+            ->makeStatic()
+            ->makePublic()
+            ->addParam($valueParam)
+            ->setReturnType('?static')
+            ->getNode();
+
+        return new self(
+            $reflectionClass->name,
+            'tryFrom',
+            $fromMethodNode,
+            $reflectionClass
+        );
+    }
+    
+    /**
+     * Returns ClassMethod node to prevent all possible type checks with instanceof
+     */
+    private function getClassMethodNode(): ClassMethod
+    {
+        if (!$this->functionLikeNode instanceof ClassMethod) {
+            throw new \LogicException('Expected ClassMethod node');
+        }
+
         return $this->functionLikeNode;
     }
 }

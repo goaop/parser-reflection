@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -19,9 +20,7 @@ interface LocatorInterface
     /**
      * Returns a path to the file for given class name
      *
-     * @param string $className Name of the class
-     *
-     * @return string|false Path to the file with given class or false if not found
+     * @param string $className Name of the class (with or without leading '\' FQCN)
      */
-    public function locateClass($className);
+    public function locateClass(string $className): false|string;
 }

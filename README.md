@@ -1,17 +1,30 @@
 Parser Reflection API Library
 -----------------
 
-Parser Reflection API library provides a set of classes that extend original internal Reflection classes, but powered by [PHP-Parser](https://github.com/nikic/PHP-Parser) library thus allowing to create a reflection instance without loading classes into the memory.
+## 🔍 Static Code Analysis Meets Reflection
 
-This library can be used for analysing the source code for PHP versions 5.5, 5.6, 7.0; for automatic proxy creation and much more.
+**Parser Reflection API** brings the power of PHP's Reflection API to static code analysis. Built on top of [nikic/php-parser](https://github.com/nikic/PHP-Parser), this library lets you introspect classes, methods, and properties **without ever loading them into memory**.
 
-[![Build Status](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/build.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/build-status/master)
-[![Code Coverage](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
+### ✨ Key Features
+
+🧠 **Pure AST-Based Reflection**
+
+Forget autoloading. This library parses your PHP source files directly into an Abstract Syntax Tree (AST) and extracts reflection data from the syntax itself — no `include`, no `require`, no side effects. Analyze classes without bootstrapping your entire application. Perfect for static analyzers, code generators, documentation tools, and IDE plugins.
+
+### Why Use It?
+
+- 📊 **Source code analysis** — inspect structure without executing anything
+- 🧪 **Safe introspection** — avoid triggering constructors or static initializers
+- 🔌 **Drop-in compatible** — extends native `\ReflectionClass`, `\ReflectionMethod`, etc.
+
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/goaop/parser-reflection/phpunit.yml?branch=master)
+![PHPStan Badge](https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg?style=flat&link=https%3A%2F%2Fphpstan.org%2Fuser-guide%2Frule-levels)
+[![GitHub release](https://img.shields.io/github/release/goaop/parser-reflection.svg)](https://github.com/goaop/parser-reflection/releases/latest)
 [![Total Downloads](https://img.shields.io/packagist/dt/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
 [![Daily Downloads](https://img.shields.io/packagist/dd/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/goaop/parser-reflection/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/goaop/parser-reflection/?branch=master)
-[![SensioLabs Insight](https://img.shields.io/sensiolabs/i/1fdfee9c-839a-4209-a2f2-42dadc859621.svg)](https://insight.sensiolabs.com/projects/1fdfee9c-839a-4209-a2f2-42dadc859621)[![Minimum PHP Version](http://img.shields.io/badge/php-%3E%3D%205.5-8892BF.svg)](https://php.net/)
+[![PHP Version](https://img.shields.io/badge/php-%3E%3D%208.4-8892BF.svg)](https://php.net/)
 [![License](https://img.shields.io/packagist/l/goaop/parser-reflection.svg)](https://packagist.org/packages/goaop/parser-reflection)
+[![Sponsor](https://img.shields.io/badge/Sponsor-❤️-lightgray?style=flat&logo=github)](https://github.com/sponsors/lisachenko)
 
 Installation
 ------------
@@ -78,17 +91,43 @@ How it works?
 
 To understand how library works let's look at what happens during the call to the `new \Go\ParserReflection\ReflectionClass(SomeClass::class)`
 
+```text
+┌─────────────────────┐
+│   ReflectionClass   │
+└──────────┬──────────┘
+           │ asks for AST node
+           ▼
+┌─────────────────────┐
+│  ReflectionEngine   │
+└──────────┬──────────┘
+           │ locates file
+           ▼
+┌─────────────────────┐
+│  ComposerLocator    │ ──► Composer autoloader
+└──────────┬──────────┘
+           │ parses file
+           ▼
+┌─────────────────────┐
+│  nikic/php-parser   │ ──► Returns AST
+└──────────┬──────────┘
+           │ wraps nodes
+           ▼
+┌─────────────────────┐
+│  Reflection Objects │
+└─────────────────────┘
+```
+
  * `\Go\ParserReflection\ReflectionClass` asks reflection engine to give an AST node for the given class name
  * Reflection engine asks a locator to locate a filename for the given class
  * `ComposerLocator` instance asks the Composer to find a filename for the given class and returns this result back to the reflection engine
  * Reflection engine loads the content of file and passes it to the [PHP-Parser](https://github.com/nikic/PHP-Parser) for tokenization and processing
  * PHP-Parser returns an AST (Abstract Syntax Tree)
- * Reflection engine then analyse this AST to extract specific nodes an wrap them into corresponding reflection classes.
+ * Reflection engine then analyse this AST to extract specific nodes and wrap them into corresponding reflection classes.
 
 Compatibility
 ------------
 
-All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the autoloading of class and switching to the internal reflection.
+All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the process of class loading and switching to the internal reflection.
 
 [0]: docs/reflection_file.md
 [1]: docs/reflection_file_namespace.md

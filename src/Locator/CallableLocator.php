@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -10,32 +12,29 @@
 
 namespace Go\ParserReflection\Locator;
 
+use Closure;
 use Go\ParserReflection\LocatorInterface;
 
 /**
  * Locator, that can find a file for the given class name by asking composer
+ * @see \Go\ParserReflection\Locator\CallableLocatorTest
  */
-class CallableLocator implements LocatorInterface
+final readonly class CallableLocator implements LocatorInterface
 {
-    /**
-     * @var callable
-     */
-    private $callable;
 
-    public function __construct(callable $callable)
+    public function __construct(private Closure $callable)
     {
-        $this->callable = $callable;
     }
 
     /**
      * Returns a path to the file for given class name
      *
      * @param string $className Name of the class
-     *
-     * @return string|false Path to the file with given class or false if not found
      */
-    public function locateClass($className)
+    public function locateClass(string $className): false|string
     {
-        return call_user_func($this->callable, $className);
+        $result = ($this->callable)(ltrim($className, '\\'));
+
+        return is_string($result) ? $result : false;
     }
 }

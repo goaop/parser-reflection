@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Parser Reflection API
  *
@@ -10,31 +12,34 @@
 
 namespace Go\ParserReflection\NodeVisitor;
 
-use Go\ParserReflection\ValueResolver\NodeExpressionResolver;
+use Go\ParserReflection\ReflectionFileNamespace;
+use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node;
-use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 
 /**
- * Visitor to collect static variables in the method/function body and resove them
+ * Visitor to collect static variables in the method/function body and resolve them
  */
 class StaticVariablesCollector extends NodeVisitorAbstract
 {
     /**
      * Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      *
-     * @var mixed
+     * @var \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null
      */
-    private $context;
+    private \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
 
-    private $staticVariables = [];
+    /**
+     * @var array<string, mixed>
+     */
+    private array $staticVariables = [];
 
     /**
      * Default constructor
      *
-     * @param mixed $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
+     * @param \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null $context Reflection context, eg. ReflectionClass, ReflectionMethod, etc
      */
-    public function __construct($context)
+    public function __construct(\ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context)
     {
         $this->context = $context;
     }
@@ -46,7 +51,7 @@ class StaticVariablesCollector extends NodeVisitorAbstract
     {
         // There may be internal closures, we do not need to look at them
         if ($node instanceof Node\Expr\Closure) {
-            return NodeTraverser::DONT_TRAVERSE_CHILDREN;
+            return self::DONT_TRAVERSE_CHILDREN;
         }
 
         if ($node instanceof Node\Stmt\Static_) {
@@ -61,7 +66,17 @@ class StaticVariablesCollector extends NodeVisitorAbstract
                     $value = null;
                 }
 
-                $this->staticVariables[$staticVariable->name] = $value;
+                if ($staticVariable->var->name instanceof Node\Expr) {
+                    $expressionSolver->process($staticVariable->var->name);
+                    $resolvedName = $expressionSolver->getValue();
+                    if (!is_string($resolvedName)) {
+                        throw new \InvalidArgumentException("Unknown value for the key, " . gettype($resolvedName) . " has given, but string is expected");
+                    }
+                    $name = $resolvedName;
+                } else {
+                    $name = $staticVariable->var->name;
+                }
+                $this->staticVariables[$name] = $value;
             }
         }
 
@@ -71,9 +86,9 @@ class StaticVariablesCollector extends NodeVisitorAbstract
     /**
      * Returns an associative map of static variables in the method/function body
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getStaticVariables()
+    public function getStaticVariables(): array
     {
         return $this->staticVariables;
     }
