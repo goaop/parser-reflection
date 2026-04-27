@@ -1281,7 +1281,10 @@ trait ReflectionClassLikeTrait
                 $methodNode         = ReflectionEngine::parseClassMethod($declaringClassName, $method->getName());
                 // Propagate the file name from the class node to the method node,
                 // mirroring what collectFromClassNode() does.
-                $methodNode->setAttribute('fileName', $classNode->getAttribute('fileName'));
+                $fileName = $classNode->getAttribute('fileName');
+                if ($fileName !== null) {
+                    $methodNode->setAttribute('fileName', $fileName);
+                }
                 $declaringReflClass = new ReflectionClass($declaringClassName, $classNode);
 
                 return (new ReflectionMethod(
@@ -1290,8 +1293,9 @@ trait ReflectionClassLikeTrait
                     $methodNode,
                     $declaringReflClass
                 ))->withContextClass($contextClassName);
-            } catch (\Exception) {
-                // Parsing failed (e.g. no locator / generated class): return native method as-is
+            } catch (\InvalidArgumentException|\LogicException|ReflectionException) {
+                // Parsing failed (e.g. no locator, class not found, or generated class):
+                // return native method as-is
             }
         }
 
