@@ -163,6 +163,32 @@ class ReflectionPropertyTest extends AbstractTestCase
         }
     }
 
+    #[DataProvider('propertiesDataProvider')]
+    public function testGetSettableType(
+        ReflectionClass $parsedRefClass,
+        \ReflectionProperty $originalRefProperty,
+    ): void {
+        if (PHP_VERSION_ID < 80400) {
+            $this->markTestSkipped('getSettableType() requires PHP 8.4+');
+        }
+
+        $propertyName      = $originalRefProperty->getName();
+        $className         = $parsedRefClass->getName();
+        $parsedRefProperty = $parsedRefClass->getProperty($propertyName);
+
+        $originalSettable = $originalRefProperty->getSettableType();
+        $parsedSettable   = $parsedRefProperty->getSettableType();
+
+        $message = "Settable type for {$className}::{$propertyName} should match native reflection";
+        if ($originalSettable === null) {
+            $this->assertNull($parsedSettable, $message);
+        } else {
+            $this->assertNotNull($parsedSettable, $message);
+            $this->assertSame($originalSettable->__toString(), $parsedSettable->__toString(), $message);
+            $this->assertSame($originalSettable->allowsNull(), $parsedSettable->allowsNull(), $message);
+        }
+    }
+
     #[DataProvider('propertyHooksDataProvider')]
     public function testHasHookMethod(
         ReflectionClass $parsedRefClass,
