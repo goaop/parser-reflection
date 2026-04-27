@@ -823,7 +823,7 @@ class NodeExpressionResolver
         }
 
         if ($this->context instanceof \ReflectionParameter) {
-            return $this->context->getDeclaringClass();
+            return $this->context->getDeclaringClass() ?? null;
         }
 
         return null;
