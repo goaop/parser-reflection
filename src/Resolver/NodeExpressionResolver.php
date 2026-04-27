@@ -805,6 +805,31 @@ class NodeExpressionResolver
     }
 
     /**
+     * Returns the \ReflectionClass for the current context, if available.
+     *
+     * @return \ReflectionClass<object>|null
+     */
+    private function getContextClass(): ?\ReflectionClass
+    {
+        if ($this->context instanceof \ReflectionClass) {
+            return $this->context;
+        }
+
+        if ($this->context instanceof \ReflectionMethod
+            || $this->context instanceof \ReflectionProperty
+            || $this->context instanceof \ReflectionClassConstant
+        ) {
+            return $this->context->getDeclaringClass();
+        }
+
+        if ($this->context instanceof \ReflectionParameter) {
+            return $this->context->getDeclaringClass();
+        }
+
+        return null;
+    }
+
+    /**
      * Utility method to fetch reflection class instance by name
      *
      * Supports:
@@ -837,6 +862,14 @@ class NodeExpressionResolver
                 if (!$refClass->isUserDefined() || $refClass->isEnum()) {
                     return $refClass;
                 }
+            }
+
+            // Return the context class directly if it matches the requested class name,
+            // to avoid infinite recursion when a class constant references its own class by name
+            // (e.g. const RELATIVE = SomeClass::LITERAL where SomeClass is the class being reflected)
+            $contextClass = $this->getContextClass();
+            if ($contextClass !== null && $contextClass->getName() === $className) {
+                return $contextClass;
             }
 
             return new ReflectionClass($className);
