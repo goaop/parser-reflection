@@ -420,6 +420,17 @@ final class ReflectionProperty extends BaseReflectionProperty
     }
 
     /**
+     * Checks if the property has an explicit public(set) visibility that differs from the main visibility.
+     *
+     * @see Property::isPublicSet()
+     * @see Param::isPublicSet()
+     */
+    public function isPublicSet(): bool
+    {
+        return $this->propertyOrPromotedParam->isPublicSet() && !$this->propertyOrPromotedParam->isPublic();
+    }
+
+    /**
      * {@inheritDoc}
      *
      * @see Property::isPublic()
@@ -490,14 +501,39 @@ final class ReflectionProperty extends BaseReflectionProperty
         if (empty($hooks)) {
             return false;
         }
-        // A property is virtual if it has hooks but none expose backing storage (byRef)
+
+        $propertyName = $this->getName();
         foreach ($hooks as $hook) {
-            if ($hook->byRef) {
+            // A short set hook (body is Expr) always stores the result in the backing field
+            if ($hook->name->name === 'set' && $hook->body instanceof Expr) {
+                return false;
+            }
+            // A block-form hook that references $this->propertyName uses the backing store
+            if (is_array($hook->body) && $this->hookBodyUsesBackingStore($hook->body, $propertyName)) {
                 return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Checks whether the hook body references the property's own backing store via $this->propertyName
+     *
+     * @param \PhpParser\Node\Stmt[] $stmts
+     */
+    private function hookBodyUsesBackingStore(array $stmts, string $propertyName): bool
+    {
+        $finder = new \PhpParser\NodeFinder();
+        $found = $finder->findFirst($stmts, function (\PhpParser\Node $node) use ($propertyName): bool {
+            return $node instanceof \PhpParser\Node\Expr\PropertyFetch
+                && $node->var instanceof \PhpParser\Node\Expr\Variable
+                && $node->var->name === 'this'
+                && $node->name instanceof \PhpParser\Node\Identifier
+                && $node->name->name === $propertyName;
+        });
+
+        return $found !== null;
     }
 
     /**

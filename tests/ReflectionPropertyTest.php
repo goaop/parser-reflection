@@ -217,6 +217,49 @@ class ReflectionPropertyTest extends AbstractTestCase
     }
 
     /**
+     * Tests isPublicSet() method for asymmetric visibility properties.
+     *
+     * Note: Native \ReflectionProperty does not have isPublicSet(), so this is tested
+     * against expected values rather than parity with native reflection.
+     */
+    #[DataProvider('isPublicSetDataProvider')]
+    public function testIsPublicSetMethod(string $className, string $propertyName, bool $expectedValue): void
+    {
+        if (PHP_VERSION_ID < 80400) {
+            $this->markTestSkipped('isPublicSet() requires PHP 8.4+');
+        }
+
+        $parsedClass    = new ReflectionClass($className);
+        $parsedProperty = $parsedClass->getProperty($propertyName);
+
+        $this->assertSame(
+            $expectedValue,
+            $parsedProperty->isPublicSet(),
+            "isPublicSet() for property {$className}::{$propertyName} should be " . ($expectedValue ? 'true' : 'false')
+        );
+    }
+
+    public static function isPublicSetDataProvider(): \Generator
+    {
+        if (PHP_VERSION_ID < 80400) {
+            return;
+        }
+
+        $class = Stub\ClassWithPhp84AsymmetricVisibility::class;
+
+        // public public(set) readonly — main visibility is public, so isPublicSet() returns false
+        yield 'explicit public public(set)' => [$class, 'explicitPublicWriteOncePublicProperty', false];
+        // public(set) readonly — implicit public, so isPublicSet() returns false
+        yield 'implicit public public(set)' => [$class, 'implicitPublicReadonlyWriteOncePublicProperty', false];
+        // public protected(set) readonly — not public(set) at all
+        yield 'public protected(set) readonly' => [$class, 'explicitPublicWriteOnceProtectedProperty', false];
+        // public private(set) readonly — not public(set) at all
+        yield 'public private(set) readonly' => [$class, 'explicitPublicWriteOncePrivateProperty', false];
+        // private(set) readonly — not public(set) at all
+        yield 'implicit public private(set) readonly' => [$class, 'implicitPublicReadonlyWriteOncePrivateProperty', false];
+    }
+
+    /**
      * Returns list of ReflectionMethod getters that be checked directly without additional arguments
      */
     protected static function getGettersToCheck(): array
@@ -228,7 +271,7 @@ class ReflectionPropertyTest extends AbstractTestCase
         ];
 
         if (PHP_VERSION_ID >= 80400) {
-            array_push($getters, 'isAbstract', 'isProtectedSet', 'isPrivateSet', 'isFinal', 'hasHooks');
+            array_push($getters, 'isAbstract', 'isProtectedSet', 'isPrivateSet', 'isFinal', 'hasHooks', 'isVirtual');
         }
 
         return $getters;
