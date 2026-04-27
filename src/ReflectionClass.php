@@ -134,7 +134,7 @@ final class ReflectionClass extends InternalReflectionClass
                             $traits[$traitName] = $trait;
                         }
                     }
-                    $traitAdaptations = $classLevelNode->adaptations;
+                    $traitAdaptations = array_merge($traitAdaptations, $classLevelNode->adaptations);
                 }
             }
         }

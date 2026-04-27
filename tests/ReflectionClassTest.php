@@ -110,9 +110,6 @@ class ReflectionClassTest extends AbstractTestCase
     ): void {
         $parsedMethods     = $parsedRefClass->getMethods();
         $originalMethods   = $originalRefClass->getMethods();
-        if ($parsedRefClass->getTraitAliases()) {
-            $this->markTestIncomplete("Adoptation methods for traits are not supported yet");
-        }
         $this->assertCount(count($originalMethods), $parsedMethods);
     }
 

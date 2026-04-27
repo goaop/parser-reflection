@@ -182,26 +182,21 @@ class ClassWithPhp54Trait
     use SimplePhp54Trait;
 }
 
-/*
- * Current implementation doesn't support trait adaptation,
- * @see https://github.com/goaop/parser-reflection/issues/54
- *
-class ClassWithTraitAndAdaptation
+class ClassWithPhp54TraitAndAdaptation
 {
-    use SimpleTrait {
+    use SimplePhp54Trait {
         foo as protected fooBar;
         foo as private fooBaz;
     }
 }
 
-class ClassWithTraitAndConflict
+class ClassWithPhp54TraitAndConflict
 {
-    use SimpleTrait, ConflictedSimpleTrait {
-        foo as protected fooBar;
-        ConflictedSimpleTrait::foo insteadof SimpleTrait;
+    use SimplePhp54Trait, SimplePhp54ConflictedTrait {
+        SimplePhp54Trait::foo as protected fooBar;
+        SimplePhp54ConflictedTrait::foo insteadof SimplePhp54Trait;
     }
 }
-*/
 
 /*
  * Logic of prototype methods for interface and traits was changed since 7.0.6
