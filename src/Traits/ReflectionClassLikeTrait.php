@@ -917,8 +917,18 @@ trait ReflectionClassLikeTrait
         }
 
         $extends = $this->classLikeNode->extends ?? null;
-        if ($extends && $extends->toString() === $className) {
-            return true;
+        if ($extends instanceof Name && $extends->getAttribute('resolvedName') instanceof FullyQualified) {
+            if ($extends->getAttribute('resolvedName')->toString() === $className) {
+                return true;
+            }
+        }
+
+        foreach ($this->classLikeNode->implements as $implementedInterface) {
+            if ($implementedInterface->getAttribute('resolvedName') instanceof FullyQualified) {
+                if ($implementedInterface->getAttribute('resolvedName')->toString() === $className) {
+                    return true;
+                }
+            }
         }
 
         $parent = $this->getParentClass();

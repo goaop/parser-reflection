@@ -4,13 +4,15 @@ declare(strict_types=1);
 namespace Go\ParserReflection;
 
 use Go\ParserReflection\Stub\ClassWithPhp50ConstantsAndInheritance;
+use Go\ParserReflection\Stub\ClassWithPhp50Interface;
 use Go\ParserReflection\Stub\ClassWithPhp50MagicConstants;
 use Go\ParserReflection\Stub\ClassWithPhp84PropertyHooks;
+use Go\ParserReflection\Stub\SimplePhp50AbstractClassInheritance;
 use Go\ParserReflection\Stub\SimplePhp50ClassWithMethodsAndProperties;
 use Go\ParserReflection\Stub\ClassWithPhp50ScalarConstants;
 use Go\ParserReflection\Stub\ClassWithPhp50FinalKeyword;
 use Go\ParserReflection\Stub\ClassWithPhp50ImplicitAbstractKeyword;
-use Go\ParserReflection\Stub\SimplePhp50AbstractClassInheritance;
+use Go\ParserReflection\Stub\SimplePhp50Interface;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class ReflectionClassTest extends AbstractTestCase
@@ -171,6 +173,18 @@ class ReflectionClassTest extends AbstractTestCase
 
             $this->assertSame($originalConstructor->getDeclaringClass()->name, $parsedConstructor->getDeclaringClass()->name);
         }
+    }
+
+    /**
+     * Test isSubclassOf() method parity
+     */
+    public function testIsSubclassOf(): void
+    {
+        $parsedClass   = $this->parsedRefFileNamespace->getClass(ClassWithPhp50Interface::class);
+        $actualValue   = $parsedClass->isSubclassOf(SimplePhp50Interface::class);
+        $originalClass = new \ReflectionClass(ClassWithPhp50Interface::class);
+        $expectedValue = $originalClass->isSubclassOf(SimplePhp50Interface::class);
+        $this->assertSame($expectedValue, $actualValue, "Class should also check interfaces for isSubclassOf");
     }
 
     /**
