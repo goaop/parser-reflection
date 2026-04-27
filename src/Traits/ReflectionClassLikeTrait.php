@@ -405,10 +405,12 @@ trait ReflectionClassLikeTrait
 
             // Collect from parent class and interfaces only (traits are handled by collectTraitMethods)
             $inheritedMethods = [];
+            $contextClassName = $this->getName();
             $parentClass = $this->getParentClass();
             if ($parentClass) {
                 foreach ($parentClass->getMethods() as $reflectionMethod) {
                     if (!$reflectionMethod->isPrivate()) {
+                        $reflectionMethod = $this->wrapInheritedMethod($reflectionMethod, $contextClassName);
                         $inheritedMethods[$reflectionMethod->name] = $reflectionMethod;
                     }
                 }
@@ -416,6 +418,7 @@ trait ReflectionClassLikeTrait
             $interfaces = ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode);
             foreach ($interfaces as $interface) {
                 foreach ($interface->getMethods() as $reflectionMethod) {
+                    $reflectionMethod = $this->wrapInheritedMethod($reflectionMethod, $contextClassName);
                     $inheritedMethods[$reflectionMethod->name] = $reflectionMethod;
                 }
             }
@@ -1251,6 +1254,48 @@ trait ReflectionClassLikeTrait
                 }
             }
         }
+    }
+
+    /**
+     * Wraps an inherited method with the given context class name.
+     *
+     * For our own ReflectionMethod instances, calls withContextClass() directly.
+     * For native \ReflectionMethod objects from user-defined classes (loaded parent/interface),
+     * attempts to parse the declaring class from AST and create an equivalent ReflectionMethod,
+     * so that __toString() can emit the correct ", inherits OriginalClass" section.
+     *
+     * Falls back to returning the original native method unmodified if parsing is unavailable.
+     */
+    private function wrapInheritedMethod(\ReflectionMethod $method, string $contextClassName): \ReflectionMethod
+    {
+        if ($method instanceof ReflectionMethod) {
+            return $method->withContextClass($contextClassName);
+        }
+
+        // Native \ReflectionMethod from a loaded (non-parsed) class: attempt to convert it
+        // to our ReflectionMethod so that __toString() can show the "inherits" section.
+        if ($method->isUserDefined()) {
+            $declaringClassName = $method->getDeclaringClass()->getName();
+            try {
+                $classNode          = ReflectionEngine::parseClass($declaringClassName);
+                $methodNode         = ReflectionEngine::parseClassMethod($declaringClassName, $method->getName());
+                // Propagate the file name from the class node to the method node,
+                // mirroring what collectFromClassNode() does.
+                $methodNode->setAttribute('fileName', $classNode->getAttribute('fileName'));
+                $declaringReflClass = new ReflectionClass($declaringClassName, $classNode);
+
+                return (new ReflectionMethod(
+                    $declaringClassName,
+                    $method->getName(),
+                    $methodNode,
+                    $declaringReflClass
+                ))->withContextClass($contextClassName);
+            } catch (\Exception) {
+                // Parsing failed (e.g. no locator / generated class): return native method as-is
+            }
+        }
+
+        return $method;
     }
 
     /**
