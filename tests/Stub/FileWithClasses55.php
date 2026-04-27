@@ -261,3 +261,10 @@ trait TraitWithPhp54Properties
     protected static $bs = __TRAIT__;
     public static $cs = 'foo';
 }
+
+
+class ClassWithSelfReferencingConstant
+{
+    const LITERAL = 1;
+    const RELATIVE = ClassWithSelfReferencingConstant::LITERAL;
+}
