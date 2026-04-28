@@ -43,6 +43,13 @@ final class ReflectionMethod extends BaseReflectionMethod
     private ?ReflectionClass $declaringClass;
 
     /**
+     * Optional context class name: when non-null, this method was accessed through a class
+     * that differs from $className (the declaring class). Used by __toString() to emit the
+     * "inherits ClassName" section for inherited methods.
+     */
+    private ?string $contextClassName = null;
+
+    /**
      * Initializes reflection instance for the method node
      *
      * @param ?ClassMethod     $classMethodNode AST-node for method
@@ -84,6 +91,26 @@ final class ReflectionMethod extends BaseReflectionMethod
     }
 
     /**
+     * Returns a copy of this method viewed through the context of a different (child) class.
+     *
+     * When a method is inherited rather than overridden, getMethods() uses this to tag the
+     * returned instance with the class it was accessed through. __toString() then emits the
+     * ", inherits OriginalClass" section that PHP's own reflection produces.
+     */
+    public function withContextClass(string $contextClassName): self
+    {
+        $newMethod = new self(
+            $this->className,
+            $this->getName(),
+            $this->getNode(),
+            $this->declaringClass
+        );
+        $newMethod->contextClassName = $contextClassName;
+
+        return $newMethod;
+    }
+
+    /**
      * Returns the AST node that contains attribute groups for this method.
      */
     protected function getNodeForAttributes(): ClassMethod
@@ -120,7 +147,14 @@ final class ReflectionMethod extends BaseReflectionMethod
         $methodParameters = $this->getParameters();
 
         $protoString = '';
-        if ($this->hasPrototype()) {
+        if ($this->contextClassName !== null && $this->contextClassName !== $this->className) {
+            // This method is inherited: accessed through $contextClassName but declared in $className
+            $protoString = ", inherits {$this->className}";
+            if ($this->hasPrototype()) {
+                $prototype    = $this->getPrototype();
+                $protoString .= ", prototype {$prototype->getDeclaringClass()->name}";
+            }
+        } elseif ($this->hasPrototype()) {
             $prototype      = $this->getPrototype();
             $prototypeClass = $prototype->getDeclaringClass()->name;
             $parentClass    = $this->getDeclaringClass()->getParentClass();
