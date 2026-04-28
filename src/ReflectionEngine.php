@@ -229,6 +229,12 @@ class ReflectionEngine
                     }
                 }
             }
+            // Enum cases are also reported as constants
+            if ($classLevelNode instanceof \PhpParser\Node\Stmt\EnumCase
+                && $classLevelNode->name->toString() === $constantName
+            ) {
+                return [$classLevelNode, $classLevelNode];
+            }
         }
 
         throw new InvalidArgumentException("ClassConstant $constantName was not found in the $fullClassName");
