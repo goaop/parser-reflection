@@ -43,7 +43,7 @@ class ReflectionAttribute extends BaseReflectionAttribute
      */
     public function __construct(
         string $attributeName,
-        private ReflectionClass|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter $reflector,
+        private ReflectionClass|ReflectionEnum|ReflectionMethod|ReflectionProperty|ReflectionClassConstant|ReflectionFunction|ReflectionParameter|ReflectionEnumUnitCase|ReflectionEnumBackedCase $reflector,
         private array $arguments,
         private bool $isRepeated,
     ) {
