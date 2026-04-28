@@ -49,10 +49,10 @@ class NodeExpressionResolver
     /**
      * Current reflection context for parsing
      *
-     * @var \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null
+     * @var \ReflectionClass<object>|\ReflectionEnum<\UnitEnum>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null
      */
     private
-        \ReflectionClass|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|
+        \ReflectionClass|\ReflectionEnum|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|
         \ReflectionParameter|\ReflectionAttribute|\ReflectionProperty|ReflectionFileNamespace|null $context;
 
     /**
@@ -84,7 +84,7 @@ class NodeExpressionResolver
     private mixed $value;
 
     /**
-     * @param \ReflectionClass<object>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null $context
+     * @param \ReflectionClass<object>|\ReflectionEnum<\UnitEnum>|\ReflectionFunction|\ReflectionMethod|\ReflectionClassConstant|\ReflectionParameter|\ReflectionAttribute<object>|\ReflectionProperty|ReflectionFileNamespace|null $context
      */
     public function __construct($context)
     {
@@ -807,9 +807,9 @@ class NodeExpressionResolver
     /**
      * Returns the \ReflectionClass for the current context, if available.
      *
-     * @return \ReflectionClass<object>|null
+     * @return \ReflectionClass<object>|\ReflectionEnum<\UnitEnum>|null
      */
-    private function getContextClass(): ?\ReflectionClass
+    private function getContextClass(): \ReflectionClass|\ReflectionEnum|null
     {
         if ($this->context instanceof \ReflectionClass) {
             return $this->context;
@@ -839,7 +839,7 @@ class NodeExpressionResolver
      *
      * @param Node\Name $node Class name node
      *
-     * @return \ReflectionClass<object>|false
+     * @return \ReflectionClass<object>|\ReflectionEnum<\UnitEnum>|false
      *
      * @throws ReflectionException
      */

@@ -40,7 +40,7 @@ final class ReflectionMethod extends BaseReflectionMethod
     /**
      * Optional declaring class reference
      */
-    private ?ReflectionClass $declaringClass;
+    private ReflectionClass|ReflectionEnum|null $declaringClass;
 
     /**
      * Optional context class name: when non-null, this method was accessed through a class
@@ -53,13 +53,13 @@ final class ReflectionMethod extends BaseReflectionMethod
      * Initializes reflection instance for the method node
      *
      * @param ?ClassMethod     $classMethodNode AST-node for method
-     * @param ?ReflectionClass $declaringClass  Optional declaring class
+     * @param ReflectionClass|ReflectionEnum|null $declaringClass  Optional declaring class
      */
     public function __construct(
         string $className,
         string $methodName,
         ?ClassMethod $classMethodNode = null,
-        ?ReflectionClass $declaringClass = null
+        ReflectionClass|ReflectionEnum|null $declaringClass = null
     ) {
         //for some reason, ReflectionMethod->getNamespaceName in php always returns '', so we shouldn't use it too
         $this->className        = ltrim($className, '\\');
@@ -215,7 +215,7 @@ final class ReflectionMethod extends BaseReflectionMethod
     /**
      * {@inheritDoc}
      *
-     * @return \ReflectionClass<object>
+     * @return ReflectionClass|ReflectionEnum
      */
     public function getDeclaringClass(): \ReflectionClass
     {
@@ -413,11 +413,11 @@ final class ReflectionMethod extends BaseReflectionMethod
      * Parses methods from the concrete class node
      *
      * @param ClassLike $classLikeNode Class-like node
-     * @param ReflectionClass $reflectionClass Reflection of the class
+     * @param ReflectionClass|ReflectionEnum $reflectionClass Reflection of the class
      *
      * @return array<string, ReflectionMethod>
      */
-    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass $reflectionClass): array
+    public static function collectFromClassNode(ClassLike $classLikeNode, ReflectionClass|ReflectionEnum $reflectionClass): array
     {
         $methods = [];
 
@@ -459,7 +459,7 @@ final class ReflectionMethod extends BaseReflectionMethod
     /**
      * Ad-Hoc constructor of Enum `cases` method, which emulates PHP behaviour
      */
-    private static function createEnumCasesMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    private static function createEnumCasesMethod(ReflectionClass|ReflectionEnum $reflectionClass): ReflectionMethod
     {
         $casesMethodNode = (new \PhpParser\Builder\Method('cases'))
             ->makeStatic()
@@ -475,7 +475,7 @@ final class ReflectionMethod extends BaseReflectionMethod
         );
     }
 
-    private static function createEnumFromMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    private static function createEnumFromMethod(ReflectionClass|ReflectionEnum $reflectionClass): ReflectionMethod
     {
         $valueParam = (new \PhpParser\Builder\Param('value'))
             ->setType(new UnionType([new Identifier('string'), new Identifier('int')]))
@@ -495,7 +495,7 @@ final class ReflectionMethod extends BaseReflectionMethod
         );
     }
 
-    private static function createEnumTryFromMethod(ReflectionClass $reflectionClass): ReflectionMethod
+    private static function createEnumTryFromMethod(ReflectionClass|ReflectionEnum $reflectionClass): ReflectionMethod
     {
         $valueParam = (new \PhpParser\Builder\Param('value'))
             ->setType(new UnionType([new Identifier('string'), new Identifier('int')]))
