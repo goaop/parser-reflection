@@ -1307,7 +1307,12 @@ trait ReflectionClassLikeTrait
      *
      * @param string $className The name of the class to create a reflection for.
      *
-     * @return \ReflectionClass The appropriate reflection object.
+     * @return \ReflectionClass<object> The appropriate reflection object.
      */
-    abstract protected function createReflectionForClass(string $className): \ReflectionClass;
+    protected function createReflectionForClass(string $className): \ReflectionClass
+    {
+        return class_exists($className, false)
+            ? new \ReflectionClass($className)
+            : new ReflectionClass($className);
+    }
 }

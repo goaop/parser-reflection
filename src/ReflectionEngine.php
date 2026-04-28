@@ -19,6 +19,7 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassConst;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\ClassMethod;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
 use PhpParser\NodeTraverser;
@@ -121,6 +122,21 @@ class ReflectionEngine
         }
 
         throw new InvalidArgumentException("Class $fullClassName was not found in the $classFileName");
+    }
+
+    /**
+     * Tries to parse an enum by name using LocatorInterface
+     *
+     * @throws InvalidArgumentException if the class is not an enum
+     */
+    public static function parseEnum(string $fullClassName): Enum_
+    {
+        $node = self::parseClass($fullClassName);
+        if (!$node instanceof Enum_) {
+            throw new InvalidArgumentException("Class $fullClassName is not an enum");
+        }
+
+        return $node;
     }
 
     /**

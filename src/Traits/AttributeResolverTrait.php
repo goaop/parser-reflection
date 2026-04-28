@@ -27,8 +27,14 @@ trait AttributeResolverTrait
 {
     /**
      * Returns the AST node that contains attribute groups for this reflection element.
+     * Default implementation delegates to getNode(). Override when the attribute-bearing
+     * node differs from getNode() (e.g. ReflectionProperty).
      */
-    abstract protected function getNodeForAttributes(): ClassLike|ClassMethod|Function_|Param|ClassConst|EnumCase|Property;
+    protected function getNodeForAttributes(): ClassLike|ClassMethod|Function_|Param|ClassConst|EnumCase|Property
+    {
+        /** @phpstan-ignore return.type */
+        return $this->getNode(); // @phpstan-ignore-line
+    }
 
     /**
      * @param class-string<object>|null $name

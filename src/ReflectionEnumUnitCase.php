@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2024, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2026, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -90,6 +90,9 @@ final class ReflectionEnumUnitCase extends InternalReflectionEnumUnitCase
 
     /**
      * {@inheritDoc}
+     *
+     * Note: this method triggers autoloading of the enum class and does not work at pure AST level.
+     * For backed enums, consider using {@see ReflectionEnumBackedCase::getBackingValue()} instead.
      */
     public function getValue(): UnitEnum
     {
@@ -172,14 +175,6 @@ final class ReflectionEnumUnitCase extends InternalReflectionEnumUnitCase
      * Returns the AST node for this enum case
      */
     public function getNode(): EnumCase
-    {
-        return $this->enumCaseNode;
-    }
-
-    /**
-     * Returns the AST node that contains attribute groups for this enum case.
-     */
-    protected function getNodeForAttributes(): EnumCase
     {
         return $this->enumCaseNode;
     }

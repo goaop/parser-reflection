@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Parser Reflection API
  *
- * @copyright Copyright 2024, Lisachenko Alexander <lisachenko.it@gmail.com>
+ * @copyright Copyright 2026, Lisachenko Alexander <lisachenko.it@gmail.com>
  *
  * This source file is subject to the license that is bundled
  * with this source code in the file LICENSE.
@@ -15,7 +15,6 @@ namespace Go\ParserReflection;
 use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Traits\ReflectionClassLikeTrait;
-use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\EnumCase;
 use ReflectionEnum as InternalReflectionEnum;
@@ -38,12 +37,53 @@ final class ReflectionEnum extends InternalReflectionEnum
     public string $name;
 
     /**
+     * PHP 8.4 virtual typed property providing type-safe access to the classLikeNode as Enum_.
+     * No backing store — delegates directly to classLikeNode with a type assertion.
+     */
+    private Enum_ $enumNode {
+        get {
+            assert($this->classLikeNode instanceof Enum_);
+
+            return $this->classLikeNode;
+        }
+    }
+
+    /**
+     * Lazily-initialised map of case name → ReflectionEnumUnitCase|ReflectionEnumBackedCase.
+     * Keyed by case name for O(1) access in getCase() / hasCase().
+     *
+     * @var array<string, ReflectionEnumUnitCase|ReflectionEnumBackedCase>
+     */
+    private array $cases {
+        get {
+            if (!isset($this->cases)) {
+                $fullClassName = $this->getName();
+                $isBacked      = $this->isBacked();
+                $casesMap      = [];
+
+                foreach ($this->enumNode->stmts as $stmt) {
+                    if ($stmt instanceof EnumCase) {
+                        $caseName            = $stmt->name->toString();
+                        $casesMap[$caseName] = $isBacked && $stmt->expr !== null
+                            ? new ReflectionEnumBackedCase($fullClassName, $caseName, $stmt, $this)
+                            : new ReflectionEnumUnitCase($fullClassName, $caseName, $stmt, $this);
+                    }
+                }
+
+                $this->cases = $casesMap;
+            }
+
+            return $this->cases;
+        }
+    }
+
+    /**
      * Initializes reflection instance for an enum
      *
-     * @param object|string $argument      Enum class name or instance
-     * @param ?ClassLike    $classLikeNode AST node for enum
+     * @param object|string $argument     Enum class name or instance
+     * @param ?Enum_        $classLikeNode AST node for enum
      */
-    public function __construct(object|string $argument, ?ClassLike $classLikeNode = null)
+    public function __construct(object|string $argument, ?Enum_ $classLikeNode = null)
     {
         $fullClassName = is_object($argument) ? get_class($argument) : ltrim($argument, '\\');
         $namespaceParts = explode('\\', $fullClassName);
@@ -58,7 +98,7 @@ final class ReflectionEnum extends InternalReflectionEnum
 
         $this->namespaceName = implode('\\', $namespaceParts);
 
-        $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseClass($fullClassName);
+        $this->classLikeNode = $classLikeNode ?: ReflectionEngine::parseEnum($fullClassName);
     }
 
     /**
@@ -66,12 +106,11 @@ final class ReflectionEnum extends InternalReflectionEnum
      */
     public function getBackingType(): ?ReflectionNamedType
     {
-        $enumNode = $this->getEnumNode();
-        if ($enumNode->scalarType === null) {
+        if ($this->enumNode->scalarType === null) {
             return null;
         }
 
-        $typeName = $enumNode->scalarType->toString();
+        $typeName = $this->enumNode->scalarType->toString();
 
         return new ReflectionNamedType($typeName, false, true);
     }
@@ -81,16 +120,11 @@ final class ReflectionEnum extends InternalReflectionEnum
      */
     public function getCase(string $name): ReflectionEnumUnitCase|ReflectionEnumBackedCase
     {
-        $enumNode = $this->getEnumNode();
-        $fullClassName = $this->getName();
-
-        foreach ($enumNode->stmts as $stmt) {
-            if ($stmt instanceof EnumCase && $stmt->name->toString() === $name) {
-                return $this->createEnumCaseReflection($fullClassName, $stmt);
-            }
+        if (!isset($this->cases[$name])) {
+            throw new ReflectionException("Case $name does not exist on enum " . $this->getName());
         }
 
-        throw new ReflectionException("Case $name does not exist on enum $fullClassName");
+        return $this->cases[$name];
     }
 
     /**
@@ -100,17 +134,7 @@ final class ReflectionEnum extends InternalReflectionEnum
      */
     public function getCases(): array
     {
-        $enumNode = $this->getEnumNode();
-        $fullClassName = $this->getName();
-        $cases = [];
-
-        foreach ($enumNode->stmts as $stmt) {
-            if ($stmt instanceof EnumCase) {
-                $cases[] = $this->createEnumCaseReflection($fullClassName, $stmt);
-            }
-        }
-
-        return $cases;
+        return array_values($this->cases);
     }
 
     /**
@@ -118,15 +142,7 @@ final class ReflectionEnum extends InternalReflectionEnum
      */
     public function hasCase(string $name): bool
     {
-        $enumNode = $this->getEnumNode();
-
-        foreach ($enumNode->stmts as $stmt) {
-            if ($stmt instanceof EnumCase && $stmt->name->toString() === $name) {
-                return true;
-            }
-        }
-
-        return false;
+        return isset($this->cases[$name]);
     }
 
     /**
@@ -134,23 +150,15 @@ final class ReflectionEnum extends InternalReflectionEnum
      */
     public function isBacked(): bool
     {
-        return $this->getEnumNode()->scalarType !== null;
+        return $this->enumNode->scalarType !== null;
     }
 
     /**
      * Returns an AST-node for class
      */
-    public function getNode(): ClassLike
+    public function getNode(): Enum_
     {
-        return $this->classLikeNode;
-    }
-
-    /**
-     * Returns the AST node that contains attribute groups for this class.
-     */
-    protected function getNodeForAttributes(): ClassLike
-    {
-        return $this->classLikeNode;
+        return $this->enumNode;
     }
 
     /**
@@ -164,21 +172,6 @@ final class ReflectionEnum extends InternalReflectionEnum
     }
 
     /**
-     * Create a ReflectionClass for a given class name.
-     *
-     * @return \ReflectionClass<object>
-     */
-    protected function createReflectionForClass(string $className): \ReflectionClass
-    {
-        if (class_exists($className, false)) {
-            /** @var \ReflectionClass<object> */
-            return new \ReflectionClass($className);
-        }
-
-        return new ReflectionClass($className);
-    }
-
-    /**
      * Emulating original behaviour of reflection
      */
     public function __debugInfo(): array
@@ -186,24 +179,5 @@ final class ReflectionEnum extends InternalReflectionEnum
         return [
             'name' => $this->getName()
         ];
-    }
-
-    /**
-     * Returns the Enum_ AST node, asserting the type
-     */
-    private function getEnumNode(): Enum_
-    {
-        assert($this->classLikeNode instanceof Enum_);
-
-        return $this->classLikeNode;
-    }
-
-    private function createEnumCaseReflection(string $fullClassName, EnumCase $enumCaseNode): ReflectionEnumUnitCase|ReflectionEnumBackedCase
-    {
-        if ($this->isBacked() && $enumCaseNode->expr !== null) {
-            return new ReflectionEnumBackedCase($fullClassName, $enumCaseNode->name->toString(), $enumCaseNode, $this);
-        }
-
-        return new ReflectionEnumUnitCase($fullClassName, $enumCaseNode->name->toString(), $enumCaseNode, $this);
     }
 }
