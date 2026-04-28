@@ -146,10 +146,15 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
     /**
      * @inheritDoc
      *
-     * @return \ReflectionClass<object>
+     * @return ReflectionClass|ReflectionEnum
      */
     public function getDeclaringClass(): \ReflectionClass
     {
+        // When the constant is an enum case, return ReflectionEnum to match native PHP behavior
+        if ($this->isEnumCase()) {
+            return new ReflectionEnum($this->className);
+        }
+
         return new ReflectionClass($this->className);
     }
 
@@ -296,6 +301,25 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant
     public function getNode(): ClassConst|EnumCase
     {
         return $this->classConstOrEnumCaseNode;
+    }
+
+    /**
+     * Converts this constant to a {@see ReflectionEnumUnitCase} or {@see ReflectionEnumBackedCase} when
+     * {@see isEnumCase()} is true.
+     *
+     * @throws ReflectionException if this constant is not an enum case
+     */
+    public function toEnumCase(): ReflectionEnumUnitCase|ReflectionEnumBackedCase
+    {
+        if (!$this->isEnumCase()) {
+            throw new ReflectionException(
+                "Constant {$this->className}::{$this->getName()} is not an enum case"
+            );
+        }
+
+        $enumReflection = new ReflectionEnum($this->className);
+
+        return $enumReflection->getCase($this->getName());
     }
 
     /**
