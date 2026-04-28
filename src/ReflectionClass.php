@@ -78,7 +78,7 @@ final class ReflectionClass extends InternalReflectionClass
 
         if ($classLikeNode instanceof Interface_) {
             $implementsList = $classLikeNode->extends;
-        } elseif ($classLikeNode instanceof Class_) {
+        } elseif ($classLikeNode instanceof Class_ || $classLikeNode instanceof Enum_) {
             $implementsList = $classLikeNode->implements;
         } else {
             $implementsList = [];

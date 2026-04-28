@@ -42,6 +42,34 @@ class ReflectionFileNamespaceTest extends TestCase
         $this->assertCount(2, $refClasses);
     }
 
+    public function testGetEnums(): void
+    {
+        $fileName = stream_resolve_include_path(__DIR__ . '/Stub/FileWithClasses81.php');
+        $fileNode = ReflectionEngine::parseFile($fileName);
+
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        include_once $fileName;
+
+        $fileNamespace = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+        $enums         = $fileNamespace->getEnums();
+
+        // FileWithClasses81.php contains: SimplePhp81EnumWithSuit, BackedPhp81EnumHTTPMethods,
+        // BackedPhp81EnumHTTPStatusWithMethod, and Php81EnumWithInterface
+        $this->assertCount(4, $enums);
+
+        foreach ($enums as $enum) {
+            $this->assertInstanceOf(ReflectionEnum::class, $enum);
+        }
+
+        // Verify that getClasses() still returns enums as ReflectionClass instances (backward compat)
+        $classes = $fileNamespace->getClasses();
+        $enumNames = array_keys($enums);
+        foreach ($enumNames as $enumName) {
+            $this->assertArrayHasKey($enumName, $classes, "getClasses() should still include enum {$enumName} for backward compatibility");
+            $this->assertInstanceOf(ReflectionClass::class, $classes[$enumName]);
+        }
+    }
+
     public function testGetConstant(): void
     {
         $constValue = $this->parsedRefFileNamespace->getConstant('NAMESPACE_NAME');

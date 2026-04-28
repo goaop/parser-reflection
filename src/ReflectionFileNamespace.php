@@ -18,6 +18,7 @@ use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Const_;
+use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\Node\Stmt\Namespace_;
@@ -35,6 +36,13 @@ class ReflectionFileNamespace
      * @var ReflectionClass[]
      */
     protected array $fileClasses;
+
+    /**
+     * List of enums in the namespace
+     *
+     * @var ReflectionEnum[]
+     */
+    protected array $fileEnums;
 
     /**
      * List of functions in the namespace
@@ -116,6 +124,20 @@ class ReflectionFileNamespace
         }
 
         return $this->fileClasses;
+    }
+
+    /**
+     * Gets list of enums in the namespace
+     *
+     * @return ReflectionEnum[]
+     */
+    public function getEnums(): array
+    {
+        if (!isset($this->fileEnums)) {
+            $this->fileEnums = $this->findEnums();
+        }
+
+        return $this->fileEnums;
     }
 
     /**
@@ -328,6 +350,29 @@ class ReflectionFileNamespace
         }
 
         return $classes;
+    }
+
+    /**
+     * Searches for enum declarations in the given AST
+     *
+     * @return ReflectionEnum[]
+     */
+    private function findEnums(): array
+    {
+        $enums         = [];
+        $namespaceName = $this->getName();
+        // enums can be only top-level nodes in the namespace, so we can scan them directly
+        foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
+            if ($namespaceLevelNode instanceof Enum_ && $namespaceLevelNode->name !== null) {
+                $enumShortName = $namespaceLevelNode->name->toString();
+                $enumName      = $namespaceName ? $namespaceName . '\\' . $enumShortName : $enumShortName;
+
+                $namespaceLevelNode->setAttribute('fileName', $this->fileName);
+                $enums[$enumName] = new ReflectionEnum($enumName, $namespaceLevelNode);
+            }
+        }
+
+        return $enums;
     }
 
     /**
