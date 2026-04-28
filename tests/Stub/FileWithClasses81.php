@@ -125,3 +125,28 @@ class ClassWithBackedEnumDefaultValue
         return $channel;
     }
 }
+
+/**
+ * Interface used for testing enum interface implementation reflection
+ */
+interface Php81LabeledInterface
+{
+    public function label(): string;
+}
+
+/**
+ * Enum implementing an interface, used to test getInterfaceNames() and related methods
+ *
+ * @see https://php.watch/versions/8.1/enums#enum-interfaces
+ */
+enum Php81EnumWithInterface: string implements Php81LabeledInterface
+{
+    case Red = 'red';
+    case Green = 'green';
+    case Blue = 'blue';
+
+    public function label(): string
+    {
+        return ucfirst($this->value);
+    }
+}
