@@ -118,4 +118,92 @@ class NodeExpressionResolverTest extends TestCase
         $expressionSolver->process($expressionNodeTree[0]);
         $this->assertSame('get', $expressionSolver->getValue());
     }
+
+    /**
+     * Testing resolving first-class callable syntax for built-in function
+     */
+    public function testResolveFirstClassCallableFunctionBuiltin(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php strlen(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $this->assertSame(6, $value('foobar'));
+    }
+
+    /**
+     * Testing resolving first-class callable syntax for another built-in function
+     */
+    public function testResolveFirstClassCallableFunctionBuiltinArrayMap(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php array_reverse(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $this->assertSame([3, 2, 1], $value([1, 2, 3]));
+    }
+
+    /**
+     * Testing that first-class callable syntax for user-defined function throws ReflectionException
+     */
+    public function testResolveFirstClassCallableFunctionUserDefinedThrows(): void
+    {
+        $this->expectException(\Go\ParserReflection\ReflectionException::class);
+        $this->expectExceptionMessageMatches('/user-defined function.*cannot be resolved/');
+
+        // Define a user function to test with
+        if (!function_exists('Go\ParserReflection\Resolver\testUserDefinedFunction')) {
+            eval('namespace Go\\ParserReflection\\Resolver; function testUserDefinedFunction() {}');
+        }
+
+        $expressionNodeTree = $this->parser->parse("<?php Go\\ParserReflection\\Resolver\\testUserDefinedFunction(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+    }
+
+    /**
+     * Testing resolving first-class callable syntax for a static method of a built-in class
+     */
+    public function testResolveFirstClassCallableStaticMethodBuiltin(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php \\DateTime::createFromFormat(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $result = $value('Y-m-d', '2023-01-01');
+        $this->assertInstanceOf(\DateTime::class, $result);
+        $this->assertSame('2023-01-01', $result->format('Y-m-d'));
+    }
+
+    /**
+     * Testing that first-class callable syntax for user-defined static method throws ReflectionException
+     */
+    public function testResolveFirstClassCallableStaticMethodUserDefinedThrows(): void
+    {
+        $this->expectException(\Go\ParserReflection\ReflectionException::class);
+        $this->expectExceptionMessageMatches('/user-defined method.*cannot be resolved/');
+
+        $expressionNodeTree = $this->parser->parse("<?php \\Go\\ParserReflection\\ReflectionEngine::locateClassFile(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+    }
+
+    /**
+     * Testing that first-class callable syntax for instance methods throws ReflectionException
+     */
+    public function testResolveFirstClassCallableInstanceMethodThrows(): void
+    {
+        $this->expectException(\Go\ParserReflection\ReflectionException::class);
+        $this->expectExceptionMessageMatches('/instance methods.*cannot be resolved statically/');
+
+        $expressionNodeTree = $this->parser->parse("<?php \$obj->method(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+    }
 }
