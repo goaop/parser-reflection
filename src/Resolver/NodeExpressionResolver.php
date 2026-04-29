@@ -223,6 +223,25 @@ class NodeExpressionResolver
      */
     protected function resolveExprFuncCall(Expr\FuncCall $node): mixed
     {
+        // First-class callable syntax: strlen(...)
+        if ($node->isFirstClassCallable()) {
+            $functionName = $this->resolve($node->name);
+            if (!is_string($functionName)) {
+                throw new ReflectionException("Could not resolve function name for first-class callable.");
+            }
+            $reflectedFunction = new \ReflectionFunction($functionName);
+            if (!$reflectedFunction->isInternal()) {
+                throw new ReflectionException(
+                    "First-class callable syntax for user-defined function '{$functionName}(...)' cannot be resolved " .
+                    "to a Closure statically, as closures cannot be represented as code in proxies."
+                );
+            }
+            if (!is_callable($functionName)) {
+                throw new ReflectionException("Function '{$functionName}' is not callable.");
+            }
+            return \Closure::fromCallable($functionName);
+        }
+
         $functionName = $this->resolve($node->name);
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
@@ -251,6 +270,81 @@ class NodeExpressionResolver
             throw new ReflectionException("Only internal PHP functions can be evaluated safely");
         }
         return $reflectedFunction->invoke(...$resolvedArgs);
+    }
+
+    /**
+     * Resolves static method calls, including first-class callable syntax (e.g. Foo::bar(...))
+     *
+    /**
+     * Resolves static method first-class callables (e.g. Foo::bar(...))
+     *
+     * @throws ReflectionException If the static method first-class callable cannot be resolved
+     */
+    protected function resolveExprStaticCall(Expr\StaticCall $node): \Closure
+    {
+        if (!$node->isFirstClassCallable()) {
+            throw new ReflectionException("Static method calls can only be resolved as first-class callables (e.g. Foo::bar(...)).");
+        }
+
+        // Resolve the class name
+        $classNode = $node->class;
+        if ($classNode instanceof Node\Name) {
+            if ($classNode->hasAttribute('resolvedName')) {
+                $resolvedName = $classNode->getAttribute('resolvedName');
+                if ($resolvedName instanceof Node\Name) {
+                    $classNode = $resolvedName;
+                }
+            }
+            $className = $classNode->toString();
+        } else {
+            $className = $this->resolve($classNode);
+            if (!is_string($className)) {
+                throw new ReflectionException("Could not resolve class name for static method first-class callable.");
+            }
+        }
+
+        // Resolve the method name
+        if ($node->name instanceof Node\Identifier) {
+            $methodName = $node->name->toString();
+        } else {
+            $resolvedName = $this->resolve($node->name);
+            if (!is_string($resolvedName)) {
+                throw new ReflectionException("Could not resolve method name for static method first-class callable.");
+            }
+            $methodName = $resolvedName;
+        }
+
+        $callable = $className . '::' . $methodName;
+        if (!is_callable($callable)) {
+            throw new ReflectionException("'{$callable}' is not callable and cannot be used as a first-class callable.");
+        }
+        $reflectedMethod = new \ReflectionMethod($className, $methodName);
+        if ($reflectedMethod->isUserDefined()) {
+            throw new ReflectionException(
+                "First-class callable syntax for user-defined method '{$callable}(...)' cannot be resolved " .
+                "to a Closure statically, as closures cannot be represented as code in proxies."
+            );
+        }
+
+        return \Closure::fromCallable($callable);
+    }
+
+    /**
+     * Handles instance method calls, including first-class callables (e.g. $obj->method(...))
+     *
+     * Instance method calls cannot be resolved statically; this method always throws.
+     *
+     * @throws ReflectionException Always, since instance method calls require a runtime object
+     */
+    protected function resolveExprMethodCall(Expr\MethodCall $node): never
+    {
+        if ($node->isFirstClassCallable()) {
+            throw new ReflectionException(
+                "First-class callable syntax for instance methods (e.g. \$obj->method(...)) cannot be resolved " .
+                "statically, as it requires a runtime object instance."
+            );
+        }
+        throw new ReflectionException("Instance method calls cannot be statically resolved.");
     }
 
     /**
