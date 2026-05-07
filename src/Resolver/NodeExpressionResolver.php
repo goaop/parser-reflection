@@ -25,6 +25,8 @@ use PhpParser\Node\Scalar\MagicConst\Line;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\PrettyPrinter\Standard;
+use Closure;
+use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 
@@ -229,7 +231,9 @@ class NodeExpressionResolver
             if (!is_string($functionName)) {
                 throw new ReflectionException("Could not resolve function name for first-class callable.");
             }
-            $reflectedFunction = new \ReflectionFunction($functionName);
+            // Set isConstExpr so callers can reconstruct the expression as code even if resolution fails
+            $this->isConstExpr = true;
+            $reflectedFunction = new ReflectionFunction($functionName);
             if (!$reflectedFunction->isInternal()) {
                 throw new ReflectionException(
                     "First-class callable syntax for user-defined function '{$functionName}(...)' cannot be resolved " .
@@ -239,7 +243,7 @@ class NodeExpressionResolver
             if (!is_callable($functionName)) {
                 throw new ReflectionException("Function '{$functionName}' is not callable.");
             }
-            return \Closure::fromCallable($functionName);
+            return Closure::fromCallable($functionName);
         }
 
         $functionName = $this->resolve($node->name);
@@ -273,14 +277,11 @@ class NodeExpressionResolver
     }
 
     /**
-     * Resolves static method calls, including first-class callable syntax (e.g. Foo::bar(...))
-     *
-    /**
      * Resolves static method first-class callables (e.g. Foo::bar(...))
      *
      * @throws ReflectionException If the static method first-class callable cannot be resolved
      */
-    protected function resolveExprStaticCall(Expr\StaticCall $node): \Closure
+    protected function resolveExprStaticCall(Expr\StaticCall $node): Closure
     {
         if (!$node->isFirstClassCallable()) {
             throw new ReflectionException("Static method calls can only be resolved as first-class callables (e.g. Foo::bar(...)).");
@@ -318,15 +319,10 @@ class NodeExpressionResolver
         if (!is_callable($callable)) {
             throw new ReflectionException("'{$callable}' is not callable and cannot be used as a first-class callable.");
         }
-        $reflectedMethod = new \ReflectionMethod($className, $methodName);
-        if ($reflectedMethod->isUserDefined()) {
-            throw new ReflectionException(
-                "First-class callable syntax for user-defined method '{$callable}(...)' cannot be resolved " .
-                "to a Closure statically, as closures cannot be represented as code in proxies."
-            );
-        }
+        // Set isConstExpr so callers can reconstruct the expression as code
+        $this->isConstExpr = true;
 
-        return \Closure::fromCallable($callable);
+        return Closure::fromCallable($callable);
     }
 
     /**

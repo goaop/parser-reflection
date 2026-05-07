@@ -67,6 +67,8 @@ final class ReflectionProperty extends BaseReflectionProperty
 
     private ?string $defaultValueConstantName;
 
+    private bool $isDefaultValueConstExpr = false;
+
     private ?string $defaultValueConstExpr;
 
     /**
@@ -94,12 +96,20 @@ final class ReflectionProperty extends BaseReflectionProperty
         // Both PropertyItem and Param has `default` property
         if (isset($this->propertyItemOrPromotedParam->default) && $this->hasDefaultValue()) {
             $expressionSolver = new NodeExpressionResolver($this->getDeclaringClass());
-            $expressionSolver->process($this->propertyItemOrPromotedParam->default);
-
-            $this->defaultValue             = $expressionSolver->getValue();
-            $this->isDefaultValueConstant   = $expressionSolver->isConstant();
-            $this->defaultValueConstantName = $expressionSolver->getConstantName();
-            $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
+            try {
+                $expressionSolver->process($this->propertyItemOrPromotedParam->default);
+                $this->defaultValue             = $expressionSolver->getValue();
+                $this->isDefaultValueConstant   = $expressionSolver->isConstant();
+                $this->defaultValueConstantName = $expressionSolver->getConstantName();
+            } catch (ReflectionException $e) {
+                // For first-class callables and other const-expressible values that can't be evaluated
+                // at parse time, fall back to storing the string expression for code reconstruction.
+                if (!$expressionSolver->isConstExpression()) {
+                    throw $e;
+                }
+            }
+            $this->isDefaultValueConstExpr = $expressionSolver->isConstExpression();
+            $this->defaultValueConstExpr   = $expressionSolver->getConstExpression();
         }
 
         if ($this->hasType() && $this->propertyOrPromotedParam->type !== null) {
@@ -165,7 +175,9 @@ final class ReflectionProperty extends BaseReflectionProperty
         $defaultValue    = '';
         if ($hasDefaultValue) {
             // For constant fetch expressions, PHP renders now expression
-            if ($this->isDefaultValueConstant) {
+            if ($this->isDefaultValueConstExpr) {
+                $defaultValue = $this->defaultValueConstExpr;
+            } elseif ($this->isDefaultValueConstant) {
                 $defaultValue = $this->defaultValueConstantName;
             } elseif (is_array($this->getDefaultValue())) {
                 $defaultValue = $this->defaultValueConstExpr;
@@ -380,6 +392,20 @@ final class ReflectionProperty extends BaseReflectionProperty
     public function getDefaultValue(): mixed
     {
         return $this->defaultValue;
+    }
+
+    /**
+     * Returns the string representation of the default value expression, if it is a
+     * constant expression (e.g. first-class callable syntax or array expression).
+     *
+     * This is useful when the default value cannot be fully evaluated at parse time but
+     * its source-code representation is needed to reconstruct proxied code.
+     *
+     * @return string|null String expression (e.g. '\strlen(...)') or null if not applicable
+     */
+    public function getDefaultValueExpression(): ?string
+    {
+        return $this->defaultValueConstExpr ?? null;
     }
 
     /**

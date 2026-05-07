@@ -275,6 +275,72 @@ class ReflectionParameterTest extends AbstractTestCase
     }
 
     /**
+     * Test that parameters with first-class callable syntax as default value are reflected correctly.
+     *
+     * The stub file is only parsed via AST (not included), because PHP runtime forbids
+     * FCC in constant-expression positions.
+     */
+    public function testParameterWithFccDefaultValue(): void
+    {
+        // Parse the stub via AST only — do NOT include_once since PHP runtime rejects FCC defaults.
+        $fileName = __DIR__ . '/Stub/FileWithFunctionsFcc.php';
+        $fileNode = ReflectionEngine::parseFile($fileName);
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        $parsedFileNamespace = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+
+        // Test built-in FCC default: function functionWithBuiltinFccDefault($callable = \strlen(...))
+        $parsedFunction = $parsedFileNamespace->getFunction('functionWithBuiltinFccDefault');
+        $parsedParameter = $parsedFunction->getParameters()[0];
+
+        $this->assertSame('callable', $parsedParameter->getName());
+        $this->assertTrue($parsedParameter->isDefaultValueAvailable());
+        $this->assertFalse($parsedParameter->isDefaultValueConstant());
+
+        // Default value should be a Closure (resolved from the built-in FCC)
+        $defaultValue = $parsedParameter->getDefaultValue();
+        $this->assertInstanceOf(\Closure::class, $defaultValue);
+        $this->assertSame(6, $defaultValue('foobar'));
+
+        // getDefaultValueExpression() must return the source expression for proxy reconstruction
+        $this->assertSame('\strlen(...)', $parsedParameter->getDefaultValueExpression());
+
+        // __toString must contain the FCC expression
+        $this->assertStringContainsString('\strlen(...)', (string) $parsedParameter);
+    }
+
+    /**
+     * Test that parameters with a user-defined static method FCC default are reflected correctly.
+     *
+     * The stub file is only parsed via AST (not included), because PHP runtime forbids
+     * FCC in constant-expression positions.
+     */
+    public function testParameterWithStaticMethodFccDefaultValue(): void
+    {
+        $fileName = __DIR__ . '/Stub/FileWithFunctionsFcc.php';
+        $fileNode = ReflectionEngine::parseFile($fileName);
+        $reflectionFile = new ReflectionFile($fileName, $fileNode);
+        $parsedFileNamespace = $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+
+        $parsedFunction = $parsedFileNamespace->getFunction('functionWithStaticMethodFccDefault');
+        $parsedParameter = $parsedFunction->getParameters()[0];
+
+        $this->assertSame('callable', $parsedParameter->getName());
+        $this->assertTrue($parsedParameter->isDefaultValueAvailable());
+
+        // Default value should be a Closure wrapping the static method
+        $defaultValue = $parsedParameter->getDefaultValue();
+        $this->assertInstanceOf(\Closure::class, $defaultValue);
+
+        // getDefaultValueExpression() must return the FQN source expression
+        $expression = $parsedParameter->getDefaultValueExpression();
+        $this->assertNotNull($expression);
+        $this->assertStringContainsString('ReflectionEngine::locateClassFile(...)', $expression);
+
+        // __toString must contain the FCC expression
+        $this->assertStringContainsString('ReflectionEngine::locateClassFile(...)', (string) $parsedParameter);
+    }
+
+    /**
      * @inheritDoc
      */
     static protected function getGettersToCheck(): array
