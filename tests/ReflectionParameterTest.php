@@ -301,7 +301,9 @@ class ReflectionParameterTest extends AbstractTestCase
         $this->assertInstanceOf(\Closure::class, $defaultValue);
         $this->assertSame(6, $defaultValue('foobar'));
 
-        // getDefaultValueExpression() must return the source expression for proxy reconstruction
+        // getDefaultValueExpression() must return the fully-qualified FCC source expression.
+        // The FQN form (\strlen) is what PHP-Parser's NameResolver emits for built-in functions
+        // inside a namespace; this exact string is needed by proxy generators for code reconstruction.
         $this->assertSame('\strlen(...)', $parsedParameter->getDefaultValueExpression());
 
         // __toString must contain the FCC expression

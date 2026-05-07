@@ -326,7 +326,7 @@ final class ReflectionParameter extends BaseReflectionParameter
      */
     public function getDefaultValueExpression(): ?string
     {
-        return $this->defaultValueConstExpr ?? null;
+        return $this->defaultValueConstExpr;
     }
 
     /**

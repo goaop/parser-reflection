@@ -405,7 +405,7 @@ final class ReflectionProperty extends BaseReflectionProperty
      */
     public function getDefaultValueExpression(): ?string
     {
-        return $this->defaultValueConstExpr ?? null;
+        return $this->defaultValueConstExpr;
     }
 
     /**
