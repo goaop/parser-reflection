@@ -105,11 +105,18 @@ final class ReflectionParameter extends BaseReflectionParameter
 
         if ($this->isDefaultValueAvailable() && $this->parameterNode->default !== null) {
             $expressionSolver = new NodeExpressionResolver($context);
-            $expressionSolver->process($this->parameterNode->default);
-
-            $this->defaultValue             = $expressionSolver->getValue();
-            $this->isDefaultValueConstant   = $expressionSolver->isConstant();
-            $this->defaultValueConstantName = $expressionSolver->getConstantName();
+            try {
+                $expressionSolver->process($this->parameterNode->default);
+                $this->defaultValue             = $expressionSolver->getValue();
+                $this->isDefaultValueConstant   = $expressionSolver->isConstant();
+                $this->defaultValueConstantName = $expressionSolver->getConstantName();
+            } catch (ReflectionException $e) {
+                // For first-class callables and other const-expressible values that can't be evaluated
+                // at parse time, fall back to storing the string expression for code reconstruction.
+                if (!$expressionSolver->isConstExpression()) {
+                    throw $e;
+                }
+            }
             $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
             $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
         }
@@ -306,6 +313,20 @@ final class ReflectionParameter extends BaseReflectionParameter
         }
 
         return $this->defaultValueConstantName;
+    }
+
+    /**
+     * Returns the string representation of the default value expression, if it is a
+     * constant expression (e.g. first-class callable syntax or array expression).
+     *
+     * This is useful when the default value cannot be fully evaluated at parse time but
+     * its source-code representation is needed to reconstruct proxied code.
+     *
+     * @return string|null String expression (e.g. '\strlen(...)') or null if not applicable
+     */
+    public function getDefaultValueExpression(): ?string
+    {
+        return $this->defaultValueConstExpr;
     }
 
     /**

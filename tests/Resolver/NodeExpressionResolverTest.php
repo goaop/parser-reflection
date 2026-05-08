@@ -118,4 +118,104 @@ class NodeExpressionResolverTest extends TestCase
         $expressionSolver->process($expressionNodeTree[0]);
         $this->assertSame('get', $expressionSolver->getValue());
     }
+
+    /**
+     * Testing resolving first-class callable syntax for built-in function
+     */
+    public function testResolveFirstClassCallableFunctionBuiltin(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php strlen(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $this->assertSame(6, $value('foobar'));
+        $this->assertTrue($expressionSolver->isConstExpression());
+    }
+
+    /**
+     * Testing resolving first-class callable syntax for another built-in function
+     */
+    public function testResolveFirstClassCallableFunctionBuiltinArrayMap(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php array_reverse(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $this->assertSame([3, 2, 1], $value([1, 2, 3]));
+        $this->assertTrue($expressionSolver->isConstExpression());
+    }
+
+    /**
+     * Testing that first-class callable syntax for user-defined function throws ReflectionException
+     * but still sets the isConstExpression flag so callers can reconstruct the expression.
+     */
+    public function testResolveFirstClassCallableFunctionUserDefinedThrows(): void
+    {
+        require_once __DIR__ . '/../Stub/FileWithFunctions55.php';
+
+        // Process just the raw Expr\FuncCall node (not the Stmt\Expression wrapper) so that
+        // getConstExpression() can return the pretty-printed expression after the exception.
+        $expressionNodeTree = $this->parser->parse("<?php Go\\ParserReflection\\Stub\\simpleNoArgs(...);");
+        $funcCallNode = $expressionNodeTree[0]->expr;
+        $expressionSolver = new NodeExpressionResolver(null);
+
+        try {
+            $expressionSolver->process($funcCallNode);
+            $this->fail('Expected ReflectionException was not thrown');
+        } catch (\Go\ParserReflection\ReflectionException $e) {
+            $this->assertMatchesRegularExpression('/user-defined function.*cannot be resolved/', $e->getMessage());
+            $this->assertTrue($expressionSolver->isConstExpression(), 'isConstExpression should be true after FCC exception');
+            $this->assertNotNull($expressionSolver->getConstExpression(), 'getConstExpression should return the FCC expression string');
+        }
+    }
+
+    /**
+     * Testing resolving first-class callable syntax for a static method of a built-in class
+     */
+    public function testResolveFirstClassCallableStaticMethodBuiltin(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php \\DateTime::createFromFormat(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $result = $value('Y-m-d', '2023-01-01');
+        $this->assertInstanceOf(\DateTime::class, $result);
+        $this->assertSame('2023-01-01', $result->format('Y-m-d'));
+        $this->assertTrue($expressionSolver->isConstExpression());
+    }
+
+    /**
+     * Testing resolving first-class callable syntax for a user-defined static method.
+     * Since PHP 8.1 FCC, user-defined static methods should also resolve to a Closure
+     * (class loading may occur, which is acceptable as it can be intercepted).
+     */
+    public function testResolveFirstClassCallableStaticMethodUserDefined(): void
+    {
+        $expressionNodeTree = $this->parser->parse("<?php \\Go\\ParserReflection\\ReflectionEngine::locateClassFile(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+
+        $value = $expressionSolver->getValue();
+        $this->assertInstanceOf(\Closure::class, $value);
+        $this->assertTrue($expressionSolver->isConstExpression(), 'isConstExpression should be true for static method FCC');
+    }
+
+    /**
+     * Testing that first-class callable syntax for instance methods throws ReflectionException
+     */
+    public function testResolveFirstClassCallableInstanceMethodThrows(): void
+    {
+        $this->expectException(\Go\ParserReflection\ReflectionException::class);
+        $this->expectExceptionMessageMatches('/instance methods.*cannot be resolved statically/');
+
+        $expressionNodeTree = $this->parser->parse("<?php \$obj->method(...);");
+        $expressionSolver = new NodeExpressionResolver(null);
+        $expressionSolver->process($expressionNodeTree[0]);
+    }
 }

@@ -300,4 +300,17 @@ class ReflectionPropertyTest extends AbstractTestCase
 
         return $getters;
     }
+
+    /**
+     * Test that getDefaultValueExpression() returns null for a property with a plain scalar default,
+     * and verifies the method contract is exercised correctly.
+     */
+    public function testGetDefaultValueExpressionForRegularProperty(): void
+    {
+        $parsedProperty = $this->parsedRefClass->getProperty('protectedProperty');
+        $this->assertInstanceOf(ReflectionProperty::class, $parsedProperty);
+
+        // Regular literal scalar default ('a'): getDefaultValueExpression() must return null
+        $this->assertNull($parsedProperty->getDefaultValueExpression());
+    }
 }
