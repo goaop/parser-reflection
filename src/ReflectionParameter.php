@@ -32,7 +32,7 @@ use ReflectionParameter as BaseReflectionParameter;
  * AST-based reflection for method/function parameter
  * @see \Go\ParserReflection\ReflectionParameterTest
  */
-final class ReflectionParameter extends BaseReflectionParameter
+final class ReflectionParameter extends BaseReflectionParameter implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;

@@ -26,7 +26,7 @@ use ReflectionMethod as BaseReflectionMethod;
  * AST-based reflection for the method in a class
  * @see \Go\ParserReflection\ReflectionMethodTest
  */
-final class ReflectionMethod extends BaseReflectionMethod
+final class ReflectionMethod extends BaseReflectionMethod implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionFunctionLikeTrait;

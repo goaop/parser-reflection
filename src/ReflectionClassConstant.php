@@ -26,7 +26,7 @@ use ReflectionClassConstant as BaseReflectionClassConstant;
 /**
  * @see \Go\ParserReflection\ReflectionClassConstantTest
  */
-final class ReflectionClassConstant extends BaseReflectionClassConstant
+final class ReflectionClassConstant extends BaseReflectionClassConstant implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;

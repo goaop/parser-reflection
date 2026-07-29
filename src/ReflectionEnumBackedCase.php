@@ -20,7 +20,7 @@ use UnitEnum;
 /**
  * AST-based reflection for enum backed cases
  */
-final class ReflectionEnumBackedCase extends InternalReflectionEnumBackedCase
+final class ReflectionEnumBackedCase extends InternalReflectionEnumBackedCase implements NodeAwareInterface
 {
     use Traits\InternalPropertiesEmulationTrait;
     use Traits\AttributeResolverTrait;
