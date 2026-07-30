@@ -22,7 +22,7 @@ use ReflectionFunction as BaseReflectionFunction;
  * AST-based reflection for function
  * @see \Go\ParserReflection\ReflectionFunctionTest
  */
-final class ReflectionFunction extends BaseReflectionFunction
+final class ReflectionFunction extends BaseReflectionFunction implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionFunctionLikeTrait;

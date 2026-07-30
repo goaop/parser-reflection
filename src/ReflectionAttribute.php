@@ -28,7 +28,7 @@ use ReflectionAttribute as BaseReflectionAttribute;
  *
  * @extends \ReflectionAttribute<object>
  */
-class ReflectionAttribute extends BaseReflectionAttribute
+class ReflectionAttribute extends BaseReflectionAttribute implements NodeAwareInterface
 {
     /**
      * Fully-qualified attribute class name.

@@ -25,7 +25,7 @@ use ReflectionEnum as InternalReflectionEnum;
  * @see \Go\ParserReflection\ReflectionEnumTest
  * @extends InternalReflectionEnum<\UnitEnum>
  */
-final class ReflectionEnum extends InternalReflectionEnum
+final class ReflectionEnum extends InternalReflectionEnum implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionClassLikeTrait;

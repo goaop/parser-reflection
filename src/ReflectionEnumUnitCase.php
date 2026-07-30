@@ -21,7 +21,7 @@ use UnitEnum;
 /**
  * AST-based reflection for enum unit cases
  */
-final class ReflectionEnumUnitCase extends InternalReflectionEnumUnitCase
+final class ReflectionEnumUnitCase extends InternalReflectionEnumUnitCase implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use AttributeResolverTrait;

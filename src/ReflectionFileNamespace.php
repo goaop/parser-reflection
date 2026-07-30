@@ -28,7 +28,7 @@ use PhpParser\Node\Stmt\Use_;
  * AST-based reflection for the concrete namespace in the file
  * @see \Go\ParserReflection\ReflectionFileNamespaceTest
  */
-class ReflectionFileNamespace
+class ReflectionFileNamespace implements NodeAwareInterface
 {
     /**
      * List of classes in the namespace

@@ -36,7 +36,7 @@ use ReflectionProperty as BaseReflectionProperty;
  * AST-based reflection for class property
  * @see \Go\ParserReflection\ReflectionPropertyTest
  */
-final class ReflectionProperty extends BaseReflectionProperty
+final class ReflectionProperty extends BaseReflectionProperty implements NodeAwareInterface
 {
     use InitializationTrait;
     use InternalPropertiesEmulationTrait;

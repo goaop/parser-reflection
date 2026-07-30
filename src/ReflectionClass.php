@@ -30,7 +30,7 @@ use ReflectionClass as InternalReflectionClass;
  * @see \Go\ParserReflection\ReflectionClassTest
  * @extends \ReflectionClass<object>
  */
-final class ReflectionClass extends InternalReflectionClass
+final class ReflectionClass extends InternalReflectionClass implements NodeAwareInterface
 {
     use InternalPropertiesEmulationTrait;
     use ReflectionClassLikeTrait;
