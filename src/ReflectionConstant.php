@@ -204,12 +204,18 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
     public function __toString(): string
     {
         $constantValue = $this->getValue();
+        $printedValue  = match (true) {
+            is_array($constantValue) => 'Array',
+            is_scalar($constantValue), $constantValue === null => (string) $constantValue,
+            $constantValue instanceof \Stringable => (string) $constantValue,
+            default => get_debug_type($constantValue),
+        };
 
         return sprintf(
             "Constant [ %s %s ] { %s }\n",
             get_debug_type($constantValue),
             $this->getName(),
-            is_array($constantValue) ? 'Array' : (string) $constantValue
+            $printedValue
         );
     }
 
@@ -241,6 +247,8 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
 
     /**
      * Normalizes the attribute class name from the given attribute node, without triggering autoloading
+     *
+     * @return class-string<object>
      */
     private static function resolveAttributeName(Attribute $attributeNode): string
     {
