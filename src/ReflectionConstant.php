@@ -261,7 +261,10 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
             }
         }
 
-        return ltrim($attributeNameNode->toString(), '\\');
+        /** @var class-string<object> $attributeClassName */
+        $attributeClassName = ltrim($attributeNameNode->toString(), '\\');
+
+        return $attributeClassName;
     }
 
     /**
