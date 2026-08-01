@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Traits;
 
 use Go\ParserReflection\ReflectionAttribute;
+use Go\ParserReflection\ReflectionClass as ParsedReflectionClass;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
@@ -42,9 +43,17 @@ trait AttributeResolverTrait
      */
     public function getAttributes(?string $name = null, int $flags = 0): array
     {
+        if ($flags !== 0 && $flags !== \ReflectionAttribute::IS_INSTANCEOF) {
+            throw new \ValueError(
+                $this->getAttributeFilterOwnerName()
+                . '::getAttributes(): Argument #2 ($flags) must be a valid attribute filter flag'
+            );
+        }
+
         $node = $this->getNodeForAttributes();
 
-        $attributes = [];
+        $filterByInstanceOf     = $name !== null && ($flags & \ReflectionAttribute::IS_INSTANCEOF) !== 0;
+        $attributes             = [];
         $nodeExpressionResolver = new NodeExpressionResolver($this);
 
         foreach ($node->attrGroups as $attrGroup) {
@@ -62,6 +71,16 @@ trait AttributeResolverTrait
                 }
                 $resolvedAttrName = self::resolveAttributeClassName($attributeNameNode);
                 if ($name === null) {
+                    $attributes[] = new ReflectionAttribute($resolvedAttrName, $this, $arguments, $this->isAttributeRepeated($resolvedAttrName, $node->attrGroups));
+
+                    continue;
+                }
+
+                if ($filterByInstanceOf) {
+                    if (!self::isAttributeInstanceOf($resolvedAttrName, $name)) {
+                        continue;
+                    }
+
                     $attributes[] = new ReflectionAttribute($resolvedAttrName, $this, $arguments, $this->isAttributeRepeated($resolvedAttrName, $node->attrGroups));
 
                     continue;
@@ -98,6 +117,93 @@ trait AttributeResolverTrait
         }
 
         return $className;
+    }
+
+    /**
+     * Returns the name of the internal reflection class that declares getAttributes(), used to build
+     * the same \ValueError message as the engine does for an invalid filter flag.
+     */
+    private function getAttributeFilterOwnerName(): string
+    {
+        return match (true) {
+            $this instanceof \ReflectionFunctionAbstract => 'ReflectionFunctionAbstract',
+            $this instanceof \ReflectionParameter        => 'ReflectionParameter',
+            $this instanceof \ReflectionProperty         => 'ReflectionProperty',
+            $this instanceof \ReflectionClassConstant    => 'ReflectionClassConstant',
+            default                                      => 'ReflectionClass',
+        };
+    }
+
+    /**
+     * Checks that an attribute class is the given class, extends it or implements it, following the
+     * instanceof semantics of \ReflectionAttribute::IS_INSTANCEOF without triggering autoloading.
+     */
+    private static function isAttributeInstanceOf(string $attributeClassName, string $filterClassName): bool
+    {
+        $filterClassName = strtolower(ltrim($filterClassName, '\\'));
+        if ($filterClassName === '') {
+            return false;
+        }
+
+        $classNamesToVisit = [$attributeClassName];
+        $visitedClassNames = [];
+
+        while ($classNamesToVisit !== []) {
+            $currentClassName = ltrim(array_shift($classNamesToVisit), '\\');
+            $lowerClassName   = strtolower($currentClassName);
+            if ($lowerClassName === '' || isset($visitedClassNames[$lowerClassName])) {
+                continue;
+            }
+            $visitedClassNames[$lowerClassName] = true;
+
+            if ($lowerClassName === $filterClassName) {
+                return true;
+            }
+
+            foreach (self::resolveClassAncestorNames($currentClassName) as $ancestorClassName) {
+                $classNamesToVisit[] = $ancestorClassName;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Resolves direct and inherited ancestors of a class without loading it: already loaded classes are
+     * inspected with native reflection, everything else is resolved from the AST via the current locator.
+     *
+     * @return list<string>
+     */
+    private static function resolveClassAncestorNames(string $className): array
+    {
+        if (class_exists($className, false) || interface_exists($className, false)) {
+            $reflection = new \ReflectionClass($className);
+        } else {
+            try {
+                $reflection = new ParsedReflectionClass($className);
+            } catch (\Throwable) {
+                // Attribute classes are not required to exist until an attribute is instantiated
+                return [];
+            }
+        }
+
+        $ancestorNames = [];
+        try {
+            $ancestorNames = array_values($reflection->getInterfaceNames());
+        } catch (\Throwable) {
+            // Unresolvable interfaces simply do not participate in the instanceof check
+        }
+
+        try {
+            $parentClass = $reflection->getParentClass();
+            if ($parentClass !== false) {
+                $ancestorNames[] = $parentClass->getName();
+            }
+        } catch (\Throwable) {
+            // Same for an unresolvable parent class
+        }
+
+        return $ancestorNames;
     }
 
     /**
