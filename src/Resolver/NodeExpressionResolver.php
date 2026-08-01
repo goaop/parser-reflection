@@ -250,9 +250,6 @@ class NodeExpressionResolver
                     "to a Closure statically, as closures cannot be represented as code in proxies."
                 );
             }
-            if (!is_callable($functionName)) {
-                throw new ReflectionException("Function '{$functionName}' is not callable.");
-            }
             return Closure::fromCallable($functionName);
         }
 
@@ -942,10 +939,11 @@ class NodeExpressionResolver
         $this->isConstExpr = true;
 
         $closureNode = $this->resolveNodeNames($node);
-        if ($closureNode instanceof Expr\Closure || $closureNode instanceof Expr\ArrowFunction) {
-            // Constant expression closures are always static, this also prevents binding of the resolver itself
-            $closureNode->static = true;
+        if (!$closureNode instanceof Expr\Closure && !$closureNode instanceof Expr\ArrowFunction) {
+            throw new ReflectionException('Unexpected node type after closure name resolution.');
         }
+        // Constant expression closures are always static, this also prevents binding of the resolver itself
+        $closureNode->static = true;
 
         $printer       = new Standard(['shortArraySyntax' => true]);
         $closureSource = $printer->prettyPrintExpr($closureNode);
@@ -1027,6 +1025,9 @@ class NodeExpressionResolver
         }
     }
 
+    /**
+     * @phpstan-impure The result changes once the located class file has been included
+     */
     private function isClassDefinitionLoaded(string $className): bool
     {
         return class_exists($className, false)
