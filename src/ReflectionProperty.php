@@ -384,7 +384,7 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
         foreach (PropertyHookType::cases() as $type) {
             $hook = $this->getHook($type);
             if ($hook !== null) {
-                $hooks[$type->value] = $hook;
+                $hooks[(string) $type->value] = $hook;
             }
         }
 
