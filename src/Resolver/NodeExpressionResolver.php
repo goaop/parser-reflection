@@ -13,6 +13,7 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Resolver;
 
 use Go\ParserReflection\ReflectionClass;
+use Go\ParserReflection\ReflectionEngine;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
@@ -24,6 +25,9 @@ use PhpParser\Node\Scalar\Int_;
 use PhpParser\Node\Scalar\MagicConst\Line;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\CloningVisitor;
+use PhpParser\NodeVisitorAbstract;
 use PhpParser\PrettyPrinter\Standard;
 use Closure;
 use ReflectionFunction;
@@ -233,6 +237,12 @@ class NodeExpressionResolver
             }
             // Set isConstExpr so callers can reconstruct the expression as code even if resolution fails
             $this->isConstExpr = true;
+            if (!function_exists($functionName)) {
+                throw new ReflectionException(
+                    "First-class callable syntax refers to the function '{$functionName}(...)' that is not defined, " .
+                    "therefore it can not be resolved to a Closure."
+                );
+            }
             $reflectedFunction = new ReflectionFunction($functionName);
             if (!$reflectedFunction->isInternal()) {
                 throw new ReflectionException(
@@ -315,12 +325,16 @@ class NodeExpressionResolver
             $methodName = $resolvedName;
         }
 
+        // Set isConstExpr so callers can reconstruct the expression as code even if resolution fails
+        $this->isConstExpr = true;
+
+        // is_callable() and Closure::fromCallable() would silently autoload the class, so it is loaded explicitly
+        $this->loadClassDefinition($className);
+
         $callable = $className . '::' . $methodName;
         if (!is_callable($callable)) {
             throw new ReflectionException("'{$callable}' is not callable and cannot be used as a first-class callable.");
         }
-        // Set isConstExpr so callers can reconstruct the expression as code
-        $this->isConstExpr = true;
 
         return Closure::fromCallable($callable);
     }
@@ -391,11 +405,38 @@ class NodeExpressionResolver
         }
 
         // Use ReflectionClass to safely instantiate the class
-        if (!class_exists($className)) {
+        $this->loadClassDefinition($className);
+        if (!class_exists($className, false)) {
             throw new ReflectionException("Class '{$className}' does not exist and cannot be instantiated.");
         }
         $reflectionClass = new \ReflectionClass($className);
         return $reflectionClass->newInstance(...$resolvedArgs);
+    }
+
+    /**
+     * Resolves a closure used as a constant expression, e.g. `const CALLBACK = static function (): int {...};`
+     *
+     * @throws ReflectionException If the closure can not be evaluated
+     */
+    protected function resolveExprClosure(Expr\Closure $node): Closure
+    {
+        if ($node->uses !== []) {
+            throw new ReflectionException(
+                "Closure with captured variables can not be resolved, because there is no outer scope to capture."
+            );
+        }
+
+        return $this->evaluateClosureNode($node);
+    }
+
+    /**
+     * Resolves an arrow function used as a constant expression, e.g. `const CALLBACK = static fn (): int => 1;`
+     *
+     * @throws ReflectionException If the arrow function can not be evaluated
+     */
+    protected function resolveExprArrowFunction(Expr\ArrowFunction $node): Closure
+    {
+        return $this->evaluateClosureNode($node);
     }
 
     protected function resolveScalarFloat(Float_ $node): float
@@ -885,6 +926,112 @@ class NodeExpressionResolver
         }
 
         return 0;
+    }
+
+    /**
+     * Builds a real closure that is equivalent to the given closure-like node
+     *
+     * Closures in constant expressions are always static and never capture anything from the outer scope,
+     * therefore an equivalent closure can be built from the source code of the node itself.
+     *
+     * @throws ReflectionException If the given node can not be evaluated
+     */
+    private function evaluateClosureNode(Expr\Closure|Expr\ArrowFunction $node): Closure
+    {
+        // Closure has a source code representation, so callers are able to reconstruct it even on failure
+        $this->isConstExpr = true;
+
+        $closureNode = $this->resolveNodeNames($node);
+        if ($closureNode instanceof Expr\Closure || $closureNode instanceof Expr\ArrowFunction) {
+            // Constant expression closures are always static, this also prevents binding of the resolver itself
+            $closureNode->static = true;
+        }
+
+        $printer       = new Standard(['shortArraySyntax' => true]);
+        $closureSource = $printer->prettyPrintExpr($closureNode);
+
+        try {
+            $closure = eval('return ' . $closureSource . ';');
+        } catch (\Throwable $e) {
+            throw new ReflectionException("Could not evaluate the closure expression: {$e->getMessage()}", 0, $e);
+        }
+        if (!$closure instanceof Closure) {
+            throw new ReflectionException("Evaluation of the closure expression did not produce a closure.");
+        }
+
+        // Closure is compiled in the scope of this class, thus the scope is dropped to mimic the original one
+        $unscopedClosure = Closure::bind($closure, null, null);
+
+        return $unscopedClosure ?? $closure;
+    }
+
+    /**
+     * Returns a deep copy of the given node with all resolved names replaced by fully-qualified ones
+     *
+     * Unqualified function and constant names are intentionally kept as is, because PHP resolves them at
+     * runtime with a fallback to the global namespace.
+     */
+    private function resolveNodeNames(Node $node): Node
+    {
+        $cloningTraverser = new NodeTraverser(new CloningVisitor());
+        [$clonedNode]     = $cloningTraverser->traverse([$node]);
+
+        $nameTraverser = new NodeTraverser(new class extends NodeVisitorAbstract {
+            public function enterNode(Node $node): ?Node
+            {
+                if ($node instanceof Name && $node->hasAttribute('resolvedName')) {
+                    $resolvedName = $node->getAttribute('resolvedName');
+                    if ($resolvedName instanceof Name) {
+                        return new Name\FullyQualified($resolvedName->toString(), $node->getAttributes());
+                    }
+                }
+
+                return null;
+            }
+        });
+        [$resolvedNode] = $nameTraverser->traverse([$clonedNode]);
+
+        return $resolvedNode;
+    }
+
+    /**
+     * Makes the definition of the given class available in the current runtime
+     *
+     * Reflection is performed on the AST only, but several expressions, such as object instantiation or
+     * first-class callables, can not be represented without a real class definition. For these cases the file
+     * with the class is resolved via the registered locator and included explicitly, thus an implicit
+     * autoloading is never triggered by the resolver itself.
+     *
+     * @throws ReflectionException If the class is not loaded and its file can not be located
+     */
+    private function loadClassDefinition(string $className): void
+    {
+        if ($this->isClassDefinitionLoaded($className)) {
+            return;
+        }
+
+        try {
+            $classFileName = ReflectionEngine::locateClassFile($className);
+        } catch (\Throwable $e) {
+            throw new ReflectionException(
+                "Class '{$className}' is not loaded and its file can not be found by the registered locator.",
+                0,
+                $e
+            );
+        }
+
+        include_once $classFileName;
+
+        if (!$this->isClassDefinitionLoaded($className)) {
+            throw new ReflectionException("Class '{$className}' was not found in the file '{$classFileName}'.");
+        }
+    }
+
+    private function isClassDefinitionLoaded(string $className): bool
+    {
+        return class_exists($className, false)
+            || interface_exists($className, false)
+            || trait_exists($className, false);
     }
 
     private function getDispatchMethodFor(Node $node): string
