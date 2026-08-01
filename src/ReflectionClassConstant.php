@@ -252,6 +252,37 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant implemen
     /**
      * @inheritDoc
      */
+    public function isDeprecated(): bool
+    {
+        // Since PHP 8.4 class constants and enum cases can be marked with the #[\Deprecated] attribute
+        foreach ($this->classConstOrEnumCaseNode->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                if (self::isDeprecatedAttributeName($attr->name)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks statically, without any autoloading, if the given attribute name points to the
+     * global `\Deprecated` attribute class
+     */
+    private static function isDeprecatedAttributeName(Node\Name $attributeName): bool
+    {
+        $resolvedName = $attributeName->getAttribute('resolvedName');
+        if ($resolvedName instanceof Node\Name) {
+            $attributeName = $resolvedName;
+        }
+
+        return strcasecmp(ltrim($attributeName->toString(), '\\'), 'Deprecated') === 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function hasType(): bool
     {
         return $this->classConstOrEnumCaseNode instanceof ClassConst && isset($this->classConstOrEnumCaseNode->type);

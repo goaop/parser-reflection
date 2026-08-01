@@ -21,6 +21,7 @@ use Go\ParserReflection\Resolver\TypeExpressionResolver;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\FunctionLike;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
@@ -68,6 +69,18 @@ trait ReflectionFunctionLikeTrait
     /**
      * {@inheritDoc}
      *
+     * Statically analysed code never holds a bound closure, so there is no called class to report.
+     *
+     * @return \ReflectionClass<object>|null
+     */
+    public function getClosureCalledClass(): ?\ReflectionClass
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @return \ReflectionClass<object>|null
      */
     public function getClosureScopeClass(): ?\ReflectionClass
@@ -85,6 +98,30 @@ trait ReflectionFunctionLikeTrait
         $this->initializeInternalReflection();
 
         return parent::getClosureThis();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Values of the used variables are only known at runtime, therefore every captured variable
+     * is reported with a `null` value. Non-closures report an empty list, just like the engine does.
+     *
+     * @return array<string, mixed>
+     */
+    public function getClosureUsedVariables(): array
+    {
+        if (!$this->functionLikeNode instanceof Closure) {
+            return [];
+        }
+
+        $usedVariables = [];
+        foreach ($this->functionLikeNode->uses as $closureUse) {
+            if (is_string($closureUse->var->name)) {
+                $usedVariables[$closureUse->var->name] = null;
+            }
+        }
+
+        return $usedVariables;
     }
 
     public function getDocComment(): string|false
@@ -256,6 +293,19 @@ trait ReflectionFunctionLikeTrait
     }
 
     /**
+     * Returns the tentative return type of a function
+     *
+     * Tentative return types exist only for internal functions, user-land code always declares
+     * its return type explicitly, so there is nothing tentative to report.
+     *
+     * @link http://php.net/manual/en/reflectionfunctionabstract.gettentativereturntype.php
+     */
+    public function getTentativeReturnType(): ?\ReflectionType
+    {
+        return null;
+    }
+
+    /**
      * Checks if the function has a specified return type
      *
      *
@@ -266,6 +316,16 @@ trait ReflectionFunctionLikeTrait
         $returnType = $this->functionLikeNode->getReturnType();
 
         return isset($returnType);
+    }
+
+    /**
+     * Checks if the function has a tentative return type
+     *
+     * @link http://php.net/manual/en/reflectionfunctionabstract.hastentativereturntype.php
+     */
+    public function hasTentativeReturnType(): bool
+    {
+        return false;
     }
 
     /**
@@ -289,8 +349,30 @@ trait ReflectionFunctionLikeTrait
      */
     public function isDeprecated(): bool
     {
-        // user-land method/function/closure can not be deprecated
+        // Since PHP 8.4 user-land functions and methods can be marked with the #[\Deprecated] attribute
+        foreach ($this->functionLikeNode->getAttrGroups() as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                if (self::isDeprecatedAttributeName($attr->name)) {
+                    return true;
+                }
+            }
+        }
+
         return false;
+    }
+
+    /**
+     * Checks statically, without any autoloading, if the given attribute name points to the
+     * global `\Deprecated` attribute class
+     */
+    private static function isDeprecatedAttributeName(Name $attributeName): bool
+    {
+        $resolvedName = $attributeName->getAttribute('resolvedName');
+        if ($resolvedName instanceof Name) {
+            $attributeName = $resolvedName;
+        }
+
+        return strcasecmp(ltrim($attributeName->toString(), '\\'), 'Deprecated') === 0;
     }
 
     /**

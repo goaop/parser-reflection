@@ -114,6 +114,26 @@ final class ReflectionFunction extends BaseReflectionFunction implements NodeAwa
     }
 
     /**
+     * Checks if the function is anonymous
+     *
+     * This reflection is always built from a named `function` node, so it can never be anonymous.
+     */
+    public function isAnonymous(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Checks if the function is static
+     *
+     * Named functions are never static, this matches the behaviour of the native reflection.
+     */
+    public function isStatic(): bool
+    {
+        return false;
+    }
+
+    /**
      * Checks if function is disabled
      *
      * Only internal functions can be disabled using disable_functions directive.
