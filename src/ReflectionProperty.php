@@ -471,13 +471,12 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
      * {@inheritDoc}
      *
      * @see Property::isFinal()
+     * @see Param::isFinal()
      */
     public function isFinal(): bool
     {
-        $explicitFinal = false;
-        if ($this->propertyOrPromotedParam instanceof Property) {
-            $explicitFinal = $this->propertyOrPromotedParam->isFinal();
-        }
+        // Promoted properties can also be declared final since PHP 8.5
+        $explicitFinal = $this->propertyOrPromotedParam->isFinal();
 
         // Property with private(set) modifier is implicitly final
         return $explicitFinal || $this->isPrivateSet();
