@@ -26,6 +26,7 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
+use PhpParser\PhpVersion;
 
 /**
  * AST-based reflection engine, powered by PHP-Parser
@@ -47,9 +48,20 @@ class ReflectionEngine
 
     private function __construct() {}
 
-    public static function init(LocatorInterface $locator): void
+    /**
+     * Initializes the engine with the given locator and an optional grammar version
+     *
+     * By default the newest grammar supported by PHP-Parser is used, so that sources written for a newer
+     * PHP version than the host one can still be analysed statically.
+     *
+     * @param PhpVersion|null $phpVersion Optional PHP version of the grammar to parse sources with
+     */
+    public static function init(LocatorInterface $locator, ?PhpVersion $phpVersion = null): void
     {
-        self::$parser = (new ParserFactory())->createForHostVersion();
+        $parserFactory = new ParserFactory();
+        self::$parser  = isset($phpVersion)
+            ? $parserFactory->createForVersion($phpVersion)
+            : $parserFactory->createForNewestSupportedVersion();
 
         self::$traverser = $traverser = new NodeTraverser();
         $traverser->addVisitor(new NameResolver(

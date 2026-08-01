@@ -410,6 +410,29 @@ final class ReflectionMethod extends BaseReflectionMethod implements NodeAwareIn
     }
 
     /**
+     * Creates a reflection instance from the `Class::method` notation
+     *
+     * Unlike the native implementation the class is resolved with the {@see ReflectionEngine},
+     * so it is never loaded into memory.
+     *
+     * @throws ReflectionException if the given name is not a valid method name
+     */
+    public static function createFromMethodName(string $method): static
+    {
+        $separatorPosition = strpos($method, '::');
+        if ($separatorPosition === false) {
+            throw new ReflectionException(
+                'ReflectionMethod::createFromMethodName(): Argument #1 ($method) must be a valid method name'
+            );
+        }
+
+        $className  = substr($method, 0, $separatorPosition);
+        $methodName = substr($method, $separatorPosition + 2);
+
+        return new static($className, $methodName);
+    }
+
+    /**
      * Parses methods from the concrete class node
      *
      * @param ClassLike $classLikeNode Class-like node

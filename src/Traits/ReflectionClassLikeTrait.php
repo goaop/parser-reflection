@@ -1047,6 +1047,102 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Creates a new lazy ghost instance of the class.
+     *
+     * @link https://php.net/manual/en/reflectionclass.newlazyghost.php
+     */
+    public function newLazyGhost(callable $initializer, int $options = 0): object
+    {
+        $this->initializeInternalReflection();
+
+        return parent::newLazyGhost($initializer, $options);
+    }
+
+    /**
+     * Creates a new lazy proxy instance of the class.
+     *
+     * @link https://php.net/manual/en/reflectionclass.newlazyproxy.php
+     */
+    public function newLazyProxy(callable $factory, int $options = 0): object
+    {
+        $this->initializeInternalReflection();
+
+        return parent::newLazyProxy($factory, $options);
+    }
+
+    /**
+     * Resets an existing object and makes it a lazy ghost.
+     *
+     * @link https://php.net/manual/en/reflectionclass.resetaslazyghost.php
+     */
+    public function resetAsLazyGhost(object $object, callable $initializer, int $options = 0): void
+    {
+        $this->initializeInternalReflection();
+
+        parent::resetAsLazyGhost($object, $initializer, $options);
+    }
+
+    /**
+     * Resets an existing object and makes it a lazy proxy.
+     *
+     * @link https://php.net/manual/en/reflectionclass.resetaslazyproxy.php
+     */
+    public function resetAsLazyProxy(object $object, callable $factory, int $options = 0): void
+    {
+        $this->initializeInternalReflection();
+
+        parent::resetAsLazyProxy($object, $factory, $options);
+    }
+
+    /**
+     * Forces the initialization of a lazy object.
+     *
+     * @link https://php.net/manual/en/reflectionclass.initializelazyobject.php
+     */
+    public function initializeLazyObject(object $object): object
+    {
+        $this->initializeInternalReflection();
+
+        return parent::initializeLazyObject($object);
+    }
+
+    /**
+     * Checks if a lazy object is still uninitialized.
+     *
+     * @link https://php.net/manual/en/reflectionclass.isuninitializedlazyobject.php
+     */
+    public function isUninitializedLazyObject(object $object): bool
+    {
+        $this->initializeInternalReflection();
+
+        return parent::isUninitializedLazyObject($object);
+    }
+
+    /**
+     * Marks a lazy object as initialized, without calling the initializer or factory.
+     *
+     * @link https://php.net/manual/en/reflectionclass.marklazyobjectasinitialized.php
+     */
+    public function markLazyObjectAsInitialized(object $object): object
+    {
+        $this->initializeInternalReflection();
+
+        return parent::markLazyObjectAsInitialized($object);
+    }
+
+    /**
+     * Returns the initializer or factory of a lazy object, or null if it is not lazy anymore.
+     *
+     * @link https://php.net/manual/en/reflectionclass.getlazyinitializer.php
+     */
+    public function getLazyInitializer(object $object): ?callable
+    {
+        $this->initializeInternalReflection();
+
+        return parent::getLazyInitializer($object);
+    }
+
+    /**
      * Sets static property value
      *
      * @link http://php.net/manual/en/reflectionclass.setstaticpropertyvalue.php

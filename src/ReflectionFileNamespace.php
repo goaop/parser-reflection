@@ -66,6 +66,13 @@ class ReflectionFileNamespace implements NodeAwareInterface
     protected array $fileConstantsWithDefined;
 
     /**
+     * List of reflections for constants in the namespace
+     *
+     * @var array<string, ReflectionConstant>
+     */
+    protected array $fileReflectionConstants;
+
+    /**
      * List of imported namespaces (aliases)
      *
      * @var array<string, string>
@@ -176,6 +183,34 @@ class ReflectionFileNamespace implements NodeAwareInterface
         }
 
         return $this->fileConstants;
+    }
+
+    /**
+     * Returns the reflection for the concrete constant, declared with the "const" keyword
+     *
+     * Constants defined via "define(...)" are not covered, because they are created at runtime.
+     *
+     * @param string $constantName Name of the constant without the namespace prefix
+     */
+    public function getReflectionConstant(string $constantName): ReflectionConstant|false
+    {
+        $reflectionConstants = $this->getReflectionConstants();
+
+        return $reflectionConstants[$constantName] ?? false;
+    }
+
+    /**
+     * Returns the list of reflections for constants, declared with the "const" keyword
+     *
+     * @return array<string, ReflectionConstant>
+     */
+    public function getReflectionConstants(): array
+    {
+        if (!isset($this->fileReflectionConstants)) {
+            $this->fileReflectionConstants = $this->findReflectionConstants();
+        }
+
+        return $this->fileReflectionConstants;
     }
 
     /**
@@ -456,6 +491,38 @@ class ReflectionFileNamespace implements NodeAwareInterface
         }
 
         return $constants;
+    }
+
+    /**
+     * Searches for reflections of constants, declared with the "const" keyword, in the given AST
+     *
+     * @return array<string, ReflectionConstant>
+     */
+    private function findReflectionConstants(): array
+    {
+        $reflectionConstants = [];
+        $namespaceName       = $this->getName();
+
+        // constants can be only top-level nodes in the namespace, so we can scan them directly
+        foreach ($this->namespaceNode->stmts as $namespaceLevelNode) {
+            if (!$namespaceLevelNode instanceof Const_) {
+                continue;
+            }
+            $namespaceLevelNode->setAttribute('fileName', $this->fileName);
+            foreach ($namespaceLevelNode->consts as $nodeConstant) {
+                $constantShortName = $nodeConstant->name->toString();
+                $constantName      = $namespaceName ? $namespaceName . '\\' . $constantShortName : $constantShortName;
+
+                $reflectionConstants[$constantShortName] = new ReflectionConstant(
+                    $constantName,
+                    $nodeConstant,
+                    $namespaceLevelNode,
+                    $this
+                );
+            }
+        }
+
+        return $reflectionConstants;
     }
 
     /**

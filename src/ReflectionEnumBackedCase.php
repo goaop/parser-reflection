@@ -12,9 +12,13 @@ declare(strict_types=1);
 
 namespace Go\ParserReflection;
 
+use Deprecated;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
+use PhpParser\Node\Name;
 use PhpParser\Node\Stmt\EnumCase;
+use ReflectionClassConstant as InternalReflectionClassConstant;
 use ReflectionEnumBackedCase as InternalReflectionEnumBackedCase;
+use ReflectionType;
 use UnitEnum;
 
 /**
@@ -189,7 +193,64 @@ final class ReflectionEnumBackedCase extends InternalReflectionEnumBackedCase im
      */
     public function isFinal(): bool
     {
-        return true;
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Enum cases are always public and never expose the final bit, exactly like the native reflection does.
+     */
+    public function getModifiers(): int
+    {
+        return InternalReflectionClassConstant::IS_PUBLIC;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Enum cases never have a declared type, even for backed enums.
+     */
+    public function hasType(): bool
+    {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Enum cases never have a declared type, even for backed enums.
+     */
+    public function getType(): ?ReflectionType
+    {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * Resolved from the #[\Deprecated] attribute at the pure AST level, without loading the enum.
+     */
+    public function isDeprecated(): bool
+    {
+        foreach ($this->enumCaseNode->attrGroups as $attrGroup) {
+            foreach ($attrGroup->attrs as $attr) {
+                $attributeNameNode = $attr->name;
+                // If we have resolved node name, then we should use it instead
+                if ($attributeNameNode->hasAttribute('resolvedName')) {
+                    $resolvedNameNode = $attributeNameNode->getAttribute('resolvedName');
+                    if ($resolvedNameNode instanceof Name) {
+                        $attributeNameNode = $resolvedNameNode;
+                    }
+                }
+
+                if (strcasecmp(ltrim($attributeNameNode->toString(), '\\'), Deprecated::class) === 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
