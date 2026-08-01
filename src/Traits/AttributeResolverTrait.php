@@ -189,7 +189,7 @@ trait AttributeResolverTrait
 
         $ancestorNames = [];
         try {
-            $ancestorNames = array_values($reflection->getInterfaceNames());
+            $ancestorNames = $reflection->getInterfaceNames();
         } catch (\Throwable) {
             // Unresolvable interfaces simply do not participate in the instanceof check
         }
