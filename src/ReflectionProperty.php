@@ -374,6 +374,24 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
     }
 
     /**
+     * {@inheritDoc}
+     *
+     * @return array<string, ReflectionMethod> Hooks, keyed by the hook name (@see PropertyHookType::$value)
+     */
+    public function getHooks(): array
+    {
+        $hooks = [];
+        foreach (PropertyHookType::cases() as $type) {
+            $hook = $this->getHook($type);
+            if ($hook !== null) {
+                $hooks[$type->value] = $hook;
+            }
+        }
+
+        return $hooks;
+    }
+
+    /**
      * @inheritDoc
      *
      * @see PropertyItem::$default
@@ -437,6 +455,16 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
         // TRUE if the property was declared at compile-time
 
         return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isDynamic(): bool
+    {
+        // Declared and promoted properties are always a part of the class definition
+
+        return false;
     }
 
     /**
@@ -561,6 +589,61 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
 
         // For static properties, we could check if we have default value
         return $this->hasDefaultValue();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function isLazy(object $object): bool
+    {
+        // Laziness is a property of the concrete object, so original reflection is required
+        $this->initializeInternalReflection();
+
+        return parent::isLazy($object);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRawValue(object $object): mixed
+    {
+        // With object we should call original reflection to bypass property hooks
+        $this->initializeInternalReflection();
+
+        return parent::getRawValue($object);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setRawValue(object $object, mixed $value): void
+    {
+        // With object we should call original reflection to bypass property hooks
+        $this->initializeInternalReflection();
+
+        parent::setRawValue($object, $value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setRawValueWithoutLazyInitialization(object $object, mixed $value): void
+    {
+        // Laziness is a property of the concrete object, so original reflection is required
+        $this->initializeInternalReflection();
+
+        parent::setRawValueWithoutLazyInitialization($object, $value);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function skipLazyInitialization(object $object): void
+    {
+        // Laziness is a property of the concrete object, so original reflection is required
+        $this->initializeInternalReflection();
+
+        parent::skipLazyInitialization($object);
     }
 
     /**
