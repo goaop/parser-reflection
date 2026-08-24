@@ -3,7 +3,7 @@ Parser Reflection API Library
 
 ## 🔍 Static Code Analysis Meets Reflection
 
-**Parser Reflection API** brings the power of PHP's Reflection API to static code analysis. Built on top of [nikic/php-parser](https://github.com/nikic/PHP-Parser), this library lets you introspect classes, methods, and properties **without ever loading them into memory**.
+**Parser Reflection API** brings the power of PHP's Reflection API to static code analysis. Built on top of [nikic/php-parser](https://github.com/nikic/PHP-Parser), this library lets you introspect classes, interfaces, traits, enums, methods, properties, functions and constants **without ever loading them into memory**.
 
 ### ✨ Key Features
 
@@ -15,7 +15,8 @@ Forget autoloading. This library parses your PHP source files directly into an A
 
 - 📊 **Source code analysis** — inspect structure without executing anything
 - 🧪 **Safe introspection** — avoid triggering constructors or static initializers
-- 🔌 **Drop-in compatible** — extends native `\ReflectionClass`, `\ReflectionMethod`, etc.
+- 🔌 **Drop-in compatible** — extends native `\ReflectionClass`, `\ReflectionMethod`, `\ReflectionEnum`, etc.
+- 🆕 **Modern PHP support** — enums, attributes (incl. `IS_INSTANCEOF` filtering), first-class callables, PHP 8.4 property hooks and lazy objects, `const`-declared global constants
 
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/goaop/parser-reflection/phpunit.yml?branch=master)
 ![PHPStan Badge](https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg?style=flat&link=https%3A%2F%2Fphpstan.org%2Fuser-guide%2Frule-levels)
@@ -127,7 +128,9 @@ To understand how library works let's look at what happens during the call to th
 Compatibility
 ------------
 
-All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, providing an  except methods that requires object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the process of class loading and switching to the internal reflection.
+All parser reflection classes extend PHP internal reflection classes, this means that you can use `\Go\ParserReflection\ReflectionClass` instance in any place that asks for `\ReflectionClass` instance. All reflection methods should be compatible with original ones, except methods that require object manipulation, such as `invoke()`, `invokeArgs()`, `setAccessible()`, etc. These methods will trigger the process of class loading and switching to the internal reflection.
+
+The only exception is `\Go\ParserReflection\ReflectionConstant`: the native `\ReflectionConstant` class is declared as `final`, so this class mirrors its public API instead of extending it.
 
 [0]: docs/reflection_file.md
 [1]: docs/reflection_file_namespace.md

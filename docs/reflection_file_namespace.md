@@ -13,8 +13,11 @@ class ReflectionFileNamespace
     public function getClass($className) {}
     public function getClasses() {}
     public function getConstant($constantName) {}
-    public function getConstants() {}
+    public function getConstants($withDefined = false) {}
+    public function getReflectionConstant($constantName) {}
+    public function getReflectionConstants() {}
     public function getDocComment() {}
+    public function getEnums() {}
     public function getEndLine() {}
     public function getFileName() {}
     public function getFunction($functionName) {}
@@ -47,9 +50,21 @@ Methods
   
   Returns a value for the constant with name `$constantName` in the file namespace or `false` if there is no such a constant in the current namespace.
   
-- `ReflectionFileNamespace::getConstants()`
+- `ReflectionFileNamespace::getConstants($withDefined = false)`
 
-  Returns an array with all available constants in the namespace.
+  Returns an array with all available constants in the namespace. If `$withDefined` is `true`, top-level `define(...)` statements will be included as well.
+
+- `ReflectionFileNamespace::getReflectionConstant($constantName)`
+
+  Returns the concrete [`ReflectionConstant`][2] from the file namespace or `false` if there is no such a constant in the current namespace.
+
+- `ReflectionFileNamespace::getReflectionConstants()`
+
+  Returns an array with available constants in the namespace. Each `const` definition will be represented as a single instance of [`ReflectionConstant`][2] in this list.
+
+- `ReflectionFileNamespace::getEnums()`
+
+  Returns an array with available enums in the namespace. Each enum definition will be represented as a single instance of [`ReflectionEnum`][3] in this list.
 
 - `ReflectionFileNamespace::getDocComment()`
 
@@ -97,3 +112,5 @@ Methods
 
 [0]: reflection_class.md
 [1]: reflection_function.md
+[2]: reflection_constant.md
+[3]: reflection_enum.md

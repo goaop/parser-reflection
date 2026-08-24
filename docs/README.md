@@ -13,6 +13,8 @@ Reference
 ---------
 
 - [`ReflectionClass`](reflection_class.md)
+- [`ReflectionConstant`](reflection_constant.md)
+- [`ReflectionEnum`](reflection_enum.md)
 - [`ReflectionFile`](reflection_file.md)
 - [`ReflectionFileNamespace`](reflection_file_namespace.md)
 - [`ReflectionFunction`](reflection_function.md)
