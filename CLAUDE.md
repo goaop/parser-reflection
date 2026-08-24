@@ -19,7 +19,7 @@ Requires PHP >=8.4. Namespace: `Go\ParserReflection\`.
 # Install dependencies (slow locally — see note below)
 composer install --prefer-source --no-interaction
 
-# Run tests (~6 seconds, ~10,500 tests)
+# Run tests (~3-6 seconds, ~13,700 tests)
 vendor/bin/phpunit
 
 # Run a single test file
@@ -28,7 +28,8 @@ vendor/bin/phpunit tests/ReflectionClassTest.php
 # Run a specific test method
 vendor/bin/phpunit --filter testMethodName
 
-# Static analysis (~5 seconds, 18 known existing errors are normal)
+# Static analysis (~5 seconds, level 10, must report zero errors;
+# known false positives are ignored via phpstan.neon)
 vendor/bin/phpstan analyse src --no-progress
 ```
 
@@ -50,7 +51,8 @@ When you call `new ReflectionClass('SomeClass')`:
 
 - **`ReflectionEngine`** (`src/ReflectionEngine.php`) — static class; central hub. Owns the PHP-Parser instance, AST cache, and locator. Entry points: `parseFile()`, `parseClass()`, `parseClassMethod()`, etc.
 - **`LocatorInterface`** / **`ComposerLocator`** — pluggable class file finder. `ComposerLocator` delegates to Composer's classmap/autoloader. `bootstrap.php` auto-registers `ComposerLocator` on load.
-- **Reflection classes** (`src/Reflection*.php`) — each extends its PHP internal counterpart (e.g. `ReflectionClass extends \ReflectionClass`) and holds an AST node. Methods that require a live object (e.g. `invoke()`) trigger actual class loading and fall back to native reflection.
+- **Reflection classes** (`src/Reflection*.php`) — each extends its PHP internal counterpart (e.g. `ReflectionClass extends \ReflectionClass`) and holds an AST node. Methods that require a live object (e.g. `invoke()`) trigger actual class loading and fall back to native reflection. Enums are covered by `ReflectionEnum`, `ReflectionEnumUnitCase` and `ReflectionEnumBackedCase`; `ReflectionConstant` reflects `const`-declared global/namespaced constants (it mirrors the final native `\ReflectionConstant` API instead of extending it).
+- **`NodeAwareInterface`** — implemented by all parsed reflection classes; exposes the underlying AST node via `getNode()`.
 - **Traits** (`src/Traits/`) — shared logic extracted to avoid duplication:
   - `ReflectionClassLikeTrait` — used by `ReflectionClass`; implements most class inspection methods against the AST
   - `ReflectionFunctionLikeTrait` — shared by `ReflectionMethod` and `ReflectionFunction`
@@ -66,4 +68,4 @@ Tests in `tests/` mirror the reflection class names (e.g. `ReflectionClassTest.p
 
 ### CI
 
-GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.2, 8.3, 8.4 with both lowest and highest dependency versions.
+GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.4 and 8.5 with both lowest and highest dependency versions, plus PHP 8.6 as an experimental (allowed-to-fail) job. A separate workflow (`.github/workflows/phpstan.yml`) runs PHPStan at level 10 on PHP 8.4.
