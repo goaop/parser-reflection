@@ -11,10 +11,11 @@ permissions:
 
 jobs:
   phpunit:
-    name: "PHPUnit tests"
+    name: "PHPUnit tests (PHP ${{ matrix.php-version }}, ${{ matrix.dependencies }} deps)${{ matrix.experimental && ' [experimental]' || '' }}"
 
     runs-on: ${{ matrix.operating-system }}
 
+    # Experimental rows (PHP 8.6 beta) are allowed to fail until PHP 8.6 reaches GA
     continue-on-error: ${{ matrix.experimental }}
 
     strategy:
@@ -73,4 +74,12 @@ jobs:
         run: "composer install --no-interaction --no-progress --no-suggest${{ matrix.experimental && ' --ignore-platform-req=php+' || '' }}"
 
       - name: "Tests"
+        id: "tests"
         run: "vendor/bin/phpunit"
+
+      # "continue-on-error" hides a failing experimental row from the checks list,
+      # therefore its real outcome is written to the run summary explicitly
+      - name: "Report experimental outcome"
+        if: ${{ always() && matrix.experimental }}
+        run: |
+          echo "PHP $(php -r 'echo PHP_VERSION;') / ${{ matrix.dependencies }} dependencies: **${{ steps.tests.outcome }}** (experimental, allowed to fail until GA)" >> "$GITHUB_STEP_SUMMARY"
