@@ -1,0 +1,59 @@
+name: "Cascade 4.x into master"
+
+on:
+  push:
+    branches:
+      - "4.x"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: "cascade-4.x-to-master"
+  cancel-in-progress: false
+
+jobs:
+  cascade:
+    name: "Open/refresh cascade PR"
+    if: github.repository == 'goaop/parser-reflection'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Open or refresh the 4.x -> master pull request"
+        env:
+          # The default GITHUB_TOKEN can open/merge PRs, but pull_request-triggered
+          # workflows (required status checks) on a PR it opens are held for manual
+          # approval by GitHub's anti-recursion safeguard. Set the CASCADE_TOKEN repo
+          # secret to a PAT (Contents: write, Pull requests: write) so required checks
+          # on the cascade PR run without manual approval; falls back to GITHUB_TOKEN
+          # if unset (checks will need one-time manual approval in that case).
+          GH_TOKEN: ${{ secrets.CASCADE_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -e
+
+          PR_NUMBER=$(gh pr list --head 4.x --base master --state open --json number --jq '.[0].number // empty')
+
+          if [ -z "$PR_NUMBER" ]; then
+            if ! gh pr create \
+              --head 4.x \
+              --base master \
+              --title "Cascade merge: 4.x into master" \
+              --body "Automated cascade merge that keeps \`master\` in sync with the \`4.x\` maintenance branch.
+
+          This PR tracks \`4.x\` and merges automatically once required checks pass. A new one is opened after each merge, so every future push to \`4.x\` keeps flowing forward into \`master\`.
+
+          If this PR shows a conflict, resolve it manually on \`4.x\` (or directly on this PR's branch) — auto-merge will pick it up once it's clean again." \
+              > /tmp/pr-create.log 2>&1; then
+              cat /tmp/pr-create.log
+              if grep -qi "No commits between" /tmp/pr-create.log; then
+                echo "master is already up to date with 4.x — nothing to cascade."
+                exit 0
+              fi
+              exit 1
+            fi
+            PR_NUMBER=$(gh pr list --head 4.x --base master --state open --json number --jq '.[0].number')
+          fi
+
+          echo "Enabling auto-merge on PR #$PR_NUMBER"
+          gh pr merge "$PR_NUMBER" --merge --auto
