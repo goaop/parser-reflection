@@ -88,6 +88,11 @@ abstract class AbstractTestCase extends TestCase
         if (PHP_VERSION_ID >= 80400) {
             yield 'PHP8.4' => [__DIR__ . '/Stub/FileWithClasses84.php'];
         }
+        // Stubs named "FileWith*86.php" may only be loaded by a PHP 8.6+ runtime, therefore every
+        // assertion that depends on them has to be guarded with the same PHP_VERSION_ID check
+        if (PHP_VERSION_ID >= 80600) {
+            yield 'PHP8.6' => [__DIR__ . '/Stub/FileWithClasses86.php'];
+        }
     }
 
     /**
