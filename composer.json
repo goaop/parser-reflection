@@ -22,7 +22,7 @@
     }
   },
   "require": {
-    "php": ">=8.4",
+    "php": ">=8.5",
     "nikic/php-parser": "^5.4"
   },
   "require-dev": {
@@ -33,7 +33,7 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "4.x-dev"
+      "dev-master": "8.5-dev"
     }
   }
 }

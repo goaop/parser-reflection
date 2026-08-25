@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Parser Reflection is a PHP library that extends PHP's internal reflection classes using nikic/PHP-Parser for static analysis. It reflects PHP code without loading classes into memory by parsing source files into an AST.
 
-Requires PHP >=8.4. Namespace: `Go\ParserReflection\`.
+Requires PHP >=8.5. Namespace: `Go\ParserReflection\`.
 
 ## Agent runtime requirement
 
-- Agents must run on PHP **8.4 or higher**.
-- If the runtime is PHP **8.3.x**, agents should not attempt dependency installation or test validation and should report that PHP **8.4+** is required.
+- Agents must run on PHP **8.5 or higher**.
+- If the runtime is PHP **8.4.x or lower**, agents should not attempt dependency installation or test validation and should report that PHP **8.5+** is required.
 
 ## Commands
 
@@ -68,4 +68,4 @@ Tests in `tests/` mirror the reflection class names (e.g. `ReflectionClassTest.p
 
 ### CI
 
-GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.4 and 8.5 with both lowest and highest dependency versions, plus PHP 8.6 as an experimental (allowed-to-fail) job. A separate workflow (`.github/workflows/phpstan.yml`) runs PHPStan at level 10 on PHP 8.4.
+GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.5 with both lowest and highest dependency versions, plus PHP 8.6 as an experimental (allowed-to-fail) job. A separate workflow (`.github/workflows/phpstan.yml`) runs PHPStan at level 10 on PHP 8.5.
