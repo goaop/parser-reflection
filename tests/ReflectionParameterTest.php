@@ -389,10 +389,44 @@ class ReflectionParameterTest extends AbstractTestCase
         if (PHP_VERSION_ID >= 80600) {
             $originalRefParameter = new \ReflectionParameter($parsedFunction->getName(), 'trailing');
             $this->assertSame(
-                '/** trailing doc comment, attached to the parameter by the engine only */',
+                '/** trailing doc comment on the last parameter of the list */',
                 $originalRefParameter->getDocComment(),
                 'Native reflection is expected to still report the trailing doc comment'
             );
+        }
+    }
+
+    /**
+     * The same known parity gap when another parameter follows the trailing doc comment.
+     *
+     * PHP-Parser discards a comment that sits between the end of a parameter and the separating
+     * comma altogether: it reaches neither the documented parameter nor the following one, so the
+     * engine reports `false` for both. Native reflection instead reports the comment for the
+     * parameter it follows. Both sides are pinned so a future change in php-src or in PHP-Parser
+     * is noticed immediately.
+     */
+    public function testTrailingDocCommentIsLostWhenAnotherParameterFollows(): void
+    {
+        $parsedFunction               = self::getStub86Namespace()->getFunction('twoParametersWithTrailingDocComment86');
+        [$parsedFirst, $parsedSecond] = $parsedFunction->getParameters();
+
+        $this->assertSame('first', $parsedFirst->getName());
+        $this->assertSame('second', $parsedSecond->getName());
+
+        // The comment is dropped by PHP-Parser, so it is not mis-attributed to the next parameter
+        $this->assertFalse($parsedFirst->getDocComment());
+        $this->assertFalse($parsedSecond->getDocComment());
+
+        if (PHP_VERSION_ID >= 80600) {
+            $originalFirst  = new \ReflectionParameter($parsedFunction->getName(), 'first');
+            $originalSecond = new \ReflectionParameter($parsedFunction->getName(), 'second');
+
+            // Native reflection reports the comment for the parameter that precedes it
+            $this->assertSame(
+                '/** trailing doc comment written after the first parameter */',
+                $originalFirst->getDocComment()
+            );
+            $this->assertFalse($originalSecond->getDocComment());
         }
     }
 

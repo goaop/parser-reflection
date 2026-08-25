@@ -20,8 +20,19 @@ The engine returns the last doc comment that belongs to the parameter declaratio
 native behaviour for doc comments placed before the parameter, before or after its attributes, before its type and
 inside its default value expression.
 
-Known limitation: a doc comment written *after* the parameter it documents (for example `string $a /** doc */,`)
-is reported by native reflection as belonging to that parameter, but PHP-Parser attaches every comment to the node
-that follows it, so such a trailing comment never reaches the parameter node and `getDocComment()` returns `false`.
+Known limitation: a doc comment written *after* the parameter it documents is reported by native reflection as
+belonging to that parameter, but PHP-Parser attaches every comment to the node that *follows* it and drops a comment
+that sits before the separating comma altogether. Such a trailing doc comment is therefore always lost:
+
+```php
+function lastParameter(string $a /** doc */) {}
+// native: $a => '/** doc */'                 engine: $a => false
+
+function nextParameter(string $a /** doc */, string $b) {}
+// native: $a => '/** doc */', $b => false    engine: $a => false, $b => false
+```
+
+The comment is not mis-attributed to the following parameter, it simply never reaches the AST. Recovering it is not
+possible from the AST alone, because the position of the separating comma is not available on the parameter nodes.
 
 [0]: http://php.net/manual/en/class.reflectionparameter.php

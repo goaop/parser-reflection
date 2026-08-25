@@ -99,11 +99,25 @@ class ClassWithDocumentedParameters86
 
 /**
  * The doc comment below is placed *after* the parameter it documents and is a known parity gap:
- * PHP-Parser attaches such a trailing comment to the following node instead of to the parameter.
+ * PHP-Parser attaches such a trailing comment to the following node instead of to the parameter,
+ * so nothing reaches the last parameter of the list and the engine reports `false` for it.
  *
  * @see \Go\ParserReflection\ReflectionParameterTest::testTrailingDocCommentIsAKnownParityGap()
  */
 function parameterWithTrailingDocComment86(
-    string $trailing /** trailing doc comment, attached to the parameter by the engine only */
+    string $trailing /** trailing doc comment on the last parameter of the list */
+) {
+}
+
+/**
+ * The same known parity gap, but with a parameter following the trailing doc comment: native
+ * reflection reports the comment for `$first`, while PHP-Parser discards a comment placed before
+ * the separating comma entirely, so neither `$first` nor `$second` receives it.
+ *
+ * @see \Go\ParserReflection\ReflectionParameterTest::testTrailingDocCommentIsLostWhenAnotherParameterFollows()
+ */
+function twoParametersWithTrailingDocComment86(
+    string $first /** trailing doc comment written after the first parameter */,
+    string $second
 ) {
 }
