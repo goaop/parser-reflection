@@ -61,7 +61,12 @@ trait AttributeResolverTrait
                 $arguments = [];
                 foreach ($attr->args as $arg) {
                     $nodeExpressionResolver->process($arg->value);
-                    $arguments[] = $nodeExpressionResolver->getValue();
+                    // Named arguments are keyed by their name, exactly like the native reflection does
+                    if (isset($arg->name)) {
+                        $arguments[$arg->name->toString()] = $nodeExpressionResolver->getValue();
+                    } else {
+                        $arguments[] = $nodeExpressionResolver->getValue();
+                    }
                 }
 
                 $attributeNameNode = $attr->name;

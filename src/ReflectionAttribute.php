@@ -39,7 +39,7 @@ class ReflectionAttribute extends BaseReflectionAttribute implements NodeAwareIn
 
     /**
      * @param class-string<object> $attributeName
-     * @param array<int, mixed> $arguments
+     * @param array<array-key, mixed> $arguments
      */
     public function __construct(
         string $attributeName,
@@ -83,7 +83,12 @@ class ReflectionAttribute extends BaseReflectionAttribute implements NodeAwareIn
                 $arguments = [];
                 foreach ($attr->args as $arg) {
                     $nodeExpressionResolver->process($arg->value);
-                    $arguments[] = $nodeExpressionResolver->getValue();
+                    // Named arguments are keyed by their name, exactly like the native reflection does
+                    if (isset($arg->name)) {
+                        $arguments[$arg->name->toString()] = $nodeExpressionResolver->getValue();
+                    } else {
+                        $arguments[] = $nodeExpressionResolver->getValue();
+                    }
                 }
 
                 if ($arguments !== $this->arguments) {
@@ -105,7 +110,7 @@ class ReflectionAttribute extends BaseReflectionAttribute implements NodeAwareIn
     /**
      * {@inheritDoc}
      *
-     * @return array<int, mixed>
+     * @return array<array-key, mixed>
      */
     public function getArguments(): array
     {
@@ -118,6 +123,44 @@ class ReflectionAttribute extends BaseReflectionAttribute implements NodeAwareIn
     public function getName(): string
     {
         return $this->attributeName;
+    }
+
+    /**
+     * Returns the attribute class name without the namespace prefix.
+     *
+     * Available in the native reflection since PHP 8.6, but the internal implementation operates on
+     * the internal attribute structure that is never initialized for the parsed reflection, therefore
+     * it is always resolved from the attribute name itself.
+     */
+    public function getShortName(): string
+    {
+        $nameParts = explode('\\', $this->getName());
+
+        return (string) array_pop($nameParts);
+    }
+
+    /**
+     * Returns the namespace of the attribute class or an empty string for the global namespace.
+     *
+     * @see self::getShortName() for the reason why this method is not inherited from the native one
+     */
+    public function getNamespaceName(): string
+    {
+        $nameParts = explode('\\', $this->getName());
+        // Removes the last part with the short class name itself
+        array_pop($nameParts);
+
+        return implode('\\', $nameParts);
+    }
+
+    /**
+     * Checks if the attribute class is defined in a namespace.
+     *
+     * @see self::getShortName() for the reason why this method is not inherited from the native one
+     */
+    public function inNamespace(): bool
+    {
+        return $this->getNamespaceName() !== '';
     }
 
     /**
