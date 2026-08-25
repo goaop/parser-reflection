@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: "PHPStan analysis - PHP8.4"
+    name: "PHPStan analysis - PHP8.5"
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout"
@@ -19,7 +19,7 @@ jobs:
       - name: "Install PHP"
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.4"
+          php-version: "8.5"
           ini-values: memory_limit=-1
           tools: composer:v2
       - name: "Cache dependencies"
@@ -28,8 +28,8 @@ jobs:
           path: |
             ~/.composer/cache
             vendor
-          key: "php-8.4"
-          restore-keys: "php-8.4"
+          key: "php-8.5"
+          restore-keys: "php-8.5"
       - name: "Install dependencies"
         run: "composer install --no-interaction --no-progress"
       - name: "Static analysis"

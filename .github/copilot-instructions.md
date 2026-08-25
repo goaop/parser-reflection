@@ -10,9 +10,9 @@ Parser Reflection is a **deprecated** PHP library that provides reflection capab
 
 **CRITICAL: Set timeouts of 30+ minutes for all composer commands. NEVER CANCEL composer operations.**
 
-1. **Verify PHP version**: Requires PHP >=8.2
+1. **Verify PHP version**: Requires PHP >=8.5
    ```bash
-   php --version  # Should show PHP 8.2+
+   php --version  # Should show PHP 8.5+
    ```
 
 2. **Install dependencies** (takes 15-25 minutes due to GitHub API rate limits):
@@ -85,10 +85,10 @@ php /tmp/test_reflection.php
 - `vendor/` - Dependencies (created during build)
 
 ### Important Files
-- `composer.json` - Dependencies: php >=8.2, nikic/php-parser ^5.0
+- `composer.json` - Dependencies: php >=8.5, nikic/php-parser ^5.0
 - `phpunit.xml.dist` - Test configuration (1536M memory limit)
 - `rector.php` - Code quality rules
-- `.github/workflows/phpunit.yml` - CI pipeline (PHP 8.2, 8.3, 8.4)
+- `.github/workflows/phpunit.yml` - CI pipeline (PHP 8.5, with 8.6 as experimental)
 
 ## Common Issues and Troubleshooting
 
@@ -143,12 +143,12 @@ php /tmp/test_reflection.php
 - Core functionality requires nikic/php-parser for AST generation
 - Tests use Composer's autoloader for class location
 - Memory usage can be high for large codebases (configure php.ini accordingly)
-- Compatible with PHP 8.2+ (tested on 8.2, 8.3, 8.4)
+- Compatible with PHP 8.5+ (tested on 8.5, with 8.6 as experimental)
 
 ## CI/Build Pipeline Reference
 
 The GitHub Actions pipeline (`.github/workflows/phpunit.yml`) runs:
-- Matrix testing: PHP 8.2, 8.3, 8.4 on Ubuntu
+- Matrix testing: PHP 8.5 on Ubuntu, plus PHP 8.6 as an experimental (allowed-to-fail) job
 - Dependency variations: lowest, highest
 - Standard `composer install` (works in CI with GitHub tokens)
 - PHPUnit test suite execution
