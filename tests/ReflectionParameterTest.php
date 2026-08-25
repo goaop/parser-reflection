@@ -343,14 +343,200 @@ class ReflectionParameterTest extends AbstractTestCase
     }
 
     /**
+     * Doc comments on parameters are a PHP 8.6 feature (native ReflectionParameter::getDocComment()),
+     * but the reflection engine resolves them statically on every supported PHP version.
+     *
+     * @param string|array{0: string, 1: string} $functionReference Function name or [class, method] pair
+     */
+    #[DataProvider('parameterDocCommentsDataProvider')]
+    public function testGetDocComment(
+        ReflectionParameter $parsedParameter,
+        string|array $functionReference,
+        string|false $expectedDocComment
+    ): void {
+        $this->assertSame(
+            $expectedDocComment,
+            $parsedParameter->getDocComment(),
+            "getDocComment() for parameter \${$parsedParameter->getName()} should be equal"
+        );
+
+        if (PHP_VERSION_ID >= 80600) {
+            $originalRefParameter = new \ReflectionParameter($functionReference, $parsedParameter->getName());
+            $this->assertSame(
+                $originalRefParameter->getDocComment(),
+                $parsedParameter->getDocComment(),
+                "getDocComment() for parameter \${$parsedParameter->getName()} should match native reflection"
+            );
+        }
+    }
+
+    /**
+     * A doc comment written *after* the parameter it belongs to is a known parity gap.
+     *
+     * PHP itself remembers the last doc comment token seen while the parameter rule is reduced,
+     * therefore a trailing comment still belongs to the preceding parameter. PHP-Parser instead
+     * attaches every comment to the node that *follows* it, so a trailing comment never reaches
+     * the `Param` node and the engine reports `false`.
+     */
+    public function testTrailingDocCommentIsAKnownParityGap(): void
+    {
+        $parsedFunction  = self::getStub86Namespace()->getFunction('parameterWithTrailingDocComment86');
+        $parsedParameter = $parsedFunction->getParameters()[0];
+
+        $this->assertSame('trailing', $parsedParameter->getName());
+        $this->assertFalse($parsedParameter->getDocComment());
+
+        if (PHP_VERSION_ID >= 80600) {
+            $originalRefParameter = new \ReflectionParameter($parsedFunction->getName(), 'trailing');
+            $this->assertSame(
+                '/** trailing doc comment on the last parameter of the list */',
+                $originalRefParameter->getDocComment(),
+                'Native reflection is expected to still report the trailing doc comment'
+            );
+        }
+    }
+
+    /**
+     * The same known parity gap when another parameter follows the trailing doc comment.
+     *
+     * PHP-Parser discards a comment that sits between the end of a parameter and the separating
+     * comma altogether: it reaches neither the documented parameter nor the following one, so the
+     * engine reports `false` for both. Native reflection instead reports the comment for the
+     * parameter it follows. Both sides are pinned so a future change in php-src or in PHP-Parser
+     * is noticed immediately.
+     */
+    public function testTrailingDocCommentIsLostWhenAnotherParameterFollows(): void
+    {
+        $parsedFunction               = self::getStub86Namespace()->getFunction('twoParametersWithTrailingDocComment86');
+        [$parsedFirst, $parsedSecond] = $parsedFunction->getParameters();
+
+        $this->assertSame('first', $parsedFirst->getName());
+        $this->assertSame('second', $parsedSecond->getName());
+
+        // The comment is dropped by PHP-Parser, so it is not mis-attributed to the next parameter
+        $this->assertFalse($parsedFirst->getDocComment());
+        $this->assertFalse($parsedSecond->getDocComment());
+
+        if (PHP_VERSION_ID >= 80600) {
+            $originalFirst  = new \ReflectionParameter($parsedFunction->getName(), 'first');
+            $originalSecond = new \ReflectionParameter($parsedFunction->getName(), 'second');
+
+            // Native reflection reports the comment for the parameter that precedes it
+            $this->assertSame(
+                '/** trailing doc comment written after the first parameter */',
+                $originalFirst->getDocComment()
+            );
+            $this->assertFalse($originalSecond->getDocComment());
+        }
+    }
+
+    /**
+     * Provides list in the form [ReflectionParameter, function reference, expected doc comment]
+     */
+    public static function parameterDocCommentsDataProvider(): \Generator
+    {
+        $expectedDocComments = [
+            'parametersWithDocComments86' => [
+                'documented'                 => '/** @param string $documented simple leading doc comment */',
+                'undocumented'               => false,
+                'blockCommented'             => false,
+                'lineCommented'              => false,
+                'variadic'                   => '/** @param array<int> $variadic variadic doc comment */',
+            ],
+            'parametersWithReferencesAndAttributes86' => [
+                'byReference'                => '/** @param array<string> $byReference by-reference doc comment */',
+                'docBeforeAttribute'         => '/** doc comment placed before the attribute */',
+                'docAfterAttribute'          => '/** doc comment placed after the attribute */',
+                'lastDocCommentWins'         => '/** last doc comment wins */',
+                'docCommentThenBlockComment' => '/** doc comment followed by a regular comment */',
+            ],
+            'parametersWithDefaultsAndTypes86' => [
+                'nullableWithDefault'        => '/** @param string|null $nullableWithDefault nullable doc comment */',
+                'unionTyped'                 => '/** @param int|float $unionTyped union type doc comment */',
+                'arrayDefault'               => '/** @param array<mixed> $arrayDefault doc comment for array default */',
+            ],
+        ];
+
+        $expectedMethodDocComments = [
+            'ClassWithDocumentedParameters86::__construct' => [
+                'promoted'                   => '/** @var string promoted property doc comment */',
+                'promotedProtected'          => '/** @var int promoted protected property doc comment */',
+                'promotedUndocumented'       => false,
+            ],
+            'ClassWithDocumentedParameters86::documentedMethod' => [
+                'first'                      => false,
+                'second'                     => '/** @param string $second method parameter doc comment */',
+            ],
+            'ClassWithDocumentedParameters86::documentedStaticMethod' => [
+                'instance'                   => '/** @param self $instance static method parameter doc comment */',
+            ],
+        ];
+
+        $parsedNamespace = self::getStub86Namespace();
+
+        foreach ($expectedDocComments as $functionName => $expectedParameters) {
+            $parsedFunction = $parsedNamespace->getFunction($functionName);
+            foreach ($parsedFunction->getParameters() as $parsedParameter) {
+                $parameterName = $parsedParameter->getName();
+                if (!array_key_exists($parameterName, $expectedParameters)) {
+                    throw new \LogicException("Missing expectation for {$functionName}(\${$parameterName})");
+                }
+                yield "{$functionName}(\${$parameterName})" => [
+                    $parsedParameter,
+                    $parsedFunction->getName(),
+                    $expectedParameters[$parameterName],
+                ];
+            }
+        }
+
+        foreach ($expectedMethodDocComments as $methodReference => $expectedParameters) {
+            [$className, $methodName] = explode('::', $methodReference);
+            $parsedClass  = $parsedNamespace->getClass('Go\ParserReflection\Stub\\' . $className);
+            $parsedMethod = $parsedClass->getMethod($methodName);
+            foreach ($parsedMethod->getParameters() as $parsedParameter) {
+                $parameterName = $parsedParameter->getName();
+                if (!array_key_exists($parameterName, $expectedParameters)) {
+                    throw new \LogicException("Missing expectation for {$methodReference}(\${$parameterName})");
+                }
+                yield "{$methodReference}(\${$parameterName})" => [
+                    $parsedParameter,
+                    [$parsedClass->getName(), $methodName],
+                    $expectedParameters[$parameterName],
+                ];
+            }
+        }
+    }
+
+    /**
+     * Parses (and loads) the stub file with documented parameters
+     */
+    private static function getStub86Namespace(): ReflectionFileNamespace
+    {
+        $fileName       = __DIR__ . '/Stub/FileWithParameters86.php';
+        $reflectionFile = new ReflectionFile($fileName);
+
+        // The file only contains ordinary comments, so it can be safely loaded on any PHP version
+        include_once $fileName;
+
+        return $reflectionFile->getFileNamespace('Go\ParserReflection\Stub');
+    }
+
+    /**
      * @inheritDoc
      */
     static protected function getGettersToCheck(): array
     {
-        return [
+        $getters = [
             'isOptional', 'isPassedByReference', 'isDefaultValueAvailable',
             'getPosition', 'canBePassedByValue', 'allowsNull', 'getDefaultValue', 'getDefaultValueConstantName',
             'isDefaultValueConstant', 'isVariadic', 'isPromoted', 'hasType', '__toString'
         ];
+
+        if (PHP_VERSION_ID >= 80600) {
+            // Native ReflectionParameter::getDocComment() only exists since PHP 8.6
+            $getters[] = 'getDocComment';
+        }
+
+        return $getters;
     }
 }
