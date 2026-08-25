@@ -62,7 +62,7 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
      *
      * @see $isDefaultValueConstant
      */
-    private ?string $defaultValueConstantName;
+    private ?string $defaultValueConstantName = null;
 
     /**
      * Index of parameter in the list
@@ -74,9 +74,9 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
      */
     private Param $parameterNode;
 
-    private bool $isDefaultValueConstExpr;
+    private bool $isDefaultValueConstExpr = false;
 
-    private ?string $defaultValueConstExpr;
+    private ?string $defaultValueConstExpr = null;
 
     private \ReflectionUnionType|\ReflectionNamedType|\ReflectionIntersectionType|null $type = null;
 
