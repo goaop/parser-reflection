@@ -66,6 +66,8 @@ When you call `new ReflectionClass('SomeClass')`:
 
 Tests in `tests/` mirror the reflection class names (e.g. `ReflectionClassTest.php`). PHP version-specific stub files in `tests/Stub/` (e.g. `FileWithClasses84.php`) contain the PHP code being reflected. Tests extend `AbstractTestCase` which sets up the `ReflectionEngine` with a `ComposerLocator`.
 
+Stubs for a PHP version newer than the supported baseline follow the `FileWith*86.php` naming convention (`FileWithClasses86.php` is the baseline one, per-feature stubs get their own file). They are only yielded by `AbstractTestCase::getFilesToAnalyze()` behind a `PHP_VERSION_ID >= 80600` check, because the data providers `include_once` every stub they yield. Since the reflection engine analyzes sources without loading them, static assertions on such stubs may run on any runtime; every assertion that needs the newer runtime (native reflection parity, for instance) must be guarded with the same `PHP_VERSION_ID >= 80600` check so the suite stays green on PHP 8.5. See `tests/Php86ParsingTest.php` for the reference wiring.
+
 ### CI
 
 GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.5 with both lowest and highest dependency versions, plus PHP 8.6 as an experimental (allowed-to-fail) job. A separate workflow (`.github/workflows/phpstan.yml`) runs PHPStan at level 10 on PHP 8.5.
