@@ -21,7 +21,13 @@ jobs:
     steps:
       - name: "Open or refresh the 4.x -> master pull request"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # The default GITHUB_TOKEN can open/merge PRs, but pull_request-triggered
+          # workflows (required status checks) on a PR it opens are held for manual
+          # approval by GitHub's anti-recursion safeguard. Set the CASCADE_TOKEN repo
+          # secret to a PAT (Contents: write, Pull requests: write) so required checks
+          # on the cascade PR run without manual approval; falls back to GITHUB_TOKEN
+          # if unset (checks will need one-time manual approval in that case).
+          GH_TOKEN: ${{ secrets.CASCADE_TOKEN || secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -e
