@@ -15,6 +15,8 @@ use Go\ParserReflection\Traits\AttributeResolverTrait;
 use Go\ParserReflection\Traits\InternalPropertiesEmulationTrait;
 use Go\ParserReflection\Resolver\NodeExpressionResolver;
 use Go\ParserReflection\Resolver\TypeExpressionResolver;
+use PhpParser\Comment\Doc;
+use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\BinaryOp\Concat;
@@ -24,6 +26,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\NullableType;
 use PhpParser\Node\Param;
+use PhpParser\NodeFinder;
 use PhpParser\PrettyPrinter\Standard;
 use ReflectionFunctionAbstract;
 use ReflectionParameter as BaseReflectionParameter;
@@ -327,6 +330,39 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
     public function getDefaultValueExpression(): ?string
     {
         return $this->defaultValueConstExpr;
+    }
+
+    /**
+     * Returns the doc comment attached to this parameter or false if there is no doc comment.
+     *
+     * Doc comments on parameters are a PHP 8.6 feature, exposed natively by
+     * \ReflectionParameter::getDocComment(). PHP-Parser attaches a doc comment to the `Param`
+     * node itself only when the comment directly precedes the parameter declaration. When the
+     * comment sits inside the declaration (for example after an attribute group, after the type
+     * or inside a default value expression) it ends up on a nested node instead. Therefore the
+     * whole parameter sub-tree is scanned and the last doc comment in source order wins, which is
+     * exactly how PHP itself resolves the doc comment of a parameter.
+     */
+    public function getDocComment(): string|false
+    {
+        $lastDocComment     = null;
+        $lastDocCommentPos  = -1;
+
+        $parameterSubTree = (new NodeFinder())->findInstanceOf($this->parameterNode, Node::class);
+        foreach ($parameterSubTree as $node) {
+            foreach ($node->getComments() as $comment) {
+                if (!$comment instanceof Doc) {
+                    continue;
+                }
+                $commentPosition = $comment->getStartFilePos();
+                if ($commentPosition >= $lastDocCommentPos) {
+                    $lastDocCommentPos = $commentPosition;
+                    $lastDocComment    = $comment;
+                }
+            }
+        }
+
+        return $lastDocComment?->getText() ?? false;
     }
 
     /**
