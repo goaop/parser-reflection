@@ -127,6 +127,16 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
     }
 
     /**
+     * Checks if the constant is defined in a namespace
+     *
+     * Mirrors the \ReflectionConstant::inNamespace() method that was added in PHP 8.6
+     */
+    public function inNamespace(): bool
+    {
+        return $this->getNamespaceName() !== '';
+    }
+
+    /**
      * Returns the value of the constant, evaluated at the pure AST level
      */
     public function getValue(): mixed
@@ -179,7 +189,12 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
                 $arguments = [];
                 foreach ($attr->args as $arg) {
                     $nodeExpressionResolver->process($arg->value);
-                    $arguments[] = $nodeExpressionResolver->getValue();
+                    // Named arguments are keyed by their name, exactly like the native reflection does
+                    if (isset($arg->name)) {
+                        $arguments[$arg->name->toString()] = $nodeExpressionResolver->getValue();
+                    } else {
+                        $arguments[] = $nodeExpressionResolver->getValue();
+                    }
                 }
 
                 $isRepeated   = self::isAttributeRepeated($resolvedAttrName, $this->declarationNode->attrGroups);
@@ -292,7 +307,7 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
      * argument of ReflectionAttribute does not accept a constant reflection.
      *
      * @param class-string<object> $attributeName
-     * @param array<int, mixed> $arguments
+     * @param array<array-key, mixed> $arguments
      */
     private static function createAttributeReflection(
         Attribute $attributeNode,
@@ -303,7 +318,7 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
         return new class ($attributeNode, $attributeName, $arguments, $isRepeated) extends ReflectionAttribute {
             /**
              * @param class-string<object> $attributeClassName
-             * @param array<int, mixed> $attributeArguments
+             * @param array<array-key, mixed> $attributeArguments
              */
             public function __construct(
                 private Attribute $attributeNode,
@@ -323,7 +338,7 @@ final class ReflectionConstant implements NodeAwareInterface, Reflector, Stringa
             }
 
             /**
-             * @return array<int, mixed>
+             * @return array<array-key, mixed>
              */
             public function getArguments(): array
             {

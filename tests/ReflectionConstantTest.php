@@ -73,6 +73,7 @@ class ReflectionConstantTest extends TestCase
             $this->assertSame(self::STUB_NAMESPACE . '\\' . $shortName, $parsedConstant->name);
             $this->assertSame($shortName, $parsedConstant->getShortName());
             $this->assertSame(self::STUB_NAMESPACE, $parsedConstant->getNamespaceName());
+            $this->assertTrue($parsedConstant->inNamespace());
             $this->assertSame($expectedValue, $parsedConstant->getValue());
             $this->assertFalse($parsedConstant->isDeprecated());
             $this->assertSame([], $parsedConstant->getAttributes());
@@ -188,6 +189,10 @@ class ReflectionConstantTest extends TestCase
             $this->assertSame($nativeConstant->getName(), $parsedConstant->getName(), $constantName);
             $this->assertSame($nativeConstant->getShortName(), $parsedConstant->getShortName(), $constantName);
             $this->assertSame($nativeConstant->getNamespaceName(), $parsedConstant->getNamespaceName(), $constantName);
+            if (PHP_VERSION_ID >= 80600) {
+                // \ReflectionConstant::inNamespace() is available since PHP 8.6 only
+                $this->assertSame($nativeConstant->inNamespace(), $parsedConstant->inNamespace(), $constantName);
+            }
             $this->assertSame($nativeConstant->getValue(), $parsedConstant->getValue(), $constantName);
             $this->assertSame($nativeConstant->isDeprecated(), $parsedConstant->isDeprecated(), $constantName);
             $this->assertSame($nativeConstant->__toString(), $parsedConstant->__toString(), $constantName);
@@ -211,7 +216,11 @@ class ReflectionConstantTest extends TestCase
         $this->assertCount(1, $attributes);
         $this->assertInstanceOf(ReflectionAttribute::class, $attributes[0]);
         $this->assertSame(Deprecated::class, $attributes[0]->getName());
-        $this->assertSame(['Use ATTRIBUTED_CONSTANT_MODERN instead', '8.5'], $attributes[0]->getArguments());
+        // Named arguments keep their names, just like the native reflection reports them
+        $this->assertSame(
+            ['message' => 'Use ATTRIBUTED_CONSTANT_MODERN instead', 'since' => '8.5'],
+            $attributes[0]->getArguments()
+        );
         $this->assertFalse($attributes[0]->isRepeated());
         $this->assertInstanceOf(Attribute::class, $attributes[0]->getNode());
 
@@ -229,7 +238,7 @@ class ReflectionConstantTest extends TestCase
         $markedAttributes = $markedConstant->getAttributes();
         $this->assertCount(1, $markedAttributes);
         $this->assertSame(self::STUB_NAMESPACE . '\ConstantMarker', $markedAttributes[0]->getName());
-        $this->assertSame(['marked'], $markedAttributes[0]->getArguments());
+        $this->assertSame(['tag' => 'marked'], $markedAttributes[0]->getArguments());
         $this->assertSame([], $markedConstant->getAttributes(Deprecated::class));
 
         $modernConstant = $parsedNamespace->getReflectionConstant('ATTRIBUTED_CONSTANT_MODERN');
@@ -256,6 +265,7 @@ class ReflectionConstantTest extends TestCase
         $this->assertSame('ATTRIBUTED_GLOBAL_CONSTANT', $globalConstant->getName());
         $this->assertSame('ATTRIBUTED_GLOBAL_CONSTANT', $globalConstant->getShortName());
         $this->assertSame('', $globalConstant->getNamespaceName());
+        $this->assertFalse($globalConstant->inNamespace());
         $this->assertSame('global', $globalConstant->getValue());
         $this->assertTrue($globalConstant->isDeprecated());
         $this->assertFalse(
