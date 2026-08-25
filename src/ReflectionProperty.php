@@ -591,6 +591,209 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
     }
 
     /**
+     * Checks if the property is readable from the given scope (PHP 8.6 API emulation)
+     *
+     * The check is performed statically from the AST: visibility, hook presence and
+     * virtual state are resolved without loading the reflected class. Only the
+     * initialization state of a concrete $object requires the native reflection.
+     *
+     * @param string|null $scope  Scope to check from: a class name or null for the global scope
+     * @param object|null $object Optional concrete instance to check the initialization state on
+     *
+     * @throws \ReflectionException When $object does not match the property (static or foreign instance)
+     * @throws \Error When the scope class can not be resolved
+     */
+    public function isReadable(?string $scope, ?object $object = null): bool
+    {
+        $this->assertObjectMatchesDeclaringClass($object);
+
+        if (!$this->isAccessibleFromScope($scope, $this->getGetVisibility())) {
+            return false;
+        }
+
+        $hasGetHook = $this->hasHook(PropertyHookType::Get);
+
+        // A virtual property without a get hook (e.g. `{ set; }` only) can never be read
+        if (!$hasGetHook && $this->isVirtual()) {
+            return false;
+        }
+
+        // For a concrete object, a property without a get hook is readable only when its
+        // backing value is initialized on that object (requires the native reflection)
+        if (isset($object) && !$hasGetHook) {
+            return $this->isInitialized($object);
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks if the property is writable from the given scope (PHP 8.6 API emulation)
+     *
+     * Takes asymmetric set-visibility (private(set)/protected(set)), the implicit
+     * protected(set) of readonly properties, hook presence and virtual state into
+     * account, statically from the AST. Only the initialization state of a concrete
+     * $object (for readonly properties) requires the native reflection.
+     *
+     * @param string|null $scope  Scope to check from: a class name or null for the global scope
+     * @param object|null $object Optional concrete instance to check the initialization state on
+     *
+     * @throws \ReflectionException When $object does not match the property (static or foreign instance)
+     * @throws \Error When the scope class can not be resolved
+     */
+    public function isWritable(?string $scope, ?object $object = null): bool
+    {
+        $this->assertObjectMatchesDeclaringClass($object);
+
+        if (!$this->isAccessibleFromScope($scope, $this->getSetVisibility())) {
+            return false;
+        }
+
+        // A virtual property without a set hook (e.g. `{ get; }` only) can never be written
+        if (!$this->hasHook(PropertyHookType::Set) && $this->isVirtual()) {
+            return false;
+        }
+
+        // A readonly property is writable on a concrete object only while it is still
+        // uninitialized on it (requires the native reflection to check the object state)
+        if (isset($object) && $this->isReadOnly()) {
+            return !$this->isInitialized($object);
+        }
+
+        return true;
+    }
+
+    /**
+     * Effective visibility that guards read access to the property
+     *
+     * @return 'public'|'protected'|'private'
+     */
+    private function getGetVisibility(): string
+    {
+        if ($this->isPrivate()) {
+            return 'private';
+        }
+        if ($this->isProtected()) {
+            return 'protected';
+        }
+
+        return 'public';
+    }
+
+    /**
+     * Effective visibility that guards write access to the property, taking asymmetric
+     * visibility and the implicit protected(set) of readonly properties into account
+     *
+     * @return 'public'|'protected'|'private'
+     */
+    private function getSetVisibility(): string
+    {
+        if ($this->isPrivate() || $this->isPrivateSet()) {
+            return 'private';
+        }
+        // isProtectedSet() also covers the implicit protected(set) of readonly properties
+        // and excludes an explicitly declared public(set) readonly combination
+        if ($this->isProtected() || $this->isProtectedSet()) {
+            return 'protected';
+        }
+
+        return 'public';
+    }
+
+    /**
+     * Validates the $object argument of accessibility checks the same way as native reflection
+     */
+    private function assertObjectMatchesDeclaringClass(?object $object): void
+    {
+        if (!isset($object)) {
+            return;
+        }
+        if ($this->isStatic()) {
+            throw new ReflectionException('null is expected as object argument for static properties');
+        }
+        if (!is_a($object, $this->className)) {
+            throw new ReflectionException('Given object is not an instance of the class this property was declared in');
+        }
+    }
+
+    /**
+     * Checks whether a member with the given effective visibility is accessible from the scope
+     *
+     * @param string|null $scope Class name or null for the global scope
+     * @param 'public'|'protected'|'private' $visibility Effective visibility to check against
+     *
+     * @throws \Error When the scope class can not be resolved (matches native behaviour)
+     */
+    private function isAccessibleFromScope(?string $scope, string $visibility): bool
+    {
+        if ($scope === null) {
+            // The global scope can only access public members
+            return $visibility === 'public';
+        }
+
+        $scopeName = ltrim($scope, '\\');
+
+        // The declaring class scope always has full access to its own property
+        if (strcasecmp($scopeName, $this->className) === 0) {
+            return true;
+        }
+
+        // Native implementation always resolves the scope class first and fails loudly
+        $scopeClass = $this->resolveScopeClass($scope);
+
+        return match ($visibility) {
+            'public'    => true,
+            'private'   => false,
+            // Protected members are accessible when the scope is a descendant of the
+            // declaring class or an ancestor of it (same rule as zend_check_protected)
+            'protected' => $this->isClassDescendantOf($scopeClass, $this->className)
+                || $this->isClassDescendantOf($this->getDeclaringClass(), $scopeClass->getName()),
+        };
+    }
+
+    /**
+     * Walks the inheritance chain of the class to find the given ancestor
+     *
+     * @param \ReflectionClass<object> $class
+     */
+    private function isClassDescendantOf(\ReflectionClass $class, string $ancestorClassName): bool
+    {
+        $parentClass = $class->getParentClass();
+        while ($parentClass !== false) {
+            if (strcasecmp($parentClass->getName(), $ancestorClassName) === 0) {
+                return true;
+            }
+            $parentClass = $parentClass->getParentClass();
+        }
+
+        return false;
+    }
+
+    /**
+     * Resolves the scope class from the already loaded classes (without autoloading)
+     * or statically via the parser reflection, never loading the scope class itself
+     *
+     * @return \ReflectionClass<object>
+     *
+     * @throws \Error When the class can not be located (matches the native error)
+     */
+    private function resolveScopeClass(string $scope): \ReflectionClass
+    {
+        $scopeName = ltrim($scope, '\\');
+        if (class_exists($scopeName, false) || interface_exists($scopeName, false) || trait_exists($scopeName, false)) {
+            /** @var class-string $scopeName */
+            return new \ReflectionClass($scopeName);
+        }
+
+        try {
+            // Unlike native reflection, the class is resolved statically instead of autoloading it
+            return new ReflectionClass($scopeName);
+        } catch (\Exception) {
+            throw new \Error(sprintf('Class "%s" not found', $scope));
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     public function isLazy(object $object): bool
@@ -664,8 +867,9 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
             if ($hook->name->name === 'set' && $hook->body instanceof Expr) {
                 return false;
             }
-            // A block-form hook that references $this->propertyName uses the backing store
-            if (is_array($hook->body) && $this->hookBodyUsesBackingStore($hook->body, $propertyName)) {
+            // A short or block-form hook that references $this->propertyName uses the backing store
+            $bodyNodes = $hook->body instanceof Expr ? [$hook->body] : $hook->body;
+            if (is_array($bodyNodes) && $this->hookBodyUsesBackingStore($bodyNodes, $propertyName)) {
                 return false;
             }
         }
@@ -676,7 +880,7 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
     /**
      * Checks whether the hook body references the property's own backing store via $this->propertyName
      *
-     * @param \PhpParser\Node\Stmt[] $stmts
+     * @param \PhpParser\Node[] $stmts
      */
     private function hookBodyUsesBackingStore(array $stmts, string $propertyName): bool
     {
