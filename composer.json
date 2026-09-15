@@ -29,7 +29,7 @@
     "phpunit/phpunit": "^13.3.1",
     "phpstan/phpstan": "^2.0",
     "tracy/tracy": "^2.10",
-    "rector/rector": "^2.0"
+    "rector/rector": "^2.6.7"
   },
   "extra": {
     "branch-alias": {
