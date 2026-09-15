@@ -257,7 +257,7 @@ class NodeExpressionResolver
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
             if (!$argumentNode instanceof Node\Arg) {
-                throw new ReflectionException('Cannot statically resolve a variadic placeholder argument in a function call');
+                throw new ReflectionException('Cannot statically resolve a placeholder argument in a function call');
             }
             $value = $this->resolve($argumentNode->value);
             // if function uses named arguments, then unpack argument name first
@@ -385,7 +385,7 @@ class NodeExpressionResolver
         $resolvedArgs = [];
         foreach ($node->args as $argumentNode) {
             if (!$argumentNode instanceof Node\Arg) {
-                throw new ReflectionException('Cannot statically resolve a variadic placeholder argument in a constructor call');
+                throw new ReflectionException('Cannot statically resolve a placeholder argument in a constructor call');
             }
             $value = $this->resolve($argumentNode->value);
             // if constructor uses named arguments, then unpack argument name first

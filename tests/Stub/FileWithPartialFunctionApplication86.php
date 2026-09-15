@@ -12,20 +12,13 @@ declare(strict_types=1);
 /**
  * Stub file containing PHP 8.6 Partial Function Application (PFA) placeholders.
  *
- * WARNING: this file is intentionally NOT valid PHP 8.5 source and it can NOT be parsed by the
- * currently required nikic/php-parser (5.8.0 has no grammar for the `?` argument placeholder).
+ * Since nikic/php-parser 5.9 the `?` placeholder parses into an ArgPlaceholder node, so this file
+ * is the positive fixture for issue #224 and reflects cleanly on every supported host runtime.
  *
- * Therefore this file:
- *   - must NEVER be included/required (it would be a fatal parse error on a PHP 8.5 runtime);
- *   - must NEVER be listed in AbstractTestCase::getFilesToAnalyze(), because every parity data
- *     provider parses those files eagerly;
- *   - is only ever read as raw text by Php86PartialFunctionApplicationTest, which asserts that
- *     the engine reports a clear parse error instead of silently producing a corrupted AST.
- *
- * Once nikic/php-parser gains PFA support, this stub becomes the positive fixture for
- * issue #224: the constraint gets bumped, the engine picks the grammar up automatically via
- * ParserFactory::createForNewestSupportedVersion(), and the assertions here flip from
- * "raises a parse error" to "reflects cleanly".
+ * It is still NOT valid PHP 8.5 at runtime (PFA is a compile error before PHP 8.6), therefore:
+ *   - it must only be included/required behind a PHP_VERSION_ID >= 80600 guard;
+ *   - it must NOT be listed in AbstractTestCase::getFilesToAnalyze(), because every parity data
+ *     provider includes those files eagerly.
  *
  * @see https://github.com/goaop/parser-reflection/issues/224
  */
