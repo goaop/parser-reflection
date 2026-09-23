@@ -3,13 +3,16 @@ parameters:
   paths:
     - src
   ignoreErrors:
-    # The installed PHPStan release knows no PHP 8.6 yet (phpVersion.max is capped at 80599), so it
-    # folds the runtime check guarding the 8.6-specific boolean rendering to "always false". The
-    # code path is exercised by the experimental PHP 8.6 CI job.
+    # A PHPStan release that knows no PHP 8.6 (phpVersion.max capped at 80599) folds the runtime
+    # check guarding the 8.6-specific boolean rendering to "always false"; newer releases know 8.6
+    # and report nothing, hence reportUnmatched is disabled for these two entries. The code path is
+    # exercised by the experimental PHP 8.6 CI job.
     - identifier: greaterOrEqual.alwaysFalse
       path: src/ReflectionClassConstant.php
+      reportUnmatched: false
     - identifier: booleanAnd.alwaysFalse
       path: src/ReflectionClassConstant.php
+      reportUnmatched: false
     # Both classes are final, so "might have hooks in a subclass" is a false positive
     - identifier: unset.possiblyHookedProperty
       path: src/ReflectionFunction.php
