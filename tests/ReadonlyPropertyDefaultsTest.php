@@ -263,10 +263,9 @@ class ReadonlyPropertyDefaultsTest extends TestCase
     }
 
     /**
-     * Parity against native reflection, pending an actual runtime that accepts readonly defaults.
-     *
-     * TODO: remove the skip once php-src ships the feature in a beta/RC build, the expectations below
-     *       have to be re-verified against the final native semantics at that point.
+     * Parity against native reflection, verified against PHP 8.6.0RC2 (the first pre-release line
+     * shipping readonly property defaults — the feature missed the beta1 tag). The runtime probe
+     * keeps the test skipped on runtimes without the feature, e.g. PHP 8.5.
      */
     public function testNativeParityForReadonlyDefaults(): void
     {
@@ -292,11 +291,15 @@ class ReadonlyPropertyDefaultsTest extends TestCase
                 $parsedProperty->hasDefaultValue(),
                 'hasDefaultValue() mismatch for $' . $propertyName
             );
-            $this->assertSame(
-                $nativeProperty->getDefaultValue(),
-                $parsedProperty->getDefaultValue(),
-                'getDefaultValue() mismatch for $' . $propertyName
-            );
+            // PHP 8.6 deprecates calling getDefaultValue() on a property without a default value,
+            // so the value comparison is limited to properties that actually have one
+            if ($nativeProperty->hasDefaultValue()) {
+                $this->assertSame(
+                    $nativeProperty->getDefaultValue(),
+                    $parsedProperty->getDefaultValue(),
+                    'getDefaultValue() mismatch for $' . $propertyName
+                );
+            }
         }
 
         $nativeDefaults = $nativeClass->getDefaultProperties();

@@ -324,12 +324,22 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant implemen
         $docComment = $this->getDocComment();
         $prefix     = $docComment !== false ? $docComment . "\n" : '';
 
+        // Since PHP 8.6 the native reflection prints boolean values as "true"/"false" instead of
+        // the string cast "1"/"" used before
+        if (is_bool($value) && PHP_VERSION_ID >= 80600) {
+            $displayValue = $value ? 'true' : 'false';
+        } elseif (is_object($value)) {
+            $displayValue = 'Object';
+        } else {
+            $displayValue = is_scalar($value) || $value === null ? (string) $value : '';
+        }
+
         return $prefix . sprintf(
             "Constant [ %s %s %s ] { %s }\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
             ReflectionType::convertToDisplayType($valueType),
             $this->getName(),
-            is_object($value) ? 'Object' : (is_scalar($value) || $value === null ? $value : '')
+            $displayValue
         );
     }
 
