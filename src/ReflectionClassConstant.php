@@ -320,7 +320,11 @@ final class ReflectionClassConstant extends BaseReflectionClassConstant implemen
             $valueType = $this->type ?? new ReflectionType('mixed', false);
         }
 
-        return sprintf(
+        // Native reflection prints the doc comment of the constant right before its declaration
+        $docComment = $this->getDocComment();
+        $prefix     = $docComment !== false ? $docComment . "\n" : '';
+
+        return $prefix . sprintf(
             "Constant [ %s %s %s ] { %s }\n",
             implode(' ', Reflection::getModifierNames($this->getModifiers())),
             ReflectionType::convertToDisplayType($valueType),
