@@ -65,11 +65,11 @@ final class ReflectionProperty extends BaseReflectionProperty implements NodeAwa
 
     private bool $isDefaultValueConstant = false;
 
-    private ?string $defaultValueConstantName;
+    private ?string $defaultValueConstantName = null;
 
     private bool $isDefaultValueConstExpr = false;
 
-    private ?string $defaultValueConstExpr;
+    private ?string $defaultValueConstExpr = null;
 
     /**
      * Initializes a reflection for the property
