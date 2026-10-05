@@ -42,9 +42,20 @@ class ReflectionEngine
 
     protected static ?int $maximumCachedFiles;
 
-    protected static Parser $parser;
+    /**
+     * Parser of the sources, created on the first parse
+     */
+    protected static ?Parser $parser = null;
 
-    protected static NodeTraverser $traverser;
+    /**
+     * Traverser resolving the names of the parsed sources, created on the first parse
+     */
+    protected static ?NodeTraverser $traverser = null;
+
+    /**
+     * Grammar version of the parser, null for the newest grammar supported by PHP-Parser
+     */
+    private static ?PhpVersion $phpVersion = null;
 
     private function __construct() {}
 
@@ -54,26 +65,17 @@ class ReflectionEngine
      * By default the newest grammar supported by PHP-Parser is used, so that sources written for a newer
      * PHP version than the host one can still be analysed statically.
      *
+     * The parser is created on the first parse: the composer bootstrap of this package initializes the engine on
+     * every request of an application, and most of them never parse anything.
+     *
      * @param PhpVersion|null $phpVersion Optional PHP version of the grammar to parse sources with
      */
     public static function init(LocatorInterface $locator, ?PhpVersion $phpVersion = null): void
     {
-        $parserFactory = new ParserFactory();
-        self::$parser  = isset($phpVersion)
-            ? $parserFactory->createForVersion($phpVersion)
-            : $parserFactory->createForNewestSupportedVersion();
-
-        self::$traverser = $traverser = new NodeTraverser();
-        $traverser->addVisitor(new NameResolver(
-            null,
-            [
-                'preserveOriginalNames' => true,
-                'replaceNodes' => false,
-            ]
-        ));
-        $traverser->addVisitor(new RootNamespaceNormalizer());
-
-        self::$locator = $locator;
+        self::$locator    = $locator;
+        self::$phpVersion = $phpVersion;
+        self::$parser     = null;
+        self::$traverser  = null;
     }
 
     /**
@@ -277,8 +279,8 @@ class ReflectionEngine
                 throw new ReflectionException("Could not read file: $fileName");
             }
         }
-        $treeNodes = self::$parser->parse($fileContent) ?? [];
-        $treeNodes = self::$traverser->traverse($treeNodes);
+        $treeNodes = self::getParser()->parse($fileContent) ?? [];
+        $treeNodes = self::getTraverser()->traverse($treeNodes);
 
         self::$parsedFiles[$fileName] = $treeNodes;
 
@@ -309,6 +311,33 @@ class ReflectionEngine
 
     public static function getParser(): Parser
     {
+        if (self::$parser === null) {
+            $parserFactory = new ParserFactory();
+            self::$parser  = isset(self::$phpVersion)
+                ? $parserFactory->createForVersion(self::$phpVersion)
+                : $parserFactory->createForNewestSupportedVersion();
+        }
+
         return self::$parser;
+    }
+
+    /**
+     * Returns the traverser resolving the names of the parsed sources
+     */
+    private static function getTraverser(): NodeTraverser
+    {
+        if (self::$traverser === null) {
+            self::$traverser = new NodeTraverser();
+            self::$traverser->addVisitor(new NameResolver(
+                null,
+                [
+                    'preserveOriginalNames' => true,
+                    'replaceNodes' => false,
+                ]
+            ));
+            self::$traverser->addVisitor(new RootNamespaceNormalizer());
+        }
+
+        return self::$traverser;
     }
 }
