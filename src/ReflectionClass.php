@@ -70,30 +70,20 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     /**
      * Parses interfaces from the concrete class node
      *
+     * An interface that can not be located is left out with the partial {@see MissingAncestorPolicy}.
+     *
      * @return array<string, \ReflectionClass<object>> List of reflections of interfaces
+     *
+     * @throws ClassNotFoundException If an interface can not be located with the strict policy
      */
     public static function collectInterfacesFromClassNode(ClassLike $classLikeNode): array
     {
         $interfaces = [];
 
-        if ($classLikeNode instanceof Interface_) {
-            $implementsList = $classLikeNode->extends;
-        } elseif ($classLikeNode instanceof Class_ || $classLikeNode instanceof Enum_) {
-            $implementsList = $classLikeNode->implements;
-        } else {
-            $implementsList = [];
-        }
-
-        if (count($implementsList) > 0) {
-            foreach ($implementsList as $implementNode) {
-                if ($implementNode->getAttribute('resolvedName') instanceof FullyQualified) {
-                    $implementName = $implementNode->getAttribute('resolvedName')->toString();
-                    $interface     = interface_exists($implementName, false)
-                        ? new parent($implementName)
-                        : new self($implementName);
-
-                    $interfaces[$implementName] = $interface;
-                }
+        foreach (self::getDeclaredInterfaceNames($classLikeNode) as $interfaceName) {
+            $interface = self::reflectAncestor($interfaceName);
+            if ($interface !== null) {
+                $interfaces[$interfaceName] = $interface;
             }
         }
 
@@ -114,32 +104,150 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     /**
      * Parses traits from the concrete class node
      *
+     * A trait that can not be located is left out with the partial {@see MissingAncestorPolicy}.
+     *
      * @param array<int|string, \PhpParser\Node\Stmt\TraitUseAdaptation> $traitAdaptations List of method adaptations
      *
      * @return \ReflectionClass<object>[] List of reflections of traits
+     *
+     * @throws ClassNotFoundException If a trait can not be located with the strict policy
      */
     public static function collectTraitsFromClassNode(ClassLike $classLikeNode, array &$traitAdaptations): array
     {
         $traits = [];
 
-        if (!empty($classLikeNode->stmts)) {
-            foreach ($classLikeNode->stmts as $classLevelNode) {
-                if ($classLevelNode instanceof TraitUse) {
-                    foreach ($classLevelNode->traits as $classTraitName) {
-                        if ($classTraitName->getAttribute('resolvedName') instanceof FullyQualified) {
-                            $traitName          = $classTraitName->getAttribute('resolvedName')->toString();
-                            $trait              = trait_exists($traitName, false)
-                                ? new parent($traitName)
-                                : new self($traitName);
-                            $traits[$traitName] = $trait;
-                        }
+        foreach ($classLikeNode->stmts as $classLevelNode) {
+            if ($classLevelNode instanceof TraitUse) {
+                foreach (self::getResolvedNames($classLevelNode->traits) as $traitName) {
+                    $trait = self::reflectAncestor($traitName);
+                    if ($trait !== null) {
+                        $traits[$traitName] = $trait;
                     }
-                    $traitAdaptations = array_merge($traitAdaptations, $classLevelNode->adaptations);
                 }
+                $traitAdaptations = array_merge($traitAdaptations, $classLevelNode->adaptations);
             }
         }
 
         return $traits;
+    }
+
+    /**
+     * Collects the names of the ancestors of the class node that can not be located
+     *
+     * The ancestors that can not be located for the available ancestors are included as well. Ancestors are
+     * checked without throwing, whatever the {@see MissingAncestorPolicy} is.
+     *
+     * @return list<string>
+     */
+    public static function collectMissingAncestorNames(ClassLike $classLikeNode): array
+    {
+        $ancestorNames = self::getDeclaredInterfaceNames($classLikeNode);
+        $parentName    = self::getDeclaredParentName($classLikeNode);
+        if ($parentName !== null) {
+            array_unshift($ancestorNames, $parentName);
+        }
+        foreach ($classLikeNode->stmts as $classLevelNode) {
+            if ($classLevelNode instanceof TraitUse) {
+                array_push($ancestorNames, ...self::getResolvedNames($classLevelNode->traits));
+            }
+        }
+
+        $missingNames = [];
+        foreach ($ancestorNames as $ancestorName) {
+            $ancestor = self::reflectAncestor($ancestorName, true);
+            if ($ancestor === null) {
+                $missingNames[] = $ancestorName;
+            } elseif ($ancestor instanceof self) {
+                // A declared ancestor is reflected natively, so it is never partial
+                array_push($missingNames, ...$ancestor->getMissingClassNames());
+            }
+        }
+
+        return array_values(array_unique($missingNames));
+    }
+
+    /**
+     * Reflects an ancestor (parent class, interface or trait) of a parsed class
+     *
+     * An ancestor already declared in the runtime is reflected natively, otherwise its source is located and parsed.
+     *
+     * @internal
+     *
+     * @param bool|null $allowMissing Whether to return null instead of throwing when the ancestor can not be
+     *                                located, null to follow the {@see MissingAncestorPolicy} of the engine
+     *
+     * @return \ReflectionClass<object>|null Null if the ancestor can not be located and that is allowed
+     *
+     * @throws ClassNotFoundException If the ancestor can not be located and that is not allowed
+     */
+    public static function reflectAncestor(string $ancestorName, ?bool $allowMissing = null): ?InternalReflectionClass
+    {
+        if (class_exists($ancestorName, false)
+            || interface_exists($ancestorName, false)
+            || trait_exists($ancestorName, false)
+        ) {
+            return new parent($ancestorName);
+        }
+
+        try {
+            return new self($ancestorName);
+        } catch (ClassNotFoundException $e) {
+            $allowMissing ??= ReflectionEngine::getMissingAncestorPolicy() === MissingAncestorPolicy::Partial;
+            if (!$allowMissing) {
+                throw $e;
+            }
+
+            return null;
+        }
+    }
+
+    /**
+     * Returns the resolved name of the parent class declared by the class node, if any
+     */
+    private static function getDeclaredParentName(ClassLike $classLikeNode): ?string
+    {
+        if (!$classLikeNode instanceof Class_ || $classLikeNode->extends === null) {
+            return null;
+        }
+
+        return self::getResolvedNames([$classLikeNode->extends])[0] ?? null;
+    }
+
+    /**
+     * Returns the resolved names of the interfaces declared by the class node, in declaration order
+     *
+     * @return list<string>
+     */
+    private static function getDeclaredInterfaceNames(ClassLike $classLikeNode): array
+    {
+        if ($classLikeNode instanceof Interface_) {
+            return self::getResolvedNames($classLikeNode->extends);
+        }
+        if ($classLikeNode instanceof Class_ || $classLikeNode instanceof Enum_) {
+            return self::getResolvedNames($classLikeNode->implements);
+        }
+
+        return [];
+    }
+
+    /**
+     * Returns the fully qualified names resolved for the given name nodes
+     *
+     * @param Name[] $nameNodes
+     *
+     * @return list<string>
+     */
+    private static function getResolvedNames(array $nameNodes): array
+    {
+        $resolvedNames = [];
+        foreach ($nameNodes as $nameNode) {
+            $resolvedName = $nameNode->getAttribute('resolvedName');
+            if ($resolvedName instanceof FullyQualified) {
+                $resolvedNames[] = $resolvedName->toString();
+            }
+        }
+
+        return $resolvedNames;
     }
 
     /**
@@ -185,17 +293,5 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     protected function __initialize(): void
     {
         parent::__construct($this->getName());
-    }
-
-    /**
-     * Create a ReflectionClass for a given class name.
-     *
-     * @param string $className The name of the class to create a reflection for.
-     *
-     * @return \ReflectionClass<object> The appropriate reflection object.
-     */
-    protected function createReflectionForClass(string $className): InternalReflectionClass
-    {
-        return class_exists($className, false) ? new parent($className) : new self($className);
     }
 }
