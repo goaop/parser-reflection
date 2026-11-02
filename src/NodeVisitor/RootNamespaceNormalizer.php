@@ -25,7 +25,14 @@ use PhpParser\NodeVisitorAbstract;
 class RootNamespaceNormalizer extends NodeVisitorAbstract
 {
     /**
-     * {@inheritdoc}
+     * Wraps the statements of a file without a namespace into a global namespace node
+     *
+     * The return type is declared in the docblock only, like in PhpParser\NodeVisitor: an explicit @return keeps
+     * Symfony's DebugClassLoader from reporting the tentative return type of the parent method.
+     *
+     * @param \PhpParser\Node[] $nodes
+     *
+     * @return \PhpParser\Node[]|null Null when the file declares namespaces itself
      */
     public function beforeTraverse(array $nodes)
     {
