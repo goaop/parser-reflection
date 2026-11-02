@@ -57,6 +57,11 @@ class ReflectionEngine
      */
     private static ?PhpVersion $phpVersion = null;
 
+    /**
+     * What the reflection of a class does when one of its ancestors can not be located
+     */
+    private static MissingAncestorPolicy $missingAncestorPolicy = MissingAncestorPolicy::Strict;
+
     private function __construct() {}
 
     /**
@@ -68,14 +73,41 @@ class ReflectionEngine
      * The parser is created on the first parse: the composer bootstrap of this package initializes the engine on
      * every request of an application, and most of them never parse anything.
      *
-     * @param PhpVersion|null $phpVersion Optional PHP version of the grammar to parse sources with
+     * @param PhpVersion|null      $phpVersion            Optional PHP version of the grammar to parse sources with
+     * @param MissingAncestorPolicy $missingAncestorPolicy What the reflection of a class does when one of its
+     *                                                     ancestors can not be located, strict by default
      */
-    public static function init(LocatorInterface $locator, ?PhpVersion $phpVersion = null): void
+    public static function init(
+        LocatorInterface $locator,
+        ?PhpVersion $phpVersion = null,
+        MissingAncestorPolicy $missingAncestorPolicy = MissingAncestorPolicy::Strict
+    ): void {
+        self::$locator               = $locator;
+        self::$phpVersion            = $phpVersion;
+        self::$missingAncestorPolicy = $missingAncestorPolicy;
+        self::$parser                = null;
+        self::$traverser             = null;
+    }
+
+    /**
+     * Sets what the reflection of a class does when one of its ancestors can not be located
+     *
+     * With the strict policy (the default) every method that needs a missing ancestor throws. With the partial
+     * policy missing ancestors are left out, and the reflection reports itself as partial.
+     *
+     * @see ReflectionClass::isPartial()
+     */
+    public static function setMissingAncestorPolicy(MissingAncestorPolicy $missingAncestorPolicy): void
     {
-        self::$locator    = $locator;
-        self::$phpVersion = $phpVersion;
-        self::$parser     = null;
-        self::$traverser  = null;
+        self::$missingAncestorPolicy = $missingAncestorPolicy;
+    }
+
+    /**
+     * Returns what the reflection of a class does when one of its ancestors can not be located
+     */
+    public static function getMissingAncestorPolicy(): MissingAncestorPolicy
+    {
+        return self::$missingAncestorPolicy;
     }
 
     /**
@@ -91,6 +123,8 @@ class ReflectionEngine
 
     /**
      * Locates a file name for class
+     *
+     * @throws ClassNotFoundException If the class is not declared and the locator can not find its file
      */
     public static function locateClassFile(string $fullClassName): string
     {
@@ -110,9 +144,13 @@ class ReflectionEngine
                 throw new \LogicException('ReflectionEngine locator is not initialized. Call ReflectionEngine::init() first.');
             }
             $classFileName = self::$locator->locateClass($fullClassName);
+            if (!$classFileName) {
+                throw new ClassNotFoundException($fullClassName);
+            }
         }
 
         if (!$classFileName) {
+            // An internal class has no file
             throw new InvalidArgumentException("Class $fullClassName was not found by locator");
         }
 

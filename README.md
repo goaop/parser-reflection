@@ -51,6 +51,46 @@ If project uses a custom autoloader then you should follow the next steps:
 1. Create a new class that implements `\Go\ParserReflection\LocatorInterface`
 2. Create an instance of that class and pass it to the `ReflectionEngine::init()` method for initial configuration
 
+### Classes whose ancestors can not be located
+
+To reflect a class, the engine has to locate its parent class, interfaces and traits. An ancestor may be impossible
+to locate: generated at runtime and loaded by another autoloader, declared by `class_alias()`, or defined outside the
+files known to the locator. By default (the *strict* policy) every method that needs such an ancestor throws a
+`Go\ParserReflection\ClassNotFoundException`.
+
+With the *partial* policy the missing ancestors are left out instead, and the reflection says that it is partial:
+
+```php
+use Go\ParserReflection\MissingAncestorPolicy;
+use Go\ParserReflection\ReflectionEngine;
+
+ReflectionEngine::setMissingAncestorPolicy(MissingAncestorPolicy::Partial);
+// or ReflectionEngine::init($locator, null, MissingAncestorPolicy::Partial);
+
+$class = new \Go\ParserReflection\ReflectionClass(SomeClass::class);
+if ($class->isPartial()) {
+    // Names of the parent class, interfaces and traits that can not be located,
+    // including the ones missing for the available ancestors
+    var_dump($class->getMissingClassNames());
+}
+// Own methods, properties, constants and attributes, and the members of the available ancestors
+var_dump($class->getMethods());
+```
+
+What a partial reflection reports:
+
+- everything declared by the class itself and by its available ancestors stays available;
+- a missing parent class is reported by `getParentClass()` as `false`, missing interfaces and traits are left out of
+  `getInterfaces()`, `getInterfaceNames()`, `getTraits()` and `getTraitNames()`, and the members inherited from
+  them are left out of `getMethods()`, `getProperties()`, `getConstants()` and alike; a method whose prototype
+  belongs to a missing ancestor reports no prototype;
+- `isSubclassOf()` still recognizes ancestors declared by the class itself, as they are known from its source;
+- the names of the ancestors as written stay available from the AST node, see `getNode()`.
+
+`isPartial()` and `getMissingClassNames()` never throw for a missing ancestor, whatever the policy, so they can also
+be used to check a class before reflecting it with the strict policy. The class itself must still be located by the
+locator: `new ReflectionClass()` for a missing class throws with any policy.
+
 ### Reflecting concrete classes/methods/properties without loading them
 
 Just use `Go\ParserReflection` package reflection classes like traditional ones:
