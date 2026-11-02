@@ -110,6 +110,13 @@ trait ReflectionClassLikeTrait
     protected ?array $classConstants;
 
     /**
+     * Names of the ancestors that can not be located, or null if not initialized yet
+     *
+     * @var list<string>|null
+     */
+    protected ?array $missingClassNames;
+
+    /**
      * Returns the string representation of the ReflectionClass object.
      */
     public function __toString(): string
@@ -512,7 +519,42 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Returns the names of the ancestors (parent class, interfaces and traits) that can not be located
+     *
+     * The ancestors missing for the available ancestors are included as well. With the partial
+     * {@see \Go\ParserReflection\MissingAncestorPolicy} these ancestors are left out of the reflection, with the
+     * strict one every method that needs them throws. This method itself never throws for a missing ancestor.
+     *
+     * @return list<string>
+     */
+    public function getMissingClassNames(): array
+    {
+        if (!isset($this->missingClassNames)) {
+            $this->missingClassNames = ReflectionClass::collectMissingAncestorNames($this->classLikeNode);
+        }
+
+        return $this->missingClassNames;
+    }
+
+    /**
+     * Checks whether some ancestors (parent class, interfaces or traits) of the class can not be located
+     *
+     * The reflection of such a class only covers what the class and its available ancestors declare: inherited
+     * members, the parent class, interfaces and traits that come from a missing ancestor are left out with the
+     * partial {@see \Go\ParserReflection\MissingAncestorPolicy}.
+     *
+     * @see getMissingClassNames()
+     */
+    public function isPartial(): bool
+    {
+        return $this->getMissingClassNames() !== [];
+    }
+
+    /**
      * {@inheritDoc}
+     *
+     * With the partial {@see \Go\ParserReflection\MissingAncestorPolicy}, false is returned for a parent class that
+     * can not be located.
      *
      * @return \ReflectionClass<object>|false
      */
@@ -525,7 +567,7 @@ trait ReflectionClassLikeTrait
 
             if ($extendsNode instanceof Name && $extendsNode->getAttribute('resolvedName') instanceof FullyQualified) {
                 $extendsName = $extendsNode->getAttribute('resolvedName')->toString();
-                $parentClass = $this->createReflectionForClass($extendsName);
+                $parentClass = ReflectionClass::reflectAncestor($extendsName) ?? false;
             }
             $this->parentClass = $parentClass;
         }
@@ -1396,19 +1438,5 @@ trait ReflectionClassLikeTrait
         }
 
         return $method;
-    }
-
-    /**
-     * Create a ReflectionClass for a given class name.
-     *
-     * @param string $className The name of the class to create a reflection for.
-     *
-     * @return \ReflectionClass<object> The appropriate reflection object.
-     */
-    protected function createReflectionForClass(string $className): \ReflectionClass
-    {
-        return class_exists($className, false)
-            ? new \ReflectionClass($className)
-            : new ReflectionClass($className);
     }
 }
