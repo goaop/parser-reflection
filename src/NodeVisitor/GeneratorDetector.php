@@ -23,7 +23,12 @@ class GeneratorDetector extends NodeVisitorAbstract
     private bool $isGenerator = false;
 
     /**
-     * {@inheritDoc}
+     * Detects yield expressions, without looking into closures
+     *
+     * The return type is declared in the docblock only, like in PhpParser\NodeVisitor: an explicit @return keeps
+     * Symfony's DebugClassLoader from reporting the tentative return type of the parent method.
+     *
+     * @return int|null self::DONT_TRAVERSE_CHILDREN for closures, null otherwise
      */
     public function enterNode(Node $node)
     {
