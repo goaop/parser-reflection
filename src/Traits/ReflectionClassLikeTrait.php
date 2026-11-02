@@ -1300,7 +1300,7 @@ trait ReflectionClassLikeTrait
                 }
             }
 
-            if ($originalMethodNode === null || $declaringTraitName === null) {
+            if ($originalMethodNode === null) {
                 continue;
             }
 
