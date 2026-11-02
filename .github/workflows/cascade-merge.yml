@@ -6,7 +6,9 @@ on:
       - "4.x"
 
 permissions:
-  contents: read
+  # Enabling auto-merge on the cascade PR (enablePullRequestAutoMerge) needs contents: write,
+  # with contents: read the GITHUB_TOKEN gets "Resource not accessible by integration"
+  contents: write
   pull-requests: write
 
 concurrency:
