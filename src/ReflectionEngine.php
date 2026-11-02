@@ -100,6 +100,11 @@ class ReflectionEngine
         ) {
             $refClass      = new \ReflectionClass($fullClassName);
             $classFileName = $refClass->getFileName();
+            // A class declared by eval() reports a pseudo file name ("file.php(12) : eval()'d code"), which
+            // can not be read: report it as not found instead of letting the parser warn on a missing file
+            if ($classFileName !== false && !is_file($classFileName)) {
+                throw new InvalidArgumentException("Class $fullClassName is not declared in a file: $classFileName");
+            }
         } else {
             if (self::$locator === null) {
                 throw new \LogicException('ReflectionEngine locator is not initialized. Call ReflectionEngine::init() first.');
