@@ -81,7 +81,7 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
         $interfaces = [];
 
         foreach (self::getDeclaredInterfaceNames($classLikeNode) as $interfaceName) {
-            $interface = self::reflectAncestor($interfaceName, interface_exists($interfaceName, false));
+            $interface = self::reflectAncestor($interfaceName);
             if ($interface !== null) {
                 $interfaces[$interfaceName] = $interface;
             }
@@ -119,7 +119,7 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
         foreach ($classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof TraitUse) {
                 foreach (self::getResolvedNames($classLevelNode->traits) as $traitName) {
-                    $trait = self::reflectAncestor($traitName, trait_exists($traitName, false));
+                    $trait = self::reflectAncestor($traitName);
                     if ($trait !== null) {
                         $traits[$traitName] = $trait;
                     }
@@ -141,25 +141,20 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
      */
     public static function collectMissingAncestorNames(ClassLike $classLikeNode): array
     {
-        $ancestors  = [];
-        $parentName = self::getDeclaredParentName($classLikeNode);
+        $ancestorNames = self::getDeclaredInterfaceNames($classLikeNode);
+        $parentName    = self::getDeclaredParentName($classLikeNode);
         if ($parentName !== null) {
-            $ancestors[] = [$parentName, class_exists($parentName, false)];
-        }
-        foreach (self::getDeclaredInterfaceNames($classLikeNode) as $interfaceName) {
-            $ancestors[] = [$interfaceName, interface_exists($interfaceName, false)];
+            array_unshift($ancestorNames, $parentName);
         }
         foreach ($classLikeNode->stmts as $classLevelNode) {
             if ($classLevelNode instanceof TraitUse) {
-                foreach (self::getResolvedNames($classLevelNode->traits) as $traitName) {
-                    $ancestors[] = [$traitName, trait_exists($traitName, false)];
-                }
+                array_push($ancestorNames, ...self::getResolvedNames($classLevelNode->traits));
             }
         }
 
         $missingNames = [];
-        foreach ($ancestors as [$ancestorName, $isDeclared]) {
-            $ancestor = self::reflectAncestor($ancestorName, $isDeclared, true);
+        foreach ($ancestorNames as $ancestorName) {
+            $ancestor = self::reflectAncestor($ancestorName, true);
             if ($ancestor === null) {
                 $missingNames[] = $ancestorName;
             } elseif ($ancestor instanceof self) {
@@ -174,11 +169,10 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     /**
      * Reflects an ancestor (parent class, interface or trait) of a parsed class
      *
-     * A declared ancestor is reflected natively, otherwise its source is located and parsed.
+     * An ancestor already declared in the runtime is reflected natively, otherwise its source is located and parsed.
      *
      * @internal
      *
-     * @param bool      $isDeclared   Whether the ancestor is already declared in the runtime
      * @param bool|null $allowMissing Whether to return null instead of throwing when the ancestor can not be
      *                                located, null to follow the {@see MissingAncestorPolicy} of the engine
      *
@@ -186,12 +180,12 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
      *
      * @throws ClassNotFoundException If the ancestor can not be located and that is not allowed
      */
-    public static function reflectAncestor(
-        string $ancestorName,
-        bool $isDeclared,
-        ?bool $allowMissing = null
-    ): ?InternalReflectionClass {
-        if ($isDeclared) {
+    public static function reflectAncestor(string $ancestorName, ?bool $allowMissing = null): ?InternalReflectionClass
+    {
+        if (class_exists($ancestorName, false)
+            || interface_exists($ancestorName, false)
+            || trait_exists($ancestorName, false)
+        ) {
             return new parent($ancestorName);
         }
 

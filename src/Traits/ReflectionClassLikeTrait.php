@@ -567,8 +567,7 @@ trait ReflectionClassLikeTrait
 
             if ($extendsNode instanceof Name && $extendsNode->getAttribute('resolvedName') instanceof FullyQualified) {
                 $extendsName = $extendsNode->getAttribute('resolvedName')->toString();
-                $parentClass = ReflectionClass::reflectAncestor($extendsName, class_exists($extendsName, false))
-                    ?? false;
+                $parentClass = ReflectionClass::reflectAncestor($extendsName) ?? false;
             }
             $this->parentClass = $parentClass;
         }
