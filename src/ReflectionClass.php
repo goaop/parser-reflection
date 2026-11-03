@@ -80,7 +80,12 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     {
         $interfaces = [];
 
-        foreach (self::getDeclaredInterfaceNames($classLikeNode) as $interfaceName) {
+        $interfaceNodes = match (true) {
+            $classLikeNode instanceof Interface_                              => $classLikeNode->extends,
+            $classLikeNode instanceof Class_, $classLikeNode instanceof Enum_ => $classLikeNode->implements,
+            default                                                           => [],
+        };
+        foreach (self::getResolvedNames($interfaceNodes) as $interfaceName) {
             $interface = self::reflectAncestor($interfaceName);
             if ($interface !== null) {
                 $interfaces[$interfaceName] = $interface;
@@ -134,36 +139,15 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     /**
      * Collects the names of the ancestors of the class node that can not be located
      *
-     * The ancestors that can not be located for the available ancestors are included as well. Ancestors are
-     * checked without throwing, whatever the {@see MissingAncestorPolicy} is.
+     * @deprecated since 4.2, use getMissingClassNames() of the reflection of the class
      *
      * @return list<string>
      */
     public static function collectMissingAncestorNames(ClassLike $classLikeNode): array
     {
-        $ancestorNames = self::getDeclaredInterfaceNames($classLikeNode);
-        $parentName    = self::getDeclaredParentName($classLikeNode);
-        if ($parentName !== null) {
-            array_unshift($ancestorNames, $parentName);
-        }
-        foreach ($classLikeNode->stmts as $classLevelNode) {
-            if ($classLevelNode instanceof TraitUse) {
-                array_push($ancestorNames, ...self::getResolvedNames($classLevelNode->traits));
-            }
-        }
+        $className = $classLikeNode->namespacedName?->toString() ?? (string) $classLikeNode->name;
 
-        $missingNames = [];
-        foreach ($ancestorNames as $ancestorName) {
-            $ancestor = self::reflectAncestor($ancestorName, true);
-            if ($ancestor === null) {
-                $missingNames[] = $ancestorName;
-            } elseif ($ancestor instanceof self) {
-                // A declared ancestor is reflected natively, so it is never partial
-                array_push($missingNames, ...$ancestor->getMissingClassNames());
-            }
-        }
-
-        return array_values(array_unique($missingNames));
+        return (new self($className, $classLikeNode))->getMissingClassNames();
     }
 
     /**
@@ -199,39 +183,6 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
 
             return null;
         }
-    }
-
-    /**
-     * Returns the resolved name of the parent class declared by the class node, if any
-     *
-     * @internal
-     */
-    public static function getDeclaredParentName(ClassLike $classLikeNode): ?string
-    {
-        if (!$classLikeNode instanceof Class_ || $classLikeNode->extends === null) {
-            return null;
-        }
-
-        return self::getResolvedNames([$classLikeNode->extends])[0] ?? null;
-    }
-
-    /**
-     * Returns the resolved names of the interfaces declared by the class node, in declaration order
-     *
-     * @internal
-     *
-     * @return list<string>
-     */
-    public static function getDeclaredInterfaceNames(ClassLike $classLikeNode): array
-    {
-        if ($classLikeNode instanceof Interface_) {
-            return self::getResolvedNames($classLikeNode->extends);
-        }
-        if ($classLikeNode instanceof Class_ || $classLikeNode instanceof Enum_) {
-            return self::getResolvedNames($classLikeNode->implements);
-        }
-
-        return [];
     }
 
     /**

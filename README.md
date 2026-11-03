@@ -81,13 +81,13 @@ What a partial reflection reports:
 
 - everything declared by the class itself and by its available ancestors stays available;
 - a missing parent class is reported by `getParentClass()` as `false`, missing interfaces and traits are left out of
-  `getInterfaces()`, `getTraits()` and `getTraitNames()`, and the members inherited from them are left out of
+  `getInterfaces()` and `getTraits()`, and the members inherited from them are left out of
   `getMethods()`, `getProperties()`, `getConstants()` and alike; a method whose prototype belongs to a missing
   ancestor reports no prototype;
 - the names of the missing ancestors are known from the source: `getParentClassName()` returns the name of the parent
   class as written, located or not, `getInterfaceNames()` and `implementsInterface()` include the missing interfaces
-  declared by the class and by its available ancestors, and `isSubclassOf()` recognizes the ancestors declared by the
-  class itself.
+  declared by the class and by its available ancestors, `getTraitNames()` includes the missing traits the class uses,
+  and `isSubclassOf()` recognizes the ancestors declared by the class itself.
 
 `isPartial()` and `getMissingClassNames()` never throw for a missing ancestor, whatever the policy, so they can also
 be used to check a class before reflecting it with the strict policy. The class itself must still be located by the

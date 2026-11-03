@@ -123,6 +123,12 @@ final class PartialReflectionTest extends TestCase
         $this->assertTrue($class->implementsInterface(self::AVAILABLE_IFACE));
         $this->assertTrue($class->implementsInterface(self::MISSING_INTERFACE));
         $this->assertFalse($class->implementsInterface(\Countable::class));
+        $this->assertSame([self::AVAILABLE_TRAIT, self::MISSING_TRAIT], $class->getTraitNames());
+        // Deprecated static access to the same names
+        $this->assertSame(
+            $class->getMissingClassNames(),
+            ReflectionClass::collectMissingAncestorNames($class->getNode()),
+        );
     }
 
     public function testParentClassNameIsReadFromTheSource(): void
@@ -143,7 +149,7 @@ final class PartialReflectionTest extends TestCase
 
         $this->assertFalse($class->getParentClass());
         $this->assertSame([self::AVAILABLE_IFACE], array_keys($class->getInterfaces()));
-        $this->assertSame([self::AVAILABLE_TRAIT], $class->getTraitNames());
+        $this->assertSame([self::AVAILABLE_TRAIT], array_keys($class->getTraits()));
         // The class declares these ancestors directly, so this is known from its source
         $this->assertTrue($class->isSubclassOf(self::MISSING_PARENT));
         $this->assertTrue($class->isSubclassOf(self::MISSING_INTERFACE));
