@@ -8,6 +8,8 @@ on:
   push:
     branches:
       - master
+  # Manual runs, e.g. on master after a cascade merge, whose push does not trigger workflows
+  workflow_dispatch:
 
 jobs:
   build:
