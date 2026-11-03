@@ -203,8 +203,10 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
 
     /**
      * Returns the resolved name of the parent class declared by the class node, if any
+     *
+     * @internal
      */
-    private static function getDeclaredParentName(ClassLike $classLikeNode): ?string
+    public static function getDeclaredParentName(ClassLike $classLikeNode): ?string
     {
         if (!$classLikeNode instanceof Class_ || $classLikeNode->extends === null) {
             return null;
@@ -216,9 +218,11 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     /**
      * Returns the resolved names of the interfaces declared by the class node, in declaration order
      *
+     * @internal
+     *
      * @return list<string>
      */
-    private static function getDeclaredInterfaceNames(ClassLike $classLikeNode): array
+    public static function getDeclaredInterfaceNames(ClassLike $classLikeNode): array
     {
         if ($classLikeNode instanceof Interface_) {
             return self::getResolvedNames($classLikeNode->extends);

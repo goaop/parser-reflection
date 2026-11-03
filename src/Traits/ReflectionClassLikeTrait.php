@@ -356,10 +356,32 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * A partial reflection also names the interfaces that can not be located, as written in the source of the class
+     * and of its available ancestors: they are left out of getInterfaces() only.
      */
     public function getInterfaceNames(): array
     {
-        return array_keys($this->getInterfaces());
+        $interfaceNames = array_keys($this->getInterfaces());
+        if (!$this->isPartial()) {
+            return $interfaceNames;
+        }
+
+        $parentClass = $this->getParentClass();
+        if ($parentClass !== false) {
+            array_push($interfaceNames, ...$parentClass->getInterfaceNames());
+        }
+        foreach (ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode) as $interface) {
+            array_push($interfaceNames, ...$interface->getInterfaceNames());
+        }
+        $missingNames = $this->getMissingClassNames();
+        foreach (ReflectionClass::getDeclaredInterfaceNames($this->classLikeNode) as $declaredName) {
+            if (in_array($declaredName, $missingNames, true)) {
+                $interfaceNames[] = $declaredName;
+            }
+        }
+
+        return array_values(array_unique($interfaceNames));
     }
 
     /**
@@ -548,6 +570,18 @@ trait ReflectionClassLikeTrait
     public function isPartial(): bool
     {
         return $this->getMissingClassNames() !== [];
+    }
+
+    /**
+     * Returns the name of the parent class as written in the source of the class, without reflecting the parent
+     *
+     * Unlike getParentClass(), it also names a parent class that can not be located (see isPartial()).
+     *
+     * @return string|false Fully qualified name of the parent class, false if the class declares none
+     */
+    public function getParentClassName(): string|false
+    {
+        return ReflectionClass::getDeclaredParentName($this->classLikeNode) ?? false;
     }
 
     /**
@@ -811,12 +845,13 @@ trait ReflectionClassLikeTrait
     public function implementsInterface(\ReflectionClass|string $interfaceName): bool
     {
         $allInterfaces = $this->getInterfaces();
-
         if ($interfaceName instanceof \ReflectionClass) {
-            return isset($allInterfaces[$interfaceName->getName()]);
-        } else {
-            return isset($allInterfaces[$interfaceName]);
+            $interfaceName = $interfaceName->getName();
         }
+
+        // An interface that can not be located is known from the source only, see getInterfaceNames()
+        return isset($allInterfaces[$interfaceName])
+            || ($this->isPartial() && in_array($interfaceName, $this->getInterfaceNames(), true));
     }
 
     /**
