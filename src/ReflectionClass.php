@@ -137,20 +137,6 @@ final class ReflectionClass extends InternalReflectionClass implements NodeAware
     }
 
     /**
-     * Collects the names of the ancestors of the class node that can not be located
-     *
-     * @deprecated since 4.2, use getMissingClassNames() of the reflection of the class
-     *
-     * @return list<string>
-     */
-    public static function collectMissingAncestorNames(ClassLike $classLikeNode): array
-    {
-        $className = $classLikeNode->namespacedName?->toString() ?? (string) $classLikeNode->name;
-
-        return (new self($className, $classLikeNode))->getMissingClassNames();
-    }
-
-    /**
      * Reflects an ancestor (parent class, interface or trait) of a parsed class
      *
      * An ancestor already declared in the runtime is reflected natively, otherwise its source is located and parsed.

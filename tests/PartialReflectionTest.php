@@ -124,11 +124,6 @@ final class PartialReflectionTest extends TestCase
         $this->assertTrue($class->implementsInterface(self::MISSING_INTERFACE));
         $this->assertFalse($class->implementsInterface(\Countable::class));
         $this->assertSame([self::AVAILABLE_TRAIT, self::MISSING_TRAIT], $class->getTraitNames());
-        // Deprecated static access to the same names
-        $this->assertSame(
-            $class->getMissingClassNames(),
-            ReflectionClass::collectMissingAncestorNames($class->getNode()),
-        );
     }
 
     public function testParentClassNameIsReadFromTheSource(): void
