@@ -19,6 +19,7 @@ Methods, that are specific for this library
 - ReflectionClass::getNode — Returns the AST node of the class.
 - ReflectionClass::isPartial — Checks whether some ancestors (parent class, interfaces or traits) of the class can not be located.
 - ReflectionClass::getMissingClassNames — Returns the names of the ancestors that can not be located, including the ones missing for the available ancestors.
+- ReflectionClass::getParentClassName — Returns the name of the parent class as written in the source, also when the parent class can not be located.
 
 By default, reflecting an information that needs an ancestor that can not be located throws a
 `Go\ParserReflection\ClassNotFoundException`. With `ReflectionEngine::setMissingAncestorPolicy(MissingAncestorPolicy::Partial)`
