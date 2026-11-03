@@ -43,7 +43,7 @@ jobs:
               --title "Cascade merge: 4.x into master" \
               --body "Automated cascade merge that keeps \`master\` in sync with the \`4.x\` maintenance branch.
 
-          This PR tracks \`4.x\` and merges automatically once required checks pass. A new one is opened after each merge, so every future push to \`4.x\` keeps flowing forward into \`master\`.
+          This PR tracks \`4.x\` and merges automatically once required checks pass, when auto-merge is allowed for the repository; otherwise merge it manually. A new one is opened after each merge, so every future push to \`4.x\` keeps flowing forward into \`master\`.
 
           If this PR shows a conflict, resolve it manually on \`4.x\` (or directly on this PR's branch) — auto-merge will pick it up once it's clean again." \
               > /tmp/pr-create.log 2>&1; then
@@ -58,4 +58,12 @@ jobs:
           fi
 
           echo "Enabling auto-merge on PR #$PR_NUMBER"
-          gh pr merge "$PR_NUMBER" --merge --auto
+          if ! gh pr merge "$PR_NUMBER" --merge --auto > /tmp/pr-merge.log 2>&1; then
+            cat /tmp/pr-merge.log
+            # "Allow auto-merge" is off in the repository settings: the PR stays open for a manual merge
+            if grep -qi "Auto merge is not allowed" /tmp/pr-merge.log; then
+              echo "::notice title=Cascade PR #$PR_NUMBER::Auto-merge is not allowed for this repository, merge the cascade PR manually."
+              exit 0
+            fi
+            exit 1
+          fi
