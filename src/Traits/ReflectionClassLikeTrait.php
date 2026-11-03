@@ -31,6 +31,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Enum_;
 use PhpParser\Node\Stmt\Interface_;
 use PhpParser\Node\Stmt\Trait_;
+use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\Node\Stmt\TraitUseAdaptation;
 use ReflectionExtension;
 use ReflectionObject;
@@ -356,10 +357,28 @@ trait ReflectionClassLikeTrait
 
     /**
      * {@inheritDoc}
+     *
+     * A partial reflection also names the interfaces that can not be located, as written in the source of the class
+     * and of its available ancestors: they are left out of getInterfaces() only.
      */
     public function getInterfaceNames(): array
     {
-        return array_keys($this->getInterfaces());
+        $interfaceNames = array_keys($this->getInterfaces());
+        if (!$this->isPartial()) {
+            return $interfaceNames;
+        }
+
+        $parentClass = $this->getParentClass();
+        if ($parentClass !== false) {
+            array_push($interfaceNames, ...$parentClass->getInterfaceNames());
+        }
+        foreach (ReflectionClass::collectInterfacesFromClassNode($this->classLikeNode) as $interface) {
+            array_push($interfaceNames, ...$interface->getInterfaceNames());
+        }
+        [, $declaredInterfaceNames] = $this->getAncestorNamesFromSource();
+        array_push($interfaceNames, ...array_intersect($declaredInterfaceNames, $this->getMissingClassNames()));
+
+        return array_values(array_unique($interfaceNames));
     }
 
     /**
@@ -530,7 +549,23 @@ trait ReflectionClassLikeTrait
     public function getMissingClassNames(): array
     {
         if (!isset($this->missingClassNames)) {
-            $this->missingClassNames = ReflectionClass::collectMissingAncestorNames($this->classLikeNode);
+            [$parentName, $interfaceNames, $traitNames] = $this->getAncestorNamesFromSource();
+            $ancestorNames = [...$interfaceNames, ...$traitNames];
+            if ($parentName !== null) {
+                array_unshift($ancestorNames, $parentName);
+            }
+
+            $missingNames = [];
+            foreach ($ancestorNames as $ancestorName) {
+                $ancestor = ReflectionClass::reflectAncestor($ancestorName, true);
+                if ($ancestor === null) {
+                    $missingNames[] = $ancestorName;
+                } elseif ($ancestor instanceof ReflectionClass) {
+                    // A declared ancestor is reflected natively, so it is never partial
+                    array_push($missingNames, ...$ancestor->getMissingClassNames());
+                }
+            }
+            $this->missingClassNames = array_values(array_unique($missingNames));
         }
 
         return $this->missingClassNames;
@@ -551,6 +586,20 @@ trait ReflectionClassLikeTrait
     }
 
     /**
+     * Returns the name of the parent class as written in the source of the class, without reflecting the parent
+     *
+     * Unlike getParentClass(), it also names a parent class that can not be located (see isPartial()).
+     *
+     * @return string|false Fully qualified name of the parent class, false if the class declares none
+     */
+    public function getParentClassName(): string|false
+    {
+        [$parentName] = $this->getAncestorNamesFromSource();
+
+        return $parentName ?? false;
+    }
+
+    /**
      * {@inheritDoc}
      *
      * With the partial {@see \Go\ParserReflection\MissingAncestorPolicy}, false is returned for a parent class that
@@ -561,15 +610,8 @@ trait ReflectionClassLikeTrait
     public function getParentClass(): \ReflectionClass|false
     {
         if (!isset($this->parentClass)) {
-
-            $parentClass = false;
-            $extendsNode = $this->classLikeNode->extends ?? null;
-
-            if ($extendsNode instanceof Name && $extendsNode->getAttribute('resolvedName') instanceof FullyQualified) {
-                $extendsName = $extendsNode->getAttribute('resolvedName')->toString();
-                $parentClass = ReflectionClass::reflectAncestor($extendsName) ?? false;
-            }
-            $this->parentClass = $parentClass;
+            $parentName        = $this->getParentClassName();
+            $this->parentClass = $parentName !== false ? (ReflectionClass::reflectAncestor($parentName) ?? false) : false;
         }
 
         return $this->parentClass;
@@ -736,10 +778,58 @@ trait ReflectionClassLikeTrait
      * Returns an array of names of traits used by this class
      *
      * @link http://php.net/manual/en/reflectionclass.gettraitnames.php
+     *
+     * A partial reflection also names the traits that can not be located, as written in the source of the class: they
+     * are left out of getTraits() only.
      */
     public function getTraitNames(): array
     {
-        return array_keys($this->getTraits());
+        if (!$this->isPartial()) {
+            return array_keys($this->getTraits());
+        }
+        [, , $traitNames] = $this->getAncestorNamesFromSource();
+
+        return $traitNames;
+    }
+
+    /**
+     * Returns the names of the parent class, interfaces and traits as written in the source of the class
+     *
+     * The names are resolved from the class node only: an ancestor is listed whether it can be located or not.
+     *
+     * @return array{string|null, list<string>, list<string>} Parent class (null if none), interfaces and traits
+     */
+    private function getAncestorNamesFromSource(): array
+    {
+        $resolveNames = static function (array $nameNodes): array {
+            $names = [];
+            foreach ($nameNodes as $nameNode) {
+                $resolvedName = $nameNode instanceof Name ? $nameNode->getAttribute('resolvedName') : null;
+                if ($resolvedName instanceof FullyQualified) {
+                    $names[] = $resolvedName->toString();
+                }
+            }
+
+            return $names;
+        };
+
+        $classLikeNode  = $this->classLikeNode;
+        $parentNames    = $classLikeNode instanceof Class_ && $classLikeNode->extends !== null
+            ? $resolveNames([$classLikeNode->extends])
+            : [];
+        $interfaceNodes = match (true) {
+            $classLikeNode instanceof Interface_                              => $classLikeNode->extends,
+            $classLikeNode instanceof Class_, $classLikeNode instanceof Enum_ => $classLikeNode->implements,
+            default                                                           => [],
+        };
+        $traitNames = [];
+        foreach ($classLikeNode->stmts as $classLevelNode) {
+            if ($classLevelNode instanceof TraitUse) {
+                array_push($traitNames, ...$resolveNames($classLevelNode->traits));
+            }
+        }
+
+        return [$parentNames[0] ?? null, $resolveNames($interfaceNodes), array_values(array_unique($traitNames))];
     }
 
     /**
@@ -811,12 +901,13 @@ trait ReflectionClassLikeTrait
     public function implementsInterface(\ReflectionClass|string $interfaceName): bool
     {
         $allInterfaces = $this->getInterfaces();
-
         if ($interfaceName instanceof \ReflectionClass) {
-            return isset($allInterfaces[$interfaceName->getName()]);
-        } else {
-            return isset($allInterfaces[$interfaceName]);
+            $interfaceName = $interfaceName->getName();
         }
+
+        // An interface that can not be located is known from the source only, see getInterfaceNames()
+        return isset($allInterfaces[$interfaceName])
+            || ($this->isPartial() && in_array($interfaceName, $this->getInterfaceNames(), true));
     }
 
     /**

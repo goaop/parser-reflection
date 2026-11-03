@@ -113,16 +113,38 @@ final class PartialReflectionTest extends TestCase
         $this->assertSame(self::MISSING_PARENT, $node->extends?->getAttribute('resolvedName')?->toString());
     }
 
+    public function testNamesOfMissingAncestorsAreKnownFromTheSource(): void
+    {
+        $this->initEngine(MissingAncestorPolicy::Partial);
+        $class = new ReflectionClass(self::PARTIAL_CLASS);
+
+        $this->assertSame(self::MISSING_PARENT, $class->getParentClassName());
+        $this->assertSame([self::AVAILABLE_IFACE, self::MISSING_INTERFACE], $class->getInterfaceNames());
+        $this->assertTrue($class->implementsInterface(self::AVAILABLE_IFACE));
+        $this->assertTrue($class->implementsInterface(self::MISSING_INTERFACE));
+        $this->assertFalse($class->implementsInterface(\Countable::class));
+        $this->assertSame([self::AVAILABLE_TRAIT, self::MISSING_TRAIT], $class->getTraitNames());
+    }
+
+    public function testParentClassNameIsReadFromTheSource(): void
+    {
+        foreach (MissingAncestorPolicy::cases() as $policy) {
+            $this->initEngine($policy);
+
+            $this->assertSame(\ArrayObject::class, (new ReflectionClass(self::COMPLETE_CLASS))->getParentClassName());
+            $this->assertSame(self::PARTIAL_CLASS, (new ReflectionClass(self::CHILD_CLASS))->getParentClassName());
+            $this->assertFalse((new ReflectionClass(self::AVAILABLE_IFACE))->getParentClassName());
+        }
+    }
+
     public function testMissingAncestorsAreLeftOutOfAPartialClass(): void
     {
         $this->initEngine(MissingAncestorPolicy::Partial);
         $class = new ReflectionClass(self::PARTIAL_CLASS);
 
         $this->assertFalse($class->getParentClass());
-        $this->assertSame([self::AVAILABLE_IFACE], $class->getInterfaceNames());
-        $this->assertTrue($class->implementsInterface(self::AVAILABLE_IFACE));
-        $this->assertFalse($class->implementsInterface(self::MISSING_INTERFACE));
-        $this->assertSame([self::AVAILABLE_TRAIT], $class->getTraitNames());
+        $this->assertSame([self::AVAILABLE_IFACE], array_keys($class->getInterfaces()));
+        $this->assertSame([self::AVAILABLE_TRAIT], array_keys($class->getTraits()));
         // The class declares these ancestors directly, so this is known from its source
         $this->assertTrue($class->isSubclassOf(self::MISSING_PARENT));
         $this->assertTrue($class->isSubclassOf(self::MISSING_INTERFACE));
@@ -152,7 +174,9 @@ final class PartialReflectionTest extends TestCase
             $this->names($class->getMethods())
         );
         $this->assertTrue($class->isSubclassOf(self::PARTIAL_CLASS));
-        $this->assertSame([self::AVAILABLE_IFACE], $class->getInterfaceNames());
+        // The interface missing for the parent class is named through it
+        $this->assertSame([self::AVAILABLE_IFACE, self::MISSING_INTERFACE], $class->getInterfaceNames());
+        $this->assertTrue($class->implementsInterface(self::MISSING_INTERFACE));
     }
 
     public function testInterfaceWithAMissingParentInterfaceIsPartial(): void
@@ -162,7 +186,8 @@ final class PartialReflectionTest extends TestCase
 
         $this->assertTrue($interface->isPartial());
         $this->assertSame([self::MISSING_INTERFACE], $interface->getMissingClassNames());
-        $this->assertSame([self::AVAILABLE_IFACE], $interface->getInterfaceNames());
+        $this->assertSame([self::AVAILABLE_IFACE], array_keys($interface->getInterfaces()));
+        $this->assertSame([self::AVAILABLE_IFACE, self::MISSING_INTERFACE], $interface->getInterfaceNames());
         $this->assertSame(['availableInterfaceMethod'], $this->names($interface->getMethods()));
     }
 
