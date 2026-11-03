@@ -801,15 +801,10 @@ trait ReflectionClassLikeTrait
      */
     private function getAncestorNamesFromSource(): array
     {
-        /**
-         * @param Name[] $nameNodes
-         *
-         * @return list<string>
-         */
         $resolveNames = static function (array $nameNodes): array {
             $names = [];
             foreach ($nameNodes as $nameNode) {
-                $resolvedName = $nameNode->getAttribute('resolvedName');
+                $resolvedName = $nameNode instanceof Name ? $nameNode->getAttribute('resolvedName') : null;
                 if ($resolvedName instanceof FullyQualified) {
                     $names[] = $resolvedName->toString();
                 }
