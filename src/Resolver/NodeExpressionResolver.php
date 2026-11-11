@@ -480,17 +480,12 @@ class NodeExpressionResolver
      */
     protected function resolveScalarMagicConstNamespace(): string
     {
-        if ($this->context instanceof ReflectionFileNamespace) {
-            return $this->context->getName();
-        }
-        if (!($this->context instanceof \ReflectionClass
-            || $this->context instanceof \ReflectionFunction
-            || $this->context instanceof \ReflectionMethod
-        )) {
+        $scope = $this->getContextScope();
+        if ($scope === null) {
             throw new ReflectionException("Could not resolve __NAMESPACE__ without having getNamespaceName");
         }
 
-        return $this->context->getNamespaceName();
+        return $scope instanceof ReflectionFileNamespace ? $scope->getName() : $scope->getNamespaceName();
     }
 
     /**
@@ -517,16 +512,10 @@ class NodeExpressionResolver
      */
     protected function resolveScalarMagicConstDir(): string
     {
-        if (!($this->context instanceof \ReflectionClass
-            || $this->context instanceof \ReflectionFunction
-            || $this->context instanceof \ReflectionMethod
-            || $this->context instanceof ReflectionFileNamespace
-        )) {
+        if ($this->getContextScope() === null) {
             throw new ReflectionException("Could not resolve __DIR__ without having getFileName");
         }
-        $fileName = $this->context->getFileName();
-
-        return dirname((string) $fileName);
+        return dirname($this->getContextFileName());
     }
 
     /**
@@ -534,15 +523,11 @@ class NodeExpressionResolver
      */
     protected function resolveScalarMagicConstFile(): string
     {
-        if (!($this->context instanceof \ReflectionClass
-            || $this->context instanceof \ReflectionFunction
-            || $this->context instanceof \ReflectionMethod
-            || $this->context instanceof ReflectionFileNamespace
-        )) {
+        if ($this->getContextScope() === null) {
             throw new ReflectionException("Could not resolve __FILE__ without having getFileName");
         }
 
-        return (string) $this->context->getFileName();
+        return $this->getContextFileName();
     }
 
     protected function resolveScalarMagicConstLine(Line $node): int
@@ -578,29 +563,28 @@ class NodeExpressionResolver
         $isFQNConstant = $nodeConstantName instanceof Node\Name\FullyQualified;
         $constantName  = $nodeConstantName->toString();
 
-        if (!$isFQNConstant && ($this->context instanceof \ReflectionClass
-            || $this->context instanceof \ReflectionFunction
-            || $this->context instanceof \ReflectionMethod
-            || $this->context instanceof ReflectionFileNamespace
-        )) {
-            $fileName      = (string) $this->context->getFileName();
-            $namespaceName = $this->resolveScalarMagicConstNamespace();
-            $fileNamespace = new ReflectionFileNamespace($fileName, $namespaceName);
-            if ($fileNamespace->hasConstant($constantName)) {
-                $constantValue = $fileNamespace->getConstant($constantName);
-                $constantName  = $fileNamespace->getName() . '\\' . $constantName;
-                $isResolved    = true;
+        $isRealConstant = !isset(self::$notConstants[strtolower($constantName)]);
+        $scope          = $isFQNConstant ? null : $this->getContextScope();
+        // true, false and null can not be redefined in a namespace, so there is nothing to look up for them
+        if ($scope !== null && $isRealConstant) {
+            $fileName = $this->getContextFileName();
+            // Code that is not stored in a file (e.g. evaluated or passed as a string) has no namespace to look into
+            if ($fileName !== '') {
+                $fileNamespace = $scope instanceof ReflectionFileNamespace
+                    ? $scope
+                    : new ReflectionFileNamespace($fileName, $scope->getNamespaceName());
+                if ($fileNamespace->hasConstant($constantName)) {
+                    $constantValue = $fileNamespace->getConstant($constantName);
+                    $constantName  = $fileNamespace->getName() . '\\' . $constantName;
+                    $isResolved    = true;
+                }
             }
         }
 
-        $isRealConstant = !isset(self::$notConstants[$constantName]);
         if (!$isResolved && defined($constantName)) {
             $constantValue = constant($constantName);
-            if (!$isFQNConstant && ($this->context instanceof \ReflectionClass
-                || $this->context instanceof \ReflectionFunction
-                || $this->context instanceof \ReflectionMethod
-            )) {
-                $constantName  = $this->context->getNamespaceName() . '\\' . $constantName;
+            if ($scope !== null && !$scope instanceof ReflectionFileNamespace) {
+                $constantName  = $scope->getNamespaceName() . '\\' . $constantName;
             }
         }
 
@@ -1040,6 +1024,52 @@ class NodeExpressionResolver
         $nodeType = $node->getType();
 
         return 'resolve' . str_replace('_', '', $nodeType);
+    }
+
+    /**
+     * Returns the reflector that owns the file and namespace of the code in the current context.
+     *
+     * Class members (methods, properties, constants) and method parameters are declared inside a class,
+     * so their namespace and file are the ones of the declaring class (or of the trait, for the imported
+     * members), function parameters belong to their function. The namespace of a class member itself is
+     * always empty, like in the native reflection, so it can not be used to resolve names.
+     *
+     * @return \ReflectionClass<object>|\ReflectionFunction|ReflectionFileNamespace|null
+     */
+    private function getContextScope(): \ReflectionClass|\ReflectionFunction|ReflectionFileNamespace|null
+    {
+        $context = $this->context;
+        if ($context instanceof \ReflectionParameter) {
+            $context = $context->getDeclaringFunction();
+        }
+
+        return match (true) {
+            $context instanceof \ReflectionClass,
+            $context instanceof \ReflectionFunction,
+            $context instanceof ReflectionFileNamespace => $context,
+            $context instanceof \ReflectionMethod,
+            $context instanceof \ReflectionProperty,
+            $context instanceof \ReflectionClassConstant => $context->getDeclaringClass(),
+            default => null,
+        };
+    }
+
+    /**
+     * Returns the name of the file with the code in the current context, or an empty string if it is unknown.
+     *
+     * A method reflected on its own may not know its file name, so the declaring class is asked as well.
+     */
+    private function getContextFileName(): string
+    {
+        $context  = $this->context instanceof \ReflectionParameter
+            ? $this->context->getDeclaringFunction()
+            : $this->context;
+        $fileName = $context instanceof \ReflectionFunctionAbstract ? $context->getFileName() : false;
+        if ($fileName === false || $fileName === '') {
+            $fileName = $this->getContextScope()?->getFileName();
+        }
+
+        return is_string($fileName) ? $fileName : '';
     }
 
     /**
