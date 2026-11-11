@@ -194,7 +194,14 @@ class ConstantExpressionClosuresTest extends TestCase
         }
     }
 
-    public function testNewInInitializerDoesNotTriggerAutoloading(): void
+    /**
+     * Reflecting a signature must not load anything, the class of a `new` default is loaded only when the
+     * default value is requested, and then through the autoloader, so that a class loader hooked into it
+     * (e.g. goaop/framework) sees the load.
+     *
+     * @see https://github.com/goaop/parser-reflection/issues/261
+     */
+    public function testNewInInitializerIsResolvedLazilyThroughAutoloader(): void
     {
         $this->assertFalse(
             class_exists(self::INITIALIZERS_DEPENDENCY_CLASS, false),
@@ -202,10 +209,15 @@ class ConstantExpressionClosuresTest extends TestCase
         );
 
         $autoloadedClasses = [];
-        $autoloadSpy       = static function (string $className) use (&$autoloadedClasses): void {
+        $stubFileName      = $this->initializersFileName;
+        // Stands in for Composer, which does not know the stub files
+        $stubAutoloader    = static function (string $className) use (&$autoloadedClasses, $stubFileName): void {
             $autoloadedClasses[] = $className;
+            if ($className === self::INITIALIZERS_DEPENDENCY_CLASS) {
+                require_once $stubFileName;
+            }
         };
-        spl_autoload_register($autoloadSpy);
+        spl_autoload_register($stubAutoloader);
 
         try {
             $reflectionFile      = new ReflectionFile($this->initializersFileName);
@@ -213,25 +225,33 @@ class ConstantExpressionClosuresTest extends TestCase
             $parsedMethod        = $reflectionNamespace->getClass(self::INITIALIZERS_STUB_CLASS)
                 ->getMethod('withDependency');
 
-            $defaultValue = $parsedMethod->getParameters()[0]->getDefaultValue();
+            $parameter = $parsedMethod->getParameters()[0];
+            $this->assertTrue($parameter->isDefaultValueAvailable());
+            $this->assertFalse($parameter->isDefaultValueConstant());
+            $this->assertNotNull($parameter->getType());
+            $this->assertFalse($parameter->getType()->allowsNull());
+            $this->assertSame([], $autoloadedClasses, 'Reflecting the parameter must not load any class');
+            $this->assertFalse(class_exists(self::INITIALIZERS_DEPENDENCY_CLASS, false));
+
+            $defaultValue = $parameter->getDefaultValue();
         } finally {
-            spl_autoload_unregister($autoloadSpy);
+            spl_autoload_unregister($stubAutoloader);
         }
 
         $this->assertIsObject($defaultValue);
         $this->assertSame(self::INITIALIZERS_DEPENDENCY_CLASS, $defaultValue::class);
         $this->assertSame('injected', $defaultValue->label);
-        $this->assertNotContains(
+        $this->assertContains(
             self::INITIALIZERS_DEPENDENCY_CLASS,
             $autoloadedClasses,
-            'Instantiation of a class in the initializer should not trigger the autoloader'
+            'Instantiation of a class in the initializer must load it through the autoloader'
         );
     }
 
     public function testNewExpressionForUnknownClassThrowsDescriptiveException(): void
     {
         $this->expectException(ReflectionException::class);
-        $this->expectExceptionMessageMatches('/can not be found by the registered locator/');
+        $this->expectExceptionMessageMatches('/can not be loaded by the autoloader/');
 
         $nodes            = $this->parser->parse('<?php new \\Go\\ParserReflection\\Stub\\ThisClassDoesNotExist();');
         $expressionSolver = new NodeExpressionResolver(null);

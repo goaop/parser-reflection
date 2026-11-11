@@ -48,9 +48,17 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
     private ReflectionFunctionAbstract $declaringFunction;
 
     /**
+     * Whether the default value has been resolved already
+     *
+     * The default value is resolved lazily, because its evaluation may have side effects, e.g. a `new`
+     * expression instantiates (and thus loads) a class, which nobody may need for reflecting a signature.
+     */
+    private bool $isDefaultValueResolved = false;
+
+    /**
      * Stores the default value for node (if present)
      */
-    private mixed $defaultValue;
+    private mixed $defaultValue = null;
 
     /**
      * Whether or not default value is constant
@@ -62,7 +70,7 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
      *
      * @see $isDefaultValueConstant
      */
-    private ?string $defaultValueConstantName;
+    private ?string $defaultValueConstantName = null;
 
     /**
      * Index of parameter in the list
@@ -74,9 +82,9 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
      */
     private Param $parameterNode;
 
-    private bool $isDefaultValueConstExpr;
+    private bool $isDefaultValueConstExpr = false;
 
-    private ?string $defaultValueConstExpr;
+    private ?string $defaultValueConstExpr = null;
 
     private \ReflectionUnionType|\ReflectionNamedType|\ReflectionIntersectionType|null $type = null;
 
@@ -95,35 +103,10 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
         $this->parameterIndex    = $parameterIndex;
         $this->declaringFunction = $declaringFunction;
 
-        if ($declaringFunction instanceof \ReflectionMethod) {
-            $context = $declaringFunction->getDeclaringClass();
-        } elseif ($declaringFunction instanceof \ReflectionFunction) {
-            $context = $declaringFunction;
-        } else {
-            $context = null;
-        }
-
-        if ($this->isDefaultValueAvailable() && $this->parameterNode->default !== null) {
-            $expressionSolver = new NodeExpressionResolver($context);
-            try {
-                $expressionSolver->process($this->parameterNode->default);
-                $this->defaultValue             = $expressionSolver->getValue();
-                $this->isDefaultValueConstant   = $expressionSolver->isConstant();
-                $this->defaultValueConstantName = $expressionSolver->getConstantName();
-            } catch (ReflectionException $e) {
-                // For first-class callables and other const-expressible values that can't be evaluated
-                // at parse time, fall back to storing the string expression for code reconstruction.
-                if (!$expressionSolver->isConstExpression()) {
-                    throw $e;
-                }
-            }
-            $this->isDefaultValueConstExpr  = $expressionSolver->isConstExpression();
-            $this->defaultValueConstExpr    = $expressionSolver->getConstExpression();
-        }
-
         if ($this->hasType() && $this->parameterNode->type !== null) {
-            // If we have null value, this handled internally as nullable type too
-            $hasDefaultNull = $this->isDefaultValueAvailable() && $this->getDefaultValue() === null;
+            // A literal null default makes the type implicitly nullable. It is checked on the AST, like PHP does
+            // at compile time, so that the default value itself does not have to be evaluated here.
+            $hasDefaultNull = $this->isDefaultValueAvailable() && $this->isDefaultValueNullLiteral();
 
             $declaringClass = $declaringFunction instanceof \ReflectionMethod ? $declaringFunction->getDeclaringClass() : null;
             $selfClassName  = $declaringClass?->getName();
@@ -175,6 +158,7 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
         $hasDefaultValue = $this->isDefaultValueAvailable();
         $defaultValue    = '';
         if ($hasDefaultValue) {
+            $this->resolveDefaultValue();
             // For constant fetch expressions, PHP renders now expression
             if ($this->isDefaultValueConstExpr) {
                 $defaultValue = $this->defaultValueConstExpr;
@@ -299,6 +283,7 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');
         }
+        $this->resolveDefaultValue();
 
         return $this->defaultValue;
     }
@@ -311,6 +296,10 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
         if (!$this->isDefaultValueAvailable()) {
             throw new ReflectionException('Internal error: Failed to retrieve the default value');
         }
+        if (!$this->isDefaultValueConstantFetch()) {
+            return null;
+        }
+        $this->resolveDefaultValue();
 
         return $this->defaultValueConstantName;
     }
@@ -326,6 +315,8 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
      */
     public function getDefaultValueExpression(): ?string
     {
+        $this->resolveDefaultValue();
+
         return $this->defaultValueConstExpr;
     }
 
@@ -398,6 +389,11 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
      */
     public function isDefaultValueConstant(): bool
     {
+        if (!$this->isDefaultValueAvailable() || !$this->isDefaultValueConstantFetch()) {
+            return false;
+        }
+        $this->resolveDefaultValue();
+
         return $this->isDefaultValueConstant;
     }
 
@@ -431,6 +427,65 @@ final class ReflectionParameter extends BaseReflectionParameter implements NodeA
     public function isVariadic(): bool
     {
         return $this->parameterNode->variadic;
+    }
+
+    /**
+     * Evaluates the default value expression once, on the first access to the default value
+     *
+     * @throws ReflectionException If the default value can not be resolved and has no expression to fall back to
+     */
+    private function resolveDefaultValue(): void
+    {
+        if ($this->isDefaultValueResolved || !$this->isDefaultValueAvailable() || $this->parameterNode->default === null) {
+            return;
+        }
+
+        $declaringFunction = $this->declaringFunction;
+        if ($declaringFunction instanceof \ReflectionMethod) {
+            $context = $declaringFunction->getDeclaringClass();
+        } elseif ($declaringFunction instanceof \ReflectionFunction) {
+            $context = $declaringFunction;
+        } else {
+            $context = null;
+        }
+
+        $expressionSolver = new NodeExpressionResolver($context);
+        try {
+            $expressionSolver->process($this->parameterNode->default);
+            $this->defaultValue             = $expressionSolver->getValue();
+            $this->isDefaultValueConstant   = $expressionSolver->isConstant();
+            $this->defaultValueConstantName = $expressionSolver->getConstantName();
+        } catch (ReflectionException $e) {
+            // For first-class callables and other const-expressible values that can't be evaluated
+            // at parse time, fall back to storing the string expression for code reconstruction.
+            // Otherwise the error is reported on every access, as the value stays unresolved.
+            if (!$expressionSolver->isConstExpression()) {
+                throw $e;
+            }
+        }
+        $this->isDefaultValueConstExpr = $expressionSolver->isConstExpression();
+        $this->defaultValueConstExpr   = $expressionSolver->getConstExpression();
+        $this->isDefaultValueResolved  = true;
+    }
+
+    /**
+     * Only a constant (`FOO`) or a class constant (`Foo::BAR`) fetch can make the default value a constant
+     */
+    private function isDefaultValueConstantFetch(): bool
+    {
+        $default = $this->parameterNode->default;
+
+        return $default instanceof ConstFetch || $default instanceof ClassConstFetch;
+    }
+
+    /**
+     * Checks whether the default value is the `null` literal, without evaluating it
+     */
+    private function isDefaultValueNullLiteral(): bool
+    {
+        $default = $this->parameterNode->default;
+
+        return $default instanceof ConstFetch && strtolower($default->name->toString()) === 'null';
     }
 
     /**
