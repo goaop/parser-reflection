@@ -13,7 +13,6 @@ declare(strict_types=1);
 namespace Go\ParserReflection\Resolver;
 
 use Go\ParserReflection\ReflectionClass;
-use Go\ParserReflection\ReflectionEngine;
 use Go\ParserReflection\ReflectionException;
 use Go\ParserReflection\ReflectionFileNamespace;
 use PhpParser\Node;
@@ -325,7 +324,6 @@ class NodeExpressionResolver
         // Set isConstExpr so callers can reconstruct the expression as code even if resolution fails
         $this->isConstExpr = true;
 
-        // is_callable() and Closure::fromCallable() would silently autoload the class, so it is loaded explicitly
         $this->loadClassDefinition($className);
 
         $callable = $className . '::' . $methodName;
@@ -403,7 +401,7 @@ class NodeExpressionResolver
 
         // Use ReflectionClass to safely instantiate the class
         $this->loadClassDefinition($className);
-        if (!class_exists($className, false)) {
+        if (!class_exists($className)) {
             throw new ReflectionException("Class '{$className}' does not exist and cannot be instantiated.");
         }
         $reflectionClass = new \ReflectionClass($className);
@@ -980,43 +978,21 @@ class NodeExpressionResolver
      * Makes the definition of the given class available in the current runtime
      *
      * Reflection is performed on the AST only, but several expressions, such as object instantiation or
-     * first-class callables, can not be represented without a real class definition. For these cases the file
-     * with the class is resolved via the registered locator and included explicitly, thus an implicit
-     * autoloading is never triggered by the resolver itself.
+     * first-class callables, can not be represented without a real class definition. For these cases the class
+     * is loaded through the registered autoloaders, never by including its file directly: an autoloader (e.g.
+     * a class loader hooked into Composer) has to see every class load.
      *
-     * @throws ReflectionException If the class is not loaded and its file can not be located
+     * @throws ReflectionException If the class can not be loaded by the autoloaders
      */
     private function loadClassDefinition(string $className): void
     {
-        if ($this->isClassDefinitionLoaded($className)) {
-            return;
+        $isLoaded = class_exists($className)
+            || interface_exists($className)
+            || trait_exists($className);
+
+        if (!$isLoaded) {
+            throw new ReflectionException("Class '{$className}' does not exist and can not be loaded by the autoloader.");
         }
-
-        try {
-            $classFileName = ReflectionEngine::locateClassFile($className);
-        } catch (\Throwable $e) {
-            throw new ReflectionException(
-                "Class '{$className}' is not loaded and its file can not be found by the registered locator.",
-                0,
-                $e
-            );
-        }
-
-        include_once $classFileName;
-
-        if (!$this->isClassDefinitionLoaded($className)) {
-            throw new ReflectionException("Class '{$className}' was not found in the file '{$classFileName}'.");
-        }
-    }
-
-    /**
-     * @phpstan-impure The result changes once the located class file has been included
-     */
-    private function isClassDefinitionLoaded(string $className): bool
-    {
-        return class_exists($className, false)
-            || interface_exists($className, false)
-            || trait_exists($className, false);
     }
 
     private function getDispatchMethodFor(Node $node): string
