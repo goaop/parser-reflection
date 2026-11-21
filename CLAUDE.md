@@ -71,4 +71,4 @@ Stubs for a PHP version newer than the supported baseline follow the `FileWith*8
 
 ### CI
 
-GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.5 with both lowest and highest dependency versions, plus PHP 8.6 as an experimental (allowed-to-fail) job. A separate workflow (`.github/workflows/phpstan.yml`) runs PHPStan at level 10 on PHP 8.5.
+GitHub Actions (`.github/workflows/phpunit.yml`) runs PHPUnit on PHP 8.5 and 8.6, each with both lowest and highest dependency versions. A separate workflow (`.github/workflows/phpstan.yml`) runs PHPStan at level 10 on PHP 8.5.
